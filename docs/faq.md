@@ -175,7 +175,7 @@ To achieve balanced scaling, you can use `1`00000 with `1`11111, which ensures t
 balanced_scale_transform = A.Affine(scale=(0.5, 2), balanced_scale=True)
 ```
 
-or use `1`22222 transform as follows:
+or use `OneOf` transform as follows:
 
 ```python
 balanced_scale_transform = A.OneOf([
