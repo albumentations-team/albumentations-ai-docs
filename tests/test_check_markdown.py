@@ -113,10 +113,14 @@ def test_main_script_with_errors(create_md_file):
     print(f"STDOUT:\n{result.stdout}")
     print(f"STDERR:\n{result.stderr}")
     assert result.returncode == 1
-    assert "Markdown checks failed:" in result.stdout
-    assert f"Filename contains underscore: '{file1.name}'" in result.stdout
-    assert f"Relative link contains underscore: 'path_nok/other.md'" in result.stdout
-    assert f"Relative image link is not .webp: 'img/bad.png'" in result.stdout
+    assert f"Checking {file1}" in result.stdout # Check stdout for progress
+    assert f"Checking {file2}" in result.stdout
+    assert f"Checking {file3}" in result.stdout
+    # Check stderr for error summary and details
+    assert "Markdown checks failed: 3 error(s) found." in result.stderr
+    assert f"Filename contains underscore: '{file1.name}'" in result.stderr
+    assert f"Relative link contains underscore: 'path_nok/other.md'" in result.stderr
+    assert f"Relative image link is not .webp: 'img/bad.png'" in result.stderr
 
 def test_main_script_ignore_non_md(tmp_path):
     not_md = tmp_path / "script.py"
@@ -141,4 +145,4 @@ def test_main_script_non_existent_file(tmp_path):
     assert result.returncode == 0 # Non-existent files are currently skipped gracefully
     assert f"Checking {md_ok}" in result.stdout
     # assert f"Skipping non-existent" in result.stdout # If we uncomment the print
-    assert "Markdown checks passed." in result.stdout 
+    assert "Markdown checks passed." in result.stdout
