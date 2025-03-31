@@ -12,7 +12,7 @@ keywords = [
   "albumentations",
   "albumentations-ai",
   "albumentations-ai-docs",
-  "albumentations-ai-docs-generator",  
+  "albumentations-ai-docs-generator",
 ]
 license = { text = "Custom License - See LICENSE file for details" }
 maintainers = [ { name = "Vladimir Iglovikov" } ]
@@ -36,7 +36,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 
-dependencies = [  
+dependencies = [
 ]
 
 optional-dependencies.dev = [
@@ -94,13 +94,15 @@ format.skip-magic-trailing-comma = false
 # Like Black, automatically detect the appropriate line ending.
 lint.select = [ "ALL" ]
 
-lint.ignore = [  
+lint.ignore = [
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 
 lint.explicit-preview-rules = true
 
+# Ignore missing docstrings in __init__.py files
+lint.per-file-ignores."**/__init__.py" = [ "D104" ]
 lint.fixable = [ "ALL" ]
 lint.unfixable = [  ]
 # Allow unused variables when underscore-prefixed.
