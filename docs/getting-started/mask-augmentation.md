@@ -66,8 +66,7 @@ transformed_image = transformed['image']
 transformed_mask = transformed['mask']
 ```
 
-![An image and a mask before and after augmentation.
-](../../img/getting_started/augmenting_masks/inria_image_and_mask.webp "An image and a mask before and after augmentation.")
+![An image and a mask before and after augmentation.](../../img/getting_started/augmenting_masks/inria_image_and_mask.webp "An image and a mask before and after augmentation.")
 
 **An image and a mask before and after augmentation. Inria Aerial Image Labeling dataset contains aerial photos as well as their segmentation masks. Each pixel of the mask is marked as 1 if the pixel belongs to the class `building` and 0 otherwise.**
 
