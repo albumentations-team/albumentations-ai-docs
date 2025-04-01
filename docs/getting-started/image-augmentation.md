@@ -44,7 +44,7 @@ To create an augmentation, you create an instance of the required augmentation c
 
 `A.RandomBrighntessContrast` in the example also has one parameter, `p`. With a probability of 20%, this augmentation will change the brightness and contrast of the image received from `A.HorizontalFlip`. And with a probability of 80%, it will keep the received image unchanged.
 
-![A visualized version of the augmentation pipeline](../images/getting_started/augmenting_images/augmentation_pipeline_visualized.webp "A visualized version of the augmentation pipeline")
+![A visualized version of the augmentation pipeline](../../img/getting_started/augmenting_images/augmentation_pipeline_visualized.webp "A visualized version of the augmentation pipeline")
 **A visualized version of the augmentation pipeline. You pass an image to it, the image goes through all transformations, and then you receive an augmented image from the pipeline.**
 
 
@@ -114,19 +114,18 @@ To augment the next image, you need to call `transform` again and pass a new ima
 another_transformed_image = transform(image=another_image)["image"]
 ```
 
-!!! note ""
-    Each augmentation will change the input image with the probability set by the parameter `p`. Also, many augmentations have parameters that control the magnitude of changes that will be applied to an image. For example, `A.RandomBrightnessContrast` has two parameters: `brightness_limit` that controls the magnitude of adjusting brightness and `contrast_limit` that controls the magnitude of adjusting contrast. The bigger the value, the more the augmentation will change an image. During augmentation, a magnitude of the transformation is sampled from a uniform distribution limited by `brightness_limit` and `contrast_limit`. That means that if you make multiple calls to `transform` with the same input image, you will get a different output image each time.
+Each augmentation will change the input image with the probability set by the parameter `p`. Also, many augmentations have parameters that control the magnitude of changes that will be applied to an image. For example, `A.RandomBrightnessContrast` has two parameters: `brightness_limit` that controls the magnitude of adjusting brightness and `contrast_limit` that controls the magnitude of adjusting contrast. The bigger the value, the more the augmentation will change an image. During augmentation, a magnitude of the transformation is sampled from a uniform distribution limited by `brightness_limit` and `contrast_limit`. That means that if you make multiple calls to `transform` with the same input image, you will get a different output image each time.
 
-    ```python
-    transform = A.Compose([
-        A.RandomBrightnessContrast(brightness_limit=1, contrast_limit=1, p=1.0),
-    ])
-    transformed_image_1 = transform(image=image)['image']
-    transformed_image_2 = transform(image=image)['image']
-    transformed_image_3 = transform(image=image)['image']
-    ```
+```python
+transform = A.Compose([
+    A.RandomBrightnessContrast(brightness_limit=1, contrast_limit=1, p=1.0),
+])
+transformed_image_1 = transform(image=image)['image']
+transformed_image_2 = transform(image=image)['image']
+transformed_image_3 = transform(image=image)['image']
+```
 
-    ![Passing the same image multiple times to `transform` will produce different output images](../images/getting_started/augmenting_images/transform_multiple_times.webp "Passing the same image multiple times to `transform` will produce different output images")
+![Passing the same image multiple times to `transform` will produce different output images](../../img/getting_started/augmenting_images/transform_multiple_times.webp "Passing the same image multiple times to `transform` will produce different output images")
 
 ## Examples
 - [Defining a simple augmentation pipeline for image augmentation](../../examples/example/)

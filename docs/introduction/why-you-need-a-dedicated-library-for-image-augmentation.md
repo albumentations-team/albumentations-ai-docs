@@ -18,7 +18,7 @@ brighter_image = brightness_enhancer.enhance(factor=1.5)
 
 ```
 
-![Example of image transformations with Pillow](../images/introduction/dedicated_library/pillow_transformations.webp)
+![Example of image transformations with Pillow](../../img/introduction/dedicated_library/pillow_transformations.webp)
 
 However, this approach has many limitations, and it doesn't handle all cases with image augmentation. An image augmentation library such as Albumentations gives you a lot of advantages.
 
@@ -28,12 +28,12 @@ Here is a list of few pitfalls that augmentation libraries can handle very well.
 
 For image classification, you need to modify only an input image and keep output labels intact because output labels are invariant to image modifications.
 
-![Examples of augmented images and their respective labels for the image classification task](../images/introduction/dedicated_library/augmentation_classification.webp)
+![Examples of augmented images and their respective labels for the image classification task](../../img/introduction/dedicated_library/augmentation_classification.webp)
 
 !!! note
     There are some exceptions to this rule. For example, an image could contain a cat and have an assigned label `cat`. During image augmentation, if you crop a part of an image that doesn't have a cat on it, then the output label `cat` becomes wrong and misleading. Usually, you deal with those situations by deciding which augmentations you could apply to a dataset without risking to have problems with incorrect labels.
 
-    ![Example of an incorrect crop of an image ](../images/introduction/dedicated_library/incorrect_crop.webp)
+    ![Example of an incorrect crop of an image ](../../img/introduction/dedicated_library/incorrect_crop.webp)
 
 
 For segmentation, you need to apply some transformations both to an input image and an output mask. You also have to use the same parameters both for the image transformation and the mask transformation.
@@ -44,17 +44,17 @@ There are two types of image augmentations: pixel-level augmentations and spatia
 
 Pixel-level augmentations change the values of pixels of the original image, but they don't change the output mask. Image transformations such as changing brightness or contrast of adjusting values of the RGB-palette of the image are pixel-level augmentations.
 
-![Example of a pixel-level augmentation](../images/introduction/dedicated_library/pixel_level_augmentation_for_inria_dataset.webp)
+![Example of a pixel-level augmentation](../../img/introduction/dedicated_library/pixel_level_augmentation_for_inria_dataset.webp)
 **We modify the input image by adjusting its brightness, but we keep the output mask intact.**
 
 On the contrary, spatial-level augmentations change both the image and the mask. When you apply image transformations such as mirroring or rotation or cropping a part of the input image, you also need to apply the same transformation to the output label to preserve its correctness.
 
-![Example of a spatial-level augmentation](../images/introduction/dedicated_library/spatial_level_augmentation_for_inria_dataset.webp)
+![Example of a spatial-level augmentation](../../img/introduction/dedicated_library/spatial_level_augmentation_for_inria_dataset.webp)
 **We rotate both the input image and the output mask. We use the same set of transformations with the same parameters, both for the image and the mask.**
 
 The same is true for object detection tasks. For pixel-level augmentations, you only need to change the input image. With spatial-level augmentations, you need to apply the same transformation not only to the image but for bounding boxes coordinates as well. After applying spatial-level augmentations, you need to update coordinates of bounding boxes to represent the correct locations of objects on the augmented image.
 
-![Example of pixel- and spatial-level augmentations for object detection](../images/introduction/dedicated_library/pixel_and_spatial_level_augmentations_for_object_detection.webp)
+![Example of pixel- and spatial-level augmentations for object detection](../../img/introduction/dedicated_library/pixel_and_spatial_level_augmentations_for_object_detection.webp)
 **Pixel-level augmentations such as brightness adjustment change only the input image but not the coordinates of bounding boxes. Spatial-level augmentations such as mirroring and cropping a part of the image change both the input image and the bounding boxes' coordinates.**
 
 Albumentations knows how to correctly apply transformation both to the input data as well as the output labels.

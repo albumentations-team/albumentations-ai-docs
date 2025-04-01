@@ -10,7 +10,7 @@ As an example, we will use an image from the dataset named [Common Objects in Co
 
 The bounding box has the following `(x, y)` coordinates of its corners: top-left is `(x_min, y_min)` or `(98px, 345px)`, top-right is `(x_max, y_min)` or `(420px, 345px)`, bottom-left is `(x_min, y_max)` or `(98px, 462px)`, bottom-right is `(x_max, y_max)` or `(420px, 462px)`. As you see, coordinates of the bounding box's corners are calculated with respect to the top-left corner of the image which has `(x, y)` coordinates `(0, 0)`.
 
-![An example image with a bounding box from the COCO dataset](../images/getting_started/augmenting_bboxes/bbox_example.webp "An example image with a bounding box from the COCO dataset")
+![An example image with a bounding box from the COCO dataset](../../img/getting_started/augmenting_bboxes/bbox_example.webp "An example image with a bounding box from the COCO dataset")
 **An example image with a bounding box from the COCO dataset**
 
 ### pascal_voc
@@ -41,7 +41,7 @@ In `yolo`, a bounding box is represented by four values `[x_center, y_center, wi
 Coordinates of the example bounding box in this format are `[((420 + 98) / 2) / 640, ((462 + 345) / 2) / 480, 322 / 640, 117 / 480]` which are `[0.4046875, 0.840625, 0.503125, 0.24375]`.
 
 
-![How different formats represent coordinates of a bounding box](../images/getting_started/augmenting_bboxes/bbox_formats.webp "How different formats represent coordinates of a bounding box")
+![How different formats represent coordinates of a bounding box](../../img/getting_started/augmenting_bboxes/bbox_formats.webp "How different formats represent coordinates of a bounding box")
 **How different formats represent coordinates of a bounding box**
 
 
@@ -104,22 +104,22 @@ transform = A.Compose([
 
 Here is an example image that contains two bounding boxes. Bounding boxes coordinates are declared using the `coco` format.
 
-![An example image with two bounding boxes](../images/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_original.webp "An example image with two bounding boxes")
+![An example image with two bounding boxes](../../img/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_original.webp "An example image with two bounding boxes")
 **An example image with two bounding boxes**
 
 First, we apply the `CenterCrop` augmentation without declaring parameters `min_area` and `min_visibility`. The augmented image contains two bounding boxes.
 
-![An example image with two bounding boxes after applying augmentation](../images/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_cropped.webp "An example image with two bounding boxes after applying augmentation")
+![An example image with two bounding boxes after applying augmentation](../../img/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_cropped.webp "An example image with two bounding boxes after applying augmentation")
 **An example image with two bounding boxes after applying augmentation**
 
 Next, we apply the same `CenterCrop` augmentation, but now we also use the `min_area` parameter. Now, the augmented image contains only one bounding box, because the other bounding box's area after augmentation became smaller than `min_area`, so Albumentations dropped that bounding box.
 
-![An example image with one bounding box after applying augmentation with 'min_area'](../images/getting_started/augmenting_bboxes/bbox_with_min_area_cropped.webp "An example image with one bounding box after applying augmentation with 'min_area'")
+![An example image with one bounding box after applying augmentation with 'min_area'](../../img/getting_started/augmenting_bboxes/bbox_with_min_area_cropped.webp "An example image with one bounding box after applying augmentation with 'min_area'")
 **An example image with one bounding box after applying augmentation with 'min_area'**
 
 Finally, we apply the `CenterCrop` augmentation with the `min_visibility`. After that augmentation, the resulting image doesn't contain any bounding box, because visibility of all bounding boxes after augmentation are below threshold set by `min_visibility`.
 
-![An example image with zero bounding boxes after applying augmentation with 'min_visibility'](../images/getting_started/augmenting_bboxes/bbox_with_min_visibility_cropped.webp "An example image with zero bounding boxes after applying augmentation with 'min_visibility'")
+![An example image with zero bounding boxes after applying augmentation with 'min_visibility'](../../img/getting_started/augmenting_bboxes/bbox_with_min_visibility_cropped.webp "An example image with zero bounding boxes after applying augmentation with 'min_visibility'")
 **An example image with zero bounding boxes after applying augmentation with 'min_visibility'**
 
 
@@ -129,7 +129,7 @@ Besides coordinates, each bounding box should have an associated class label tha
 
 Let's say you have an example image with three objects: `dog`, `cat`, and `sports ball`. Bounding boxes coordinates in the `coco` format for those objects are `[23, 74, 295, 388]`, `[377, 294, 252, 161]`, and `[333, 421, 49, 49]`.
 
-![An example image with 3 bounding boxes from the COCO dataset](../images/getting_started/augmenting_bboxes/multiple_bboxes.webp "An example image with 3 bounding boxes from the COCO dataset")
+![An example image with 3 bounding boxes from the COCO dataset](../../img/getting_started/augmenting_bboxes/multiple_bboxes.webp "An example image with 3 bounding boxes from the COCO dataset")
 **An example image with 3 bounding boxes from the COCO dataset**
 
 #### 1. You can pass labels along with bounding boxes coordinates by adding them as additional values to the list of coordinates.
@@ -209,7 +209,7 @@ transformed_image = transformed['image']
 transformed_bboxes = transformed['bboxes']
 ```
 
-![Example input and output data for bounding boxes augmentation](../images/getting_started/augmenting_bboxes/bbox_augmentation_example.webp "Example input and output data for bounding boxes augmentation")
+![Example input and output data for bounding boxes augmentation](../../img/getting_started/augmenting_bboxes/bbox_augmentation_example.webp "Example input and output data for bounding boxes augmentation")
 **Example input and output data for bounding boxes augmentation**
 
 
@@ -240,7 +240,7 @@ transformed_bboxes = transformed['bboxes']
 transformed_class_labels = transformed['class_labels']
 ```
 
-![Example input and output data for bounding boxes augmentation with a separate argument for class labels](../images/getting_started/augmenting_bboxes/bbox_augmentation_example_2.webp "Example input and output data for bounding boxes augmentation with a separate argument for class labels")
+![Example input and output data for bounding boxes augmentation with a separate argument for class labels](../../img/getting_started/augmenting_bboxes/bbox_augmentation_example_2.webp "Example input and output data for bounding boxes augmentation with a separate argument for class labels")
 **Example input and output data for bounding boxes augmentation with a separate argument for class labels**
 
 

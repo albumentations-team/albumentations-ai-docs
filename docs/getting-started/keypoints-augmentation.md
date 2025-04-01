@@ -4,26 +4,26 @@ Computer vision tasks such as human pose estimation, face detection, and emotion
 
 In the case of pose estimation, keypoints mark human joints such as shoulder, elbow, wrist, knee, etc.
 
-![Keypoints annotations along with visualized edges between keypoints. Images are from the COCO dataset.](../images/getting_started/augmenting_keypoints/keypoints_example_coco.webp "Keypoints annotations along with visualized edges between keypoints. Images are from the COCO dataset.")
+![Keypoints annotations along with visualized edges between keypoints. Images are from the COCO dataset.](../../img/getting_started/augmenting_keypoints/keypoints_example_coco.webp "Keypoints annotations along with visualized edges between keypoints. Images are from the COCO dataset.")
 **Keypoints annotations along with visualized edges between keypoints. Images are from the [COCO dataset](https://cocodataset.org/).**
 
 In the case of face detection, keypoints mark important areas of the face such as eyes, nose, corners of the mouth, etc.
 
-![Facial keypoints](../images/getting_started/augmenting_keypoints/facial_keypoints.webp "Facial keypoints.")
+![Facial keypoints](../../img/getting_started/augmenting_keypoints/facial_keypoints.webp "Facial keypoints.")
 **Facial keypoints. Source: the "Facial Keypoints Detection" competition on [Kaggle](https://www.kaggle.com/c/facial-keypoints-detection).**
 
 To define a keypoint, you usually need two values, x and y coordinates of the keypoint. Coordinates of the keypoint are calculated with respect to the top-left corner of the image which has `(x, y)` coordinates `(0, 0)`. Often keypoints have associated labels such as `right_elbow`, `left_wrist`, etc.
 
-![An example image with five keypoints from the COCO dataset](../images/getting_started/augmenting_keypoints/keypoints_coco_example.webp "An example image with five keypoints from the COCO dataset")
+![An example image with five keypoints from the COCO dataset](../../img/getting_started/augmenting_keypoints/keypoints_coco_example.webp "An example image with five keypoints from the COCO dataset")
 **An example image with five keypoints from the COCO dataset**
 
 Some classical computer vision algorithms, such as SIFT, may use four values to describe a keypoint. In addition to the x and y coordinates, there are keypoint scale and keypoint angle. Albumentations support those values as well.
 
-![A keypoint may also has associated scale and angle values.](../images/getting_started/augmenting_keypoints/keypoint_with_scale_and_angle_v2.png "A keypoint may also has associated scale and angle values.")
+![A keypoint may also has associated scale and angle values.](../../img/getting_started/augmenting_keypoints/keypoint_with_scale_and_angle_v2.png "A keypoint may also has associated scale and angle values.")
 **A keypoint may also has associated scale and angle values**
 
 Keypoint angles are counter-clockwise. For example, in the following image, the angle value is 65°. You can read more about angle of rotation in the [Wikipedia article](https://en.wikipedia.org/wiki/Angle_of_rotation).
-![Keypoints angles are counter-clockwise.](../images/getting_started/augmenting_keypoints/keypoint_angle.png "Keypoints angles are counter-clockwise")
+![Keypoints angles are counter-clockwise.](../../img/getting_started/augmenting_keypoints/keypoint_angle.png "Keypoints angles are counter-clockwise")
 
 
 ## Supported formats for keypoints' coordinates.
@@ -133,12 +133,12 @@ transformed_image = transformed['image']
 transformed_keypoints = transformed['keypoints']
 ```
 
-![The augmented image with augmented keypoints](../images/getting_started/augmenting_keypoints/augmented_image_with_keypoints.webp "The augmented image with augmented keypoints")
+![The augmented image with augmented keypoints](../../img/getting_started/augmenting_keypoints/augmented_image_with_keypoints.webp "The augmented image with augmented keypoints")
 **The augmented image with augmented keypoints**
 
 If you set `remove_invisible` to `False` in `keypoint_params`, then Albumentations will return all keypoints, even if they lie outside the visible area. In the example image below, you can see that the keypoint for the right hip is located outside the image, but Albumentations still returned it. The area outside the image is highlighted in yellow.
 
-![When `remove_invisible` is set to `False` Albumentations will return all keypoints, even those located outside the image](../images/getting_started/augmenting_keypoints/invisible_keypoints.webp "When `remove_invisible` is set to `False` Albumentations will return all keypoints, even those located outside the image")
+![When `remove_invisible` is set to `False` Albumentations will return all keypoints, even those located outside the image](../../img/getting_started/augmenting_keypoints/invisible_keypoints.webp "When `remove_invisible` is set to `False` Albumentations will return all keypoints, even those located outside the image")
 **When `remove_invisible` is set to `False` Albumentations will return all keypoints, even those located outside the image**
 
 
@@ -204,13 +204,13 @@ transformed_keypoints = transformed['keypoints']
 transformed_image = transformed['image']
 ```
 
-![Example input and output data for keypoints augmentation with two separate arguments for class labels](../images/getting_started/augmenting_keypoints/augmented_image_keypoints_and_class_labels.webp "Example input and output data for keypoints augmentation with two separate arguments for class labels")
+![Example input and output data for keypoints augmentation with two separate arguments for class labels](../../img/getting_started/augmenting_keypoints/augmented_image_keypoints_and_class_labels.webp "Example input and output data for keypoints augmentation with two separate arguments for class labels")
 **Example input and output data for keypoints augmentation with two separate arguments for class labels**
 
 !!! note
     Some augmentations may affect class labels and make them incorrect. For example, the `HorizontalFlip` augmentation mirrors the input image. When you apply that augmentation to keypoints that mark the side of body parts (left or right), those keypoints will point to the wrong side (since `left` on the mirrored image becomes `right`). So when you are creating an augmentation pipeline look carefully which augmentations could be applied to the input data.
 
-    ![HorizontalFlip may make keypoints' labels incorrect](../images/getting_started/augmenting_keypoints/applying_horizontal_flip_to_keypoints.webp "HorizontalFlip may make keypoints' labels incorrect")
+    ![HorizontalFlip may make keypoints' labels incorrect](../../img/getting_started/augmenting_keypoints/applying_horizontal_flip_to_keypoints.webp "HorizontalFlip may make keypoints' labels incorrect")
     `HorizontalFlip` may make keypoints' labels incorrect
 
 ## Examples
