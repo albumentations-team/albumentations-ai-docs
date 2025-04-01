@@ -90,7 +90,7 @@ Here are some examples of available 3D transforms:
 - `CoarseDropout3D` - Random dropout of 3D cubic regions
 - `CubicSymmetry` - Apply random cubic symmetry transformations
 
-For a complete and up-to-date list of all available 3D transforms, please see our [API Reference](api_reference/augmentations/3d_transforms.md).
+For a complete and up-to-date list of all available 3D transforms, please see our [API Reference](api-reference/augmentations/3d-transforms.md).
 
 ## Combining 2D and 3D Transforms
 
@@ -115,7 +115,7 @@ transformed_mask = transformed['mask3d']
 
 1. **Memory Management**: 3D volumes can be large. Consider using smaller crop sizes or processing in patches.
    - Place cropping operations at the beginning of your pipeline for better performance
-   - Example: A `(D, H, W, C)`00000 volume cropped to `(D, H, W, C)`11111 will process subsequent transforms ~64x faster
+   - Example: A `256x256x256` volume cropped to `64x64x64` will process subsequent transforms ~64x faster
 
 ### Efficient pipeline - cropping first
 ```python
@@ -138,10 +138,10 @@ A.RandomCrop3D(size=(64, 64, 64)) # Cropping at the end
 2. **Avoid Interpolation Artifacts**: For highest quality augmentation, prefer transforms that only rearrange existing voxels without interpolation:
 
    a) Available Artifact-Free Transforms:
-      - `(D, H, W, C)`22222, `(D, H, W, C)`33333 - Mirror images across X or Y axes
-      - `(D, H, W, C)`44444 - Rotate by 90 degrees in XY plane
-      - `(D, H, W, C)`55555 - All possible combinations of flips and 90-degree rotations in XY plane (8 variants)
-      - `(D, H, W, C)`66666 - 3D extension of D4, includes all 48 possible cube symmetries
+      - `HorizontalFlip`, `VerticalFlip` - Mirror images across X or Y axes
+      - `RandomRotate90` - Rotate by 90 degrees in XY plane
+      - `D4` - All possible combinations of flips and 90-degree rotations in XY plane (8 variants)
+      - `CubicSymmetry` - 3D extension of D4, includes all 48 possible cube symmetries
 
    These transforms maintain perfect image quality because they only move existing voxels to new positions without creating new values through interpolation.
 
@@ -194,4 +194,4 @@ transformed = transform(volume=volume, mask3d=mask)
 
 ## Next Steps
 
-- Learn about [Video Augmentation](./video_augmentation.md) for sequential data
+- Learn about [Video Augmentation](./video-augmentation.md) for sequential data

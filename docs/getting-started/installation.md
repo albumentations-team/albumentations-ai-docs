@@ -1,6 +1,6 @@
 # Installation
 
-Albumentations requires Python 3.8 or higher.
+Albumentations requires Python 3.9 or higher.
 
 ## Install the latest stable version from PyPI
 
@@ -27,7 +27,7 @@ pip install -U albumentations
 pip will use the following logic to determine the required OpenCV distribution:
 
 1. If your Python environment already contains `opencv-python`, `opencv-contrib-python`, `opencv-contrib-python-headless` or `opencv-python-headless` pip will use it.
-2. If your Python environment doesn't contain any OpenCV distribution from step 1, pip will download `opencv-python-headless`00000.
+2. If your Python environment doesn't contain any OpenCV distribution from step 1, pip will download `opencv-python-headless`.
 
 ## Install the latest stable version from conda-forge
 

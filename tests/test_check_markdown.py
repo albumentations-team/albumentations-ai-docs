@@ -144,7 +144,8 @@ def test_main_script_with_errors(create_md_file, tmp_path):
     print(f"STDERR:\n{result.stderr}")
     assert result.returncode == 1
     # Expect 3 original errors + 1 dir error = 4 errors
-    assert "Markdown checks failed: 4 error(s) found." in result.stderr
+    # Corrected assertion to match the actual stderr output format
+    assert "4 Markdown convention violations found:" in result.stderr
     assert f"Filename contains underscore: '{file1.name}'" in result.stderr
     assert f"Directory name contains underscore: 'subdir_one'" in result.stderr
     assert f"Relative link contains underscore: 'path_nok/other.md'" in result.stderr

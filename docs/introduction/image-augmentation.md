@@ -12,7 +12,7 @@ Image augmentation is a process of creating new training examples from the exist
 
 Here are some examples of transformations of the original image that will create a new training sample.
 
-![Image augmentation examples](/img/introduction/image_augmentation/augmentation.webp "Image augmentation examples")
+![Image augmentation examples](../images/introduction/image_augmentation/augmentation.webp "Image augmentation examples")
 
 By applying those transformations to the original training dataset, you could create an almost infinite amount of new training samples.
 
