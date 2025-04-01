@@ -85,7 +85,7 @@ repos:
     hooks:
       - id: check-markdown
         name: Check Markdown Conventions
-        entry: python scripts/check_markdown.py
+        entry: python scripts/check_markdown.py --fix
         language: python
         types: [markdown]
         # Optionally exclude specific files/directories if needed

@@ -4,7 +4,7 @@ For instance and semantic segmentation tasks, you need to augment both the input
 
 Albumentations ensures that the input image and the output mask will receive the same set of augmentations with the same parameters.
 
-The process of augmenting images and masks looks very similar to the [regular image-only augmentation](../getting_started/image_augmentation.md).
+The process of augmenting images and masks looks very similar to the [regular image-only augmentation](../getting-started/image-augmentation.md).
 
 1. You import the required libraries.
 2. You define an augmentation pipeline.
@@ -13,7 +13,7 @@ The process of augmenting images and masks looks very similar to the [regular im
 
 ## Steps 1 and 2. Import the required libraries and define an augmentation pipeline.
 
-[Image augmentation for classification](../getting_started/image_augmentation.md) described Steps 1 and 2 in great detail. These are the same steps for the simultaneous augmentation of images and masks.
+[Image augmentation for classification](../getting-started/image-augmentation.md) described Steps 1 and 2 in great detail. These are the same steps for the simultaneous augmentation of images and masks.
 
 ```python
 import albumentations as A
@@ -67,12 +67,12 @@ transformed_mask = transformed['mask']
 ```
 
 ![An image and a mask before and after augmentation.
-](/img/getting_started/augmenting_masks/inria_image_and_mask.webp "An image and a mask before and after augmentation.")
+](../images/getting_started/augmenting_masks/inria_image_and_mask.webp "An image and a mask before and after augmentation.")
 
 **An image and a mask before and after augmentation. Inria Aerial Image Labeling dataset contains aerial photos as well as their segmentation masks. Each pixel of the mask is marked as 1 if the pixel belongs to the class `building` and 0 otherwise.**
 
 
-If the image has multiple associated masks, you should use the `masks` argument instead of `image`00000. In `image`11111 you should pass a list of masks.
+If the image has multiple associated masks, you should use the `masks` argument instead of `mask`. In `masks` you should pass a list of masks.
 
 ```python
 transformed = transform(image=image, masks=masks)
@@ -81,5 +81,5 @@ transformed_masks = transformed['masks']
 ```
 
 ## Examples
-- [Using Albumentations for a semantic segmentation task](../../examples/example_kaggle_salt/)
+- [Using Albumentations for a semantic segmentation task](../../examples/example-kaggle-salt/)
 - [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](../../examples/showcase/)
