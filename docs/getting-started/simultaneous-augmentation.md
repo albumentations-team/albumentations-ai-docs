@@ -26,7 +26,7 @@ Please refer to articles [Image augmentation for classification](image-augmentat
 
 For example, here is an image from the [COCO dataset](https://cocodataset.org/). that has one associated mask, one bounding box with the class label `person`, and five keypoints that define body parts.
 
-![An example image with mask, bounding boxes and keypoints](../images/getting_started/augmenting_multiple_targets/original.webp "An example image with mask, bounding boxes and keypoints")
+![An example image with mask, bounding boxes and keypoints](../../img/getting_started/augmenting_multiple_targets/original.webp "An example image with mask, bounding boxes and keypoints")
 **An example image with mask, bounding boxes and keypoints**
 
 ## Step 3. Pass all targets to `transform` and receive their augmented versions
@@ -48,7 +48,7 @@ transformed_keypoints = transformed["keypoints"]
 transformed_keypoints_classes = transformed["keypoints_classes"]
 ```
 
-![The augmented version of the image and its targets](../images/getting_started/augmenting_multiple_targets/augmented.webp "The augmented version of the image and its targets")
+![The augmented version of the image and its targets](../../img/getting_started/augmenting_multiple_targets/augmented.webp "The augmented version of the image and its targets")
 **The augmented version of the image and its targets**
 
 ## Examples
