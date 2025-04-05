@@ -1,38 +1,62 @@
 # Installation
 
-Albumentations requires Python 3.9 or higher.
+Albumentations requires Python 3.9 or higher. We recommend using the latest stable Python version.
 
-## Install the latest stable version from PyPI
+## Installation Methods
+
+### From PyPI (Recommended Stable Version)
+
+This installs the latest official release.
 
 ```bash
 pip install -U albumentations
 ```
 
-## Install the latest version from the master branch on GitHub
+### From Conda Forge
+
+If you are using Anaconda or Miniconda:
+
+```bash
+conda install -c conda-forge albumentations
+```
+
+### From GitHub (Latest Development Version)
+
+This installs the bleeding-edge version directly from the `main` branch.
 
 ```bash
 pip install -U git+https://github.com/albumentations-team/albumentations
 ```
 
-### Note on OpenCV dependencies
+**Note:** Installing from the `main` branch might give you newer features but could potentially be less stable than official releases.
 
-By default, pip downloads a wheel distribution of Albumentations. This distribution has `opencv-python-headless` as its dependency.
+## Handling OpenCV Dependencies
 
-If you already have some OpenCV distribution (such as `opencv-python-headless`, `opencv-python`, `opencv-contrib-python` or `opencv-contrib-python-headless`) installed in your Python environment, you can force Albumentations to use it by providing the `--no-binary albumentations` argument to pip, e.g.
+Albumentations relies heavily on OpenCV.
+
+*   **Default:** By default, Albumentations depends on `opencv-python-headless`. This version is chosen because it avoids installing GUI-related dependencies, making it suitable for server environments and containers where graphical interfaces are not needed.
+*   **Using Your Existing OpenCV:** If you already have a different OpenCV distribution installed (like `opencv-python`, `opencv-contrib-python`, or `opencv-contrib-python-headless`), pip should automatically detect and use it.
+*   **Forcing Source Build (Advanced):** If you need to force pip to build Albumentations from source and use a *specific*, pre-existing OpenCV installation (perhaps compiled manually), you can use the `--no-binary albumentations` flag:
+    ```bash
+    pip install -U albumentations --no-binary albumentations
+    ```
+    In most standard cases, this flag is **not** required.
+
+## Optional Dependencies
+
+While the core library requires only OpenCV and NumPy, a few specific transforms might need additional libraries:
+
+*   [`ElasticTransform`](https://explore.albumentations.ai/transform/ElasticTransform), [`GridDistortion`](https://explore.albumentations.ai/transform/GridDistortion): May require `scipy`.
+*   [`Superpixels`](https://explore.albumentations.ai/transform/Superpixels): Requires `scikit-image`.
+
+If you plan to use these specific transforms, install the necessary libraries separately (e.g., `pip install scipy scikit-image`). The library will raise an informative error if a required dependency for a transform is missing.
+
+## Verify Installation
+
+After installation, you can verify it by running:
 
 ```bash
-pip install -U albumentations --no-binary albumentations
+python -c "import albumentations as A; print(A.__version__)"
 ```
 
-pip will use the following logic to determine the required OpenCV distribution:
-
-1. If your Python environment already contains `opencv-python`, `opencv-contrib-python`, `opencv-contrib-python-headless` or `opencv-python-headless` pip will use it.
-2. If your Python environment doesn't contain any OpenCV distribution from step 1, pip will download `opencv-python-headless`.
-
-## Install the latest stable version from conda-forge
-
-If you are using Anaconda or Miniconda you can install Albumentations from conda-forge:
-
-```bash
-conda install -c conda-forge albumentations
-```
+This should print the installed version number of Albumentations.
