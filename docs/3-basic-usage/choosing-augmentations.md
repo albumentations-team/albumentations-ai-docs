@@ -6,6 +6,103 @@ Selecting the right set of augmentations is key to helping your model generalize
 
 This guide focuses on strategies for selecting augmentations that are *useful* for improving model performance.
 
+## A Practical Approach to Building Your Pipeline
+
+Instead of adding transforms randomly, here's a structured approach to build an effective pipeline:
+
+### Step 1: Start with Cropping (If Applicable)
+
+Often, the images in your dataset (e.g., 1024x1024) are larger than the input size required by your model (e.g., 256x256). Resizing or cropping to the target size should almost always be the **first** step in your pipeline. As highlighted in the performance guide, processing smaller images significantly speeds up all subsequent transforms.
+
+*   **Training Pipeline:** Use [`A.RandomCrop`](https://explore.albumentations.ai/transform/RandomCrop) or [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop). If your original images might be *smaller* than the target crop size, ensure you set `pad_if_needed=True` within the crop transform itself (instead of using a separate `A.PadIfNeeded`).
+*   **Validation/Inference Pipeline:** Typically use [`A.CenterCrop`](https://explore.albumentations.ai/transform/CenterCrop). Again, use `pad_if_needed=True` if necessary.
+
+```python
+import albumentations as A
+
+TARGET_SIZE = 256
+
+train_pipeline_start = A.Compose([
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    # ... other transforms ...
+])
+
+val_pipeline_start = A.Compose([
+    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    # ... other transforms ...
+])
+```
+
+### Step 2: Add Basic Geometric Invariances
+
+Next, add augmentations that reflect fundamental invariances in your data without distorting it unrealistically.
+
+*   **Horizontal Flip:** [`A.HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) is almost universally applicable for natural images (street scenes, animals, general objects like in ImageNet, COCO, Open Images). It reflects the fact that object identity usually doesn't change when flipped horizontally. The main exception is when directionality is critical and fixed, such as recognizing specific text characters or directional signs where flipping changes the meaning.
+*   **Vertical Flip & 90/180/270 Rotations (Square Symmetry):** If your data is invariant to basic rotations and flips, incorporating these can be highly beneficial.
+    *   For data invariant to axis-aligned flips and rotations by 90, 180, and 270 degrees (common in aerial/satellite imagery, microscopy, some medical scans), [`A.SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) is an excellent choice. It randomly applies one of the 8 symmetries of the square: identity, horizontal flip, vertical flip, diagonal flip (rotation by 180 + vertical flip), rotation 90 degrees, rotation 180 degrees, rotation 270 degrees, anti-diagonal flip (rotation by 180 + horizontal flip). A key advantage is that these are *exact* transformations, avoiding interpolation artifacts that can occur with arbitrary rotations (like those from `A.Rotate`).
+    *   This type of symmetry can sometimes be useful even in unexpected domains. For example, in a [Kaggle competition on Digital Forensics](https://ieeexplore.ieee.org/abstract/document/8622031), identifying the camera model used to take a photo, applying `SquareSymmetry` proved beneficial, likely because sensor-specific noise patterns can exhibit rotational/flip symmetries.
+    *   If *only* vertical flipping makes sense for your data, use [`A.VerticalFlip`](https://explore.albumentations.ai/transform/VerticalFlip) instead.
+
+```python
+import albumentations as A
+
+TARGET_SIZE = 256
+
+# Example for typical natural images
+train_pipeline_step2_natural = A.Compose([
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.HorizontalFlip(p=0.5),
+    # ... other transforms ...
+])
+
+# Example for aerial/medical images with rotational symmetry
+train_pipeline_step2_aerial = A.Compose([
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.SquareSymmetry(p=0.5), # Applies one of 8 symmetries
+    # ... other transforms ...
+])
+```
+
+### Step 3: Add Dropout / Occlusion Augmentations
+
+Dropout, in its various forms, is a powerful regularization technique for neural networks. The core idea is to randomly remove parts of the input signal, forcing the network to learn more robust and diverse features rather than relying on any single dominant characteristic.
+
+Albumentations offers several transforms that implement this idea for images:
+
+*   **[`A.CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout):** Randomly zeros out rectangular regions in the image.
+*   **[`A.RandomErasing`](https://explore.albumentations.ai/transform/RandomErasing):** Similar to CoarseDropout, selects a rectangular region and erases its pixels (can fill with noise or mean values too).
+*   **[`A.GridDropout`](https://explore.albumentations.ai/transform/GridDropout):** Zeros out pixels on a regular grid pattern.
+*   **[`A.ConstrainedCoarseDropout`](https://explore.albumentations.ai/transform/ConstrainedCoarseDropout):** This is a powerful variant where dropout is applied *only* within the regions specified by masks or bounding boxes of certain target classes. Instead of randomly dropping squares anywhere, it focuses the dropout *on the objects themselves*.
+    *   **Use Case:** Imagine detecting small objects like sports balls in game footage. These objects might already be partially occluded. Standard `CoarseDropout` might randomly hit the ball too infrequently or only cover a tiny, insignificant part. With `ConstrainedCoarseDropout`, you can ensure that the dropout patches are specifically applied *within* the bounding box (or mask) of the ball class, more reliably simulating partial occlusion of the target object itself.
+
+**Why is this useful?**
+
+1.  **Learning Diverse Features:** Imagine training an elephant detector. If the network only sees full images, it might heavily rely on the most distinctive feature, like the trunk. By using `CoarseDropout` or `RandomErasing`, sometimes the trunk will be masked out. Now, the network *must* learn to identify the elephant from its ears, legs, body shape, color, etc. On another iteration, perhaps the tusks are masked out, forcing the network to rely on other features again. This encourages the model to build a more comprehensive understanding of the object.
+
+2.  **Robustness to Occlusion:** In real-world scenarios, objects are often partially occluded. Training with dropout simulates this, making the model better at recognizing objects even when only parts are visible.
+
+3.  **Mitigating Spurious Correlations:** Models can sometimes learn unintended biases from datasets. For example, researchers found models associating certain demographics with objects like basketballs simply because of their correlation in the training data, not because the model truly understood the concepts. Dropout can help by randomly removing potentially confounding elements, encouraging the network to focus on more fundamental features of the target object itself.
+
+4.  **Train Hard, Test Easy (Ensemble Effect):** By training on images with randomly masked regions, the network learns to make predictions even with incomplete information – a harder task. During inference, the network sees the *complete*, unmasked image. This is analogous to how dropout layers work in neural network architectures: they deactivate neurons during training, forcing the network to build redundancy, but use all neurons during inference. Applying dropout augmentations can be seen as implicitly training an ensemble of models that specialize in different parts of the object/image; at inference time, you get the benefit of this ensemble working together on the full input.
+
+**Recommendation:** Consider adding [`A.CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) or [`A.RandomErasing`](https://explore.albumentations.ai/transform/RandomErasing) to your pipeline, especially for classification and detection tasks. Start with moderate probabilities and dropout sizes, and visualize the results to ensure you aren't removing too much information.
+
+```python
+import albumentations as A
+
+TARGET_SIZE = 256
+
+# Example adding CoarseDropout
+train_pipeline_step3 = A.Compose([
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.HorizontalFlip(p=0.5),
+    A.CoarseDropout(num_holes_range=(1, 5), hole_height_range=(0.1, 0.2), hole_width_range=(0.1, 0.2), p=0.5),
+    # ... other transforms ...
+])
+```
+
+*(More steps to follow on adding color, noise, etc.)*
+
 ## 1. Understand Your Task and Data Domain
 
 The most effective augmentations often mimic the variations your model will encounter in the real world or are relevant to the specific computer vision task.
