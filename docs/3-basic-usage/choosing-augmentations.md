@@ -92,11 +92,54 @@ import albumentations as A
 
 TARGET_SIZE = 256
 
-# Example adding CoarseDropout
+# Example adding OneOf dropout transforms
 train_pipeline_step3 = A.Compose([
     A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
     A.HorizontalFlip(p=0.5),
-    A.CoarseDropout(num_holes_range=(1, 5), hole_height_range=(0.1, 0.2), hole_width_range=(0.1, 0.2), p=0.5),
+    A.OneOf([
+        A.CoarseDropout(max_holes=8, max_height=16, max_width=16, p=1.0), # p=1.0 inside OneOf
+        A.GridDropout(p=1.0) # p=1.0 inside OneOf
+    ], p=0.5), # Apply one of the dropouts 50% of the time
+    # ... other transforms ...
+])
+```
+
+### Step 4: Reduce Reliance on Color Features
+
+Sometimes, color can be a misleading feature, or you might want your model to generalize across variations where color isn't a reliable indicator. Two transforms specifically target this:
+
+*   **[`A.ChannelDropout`](https://explore.albumentations.ai/transform/ChannelDropout):** Randomly drops one or more channels from the input image (e.g., makes an RGB image RG, RB, GB, or single channel).
+*   **[`A.ToGray`](https://explore.albumentations.ai/transform/ToGray):** Converts the image to grayscale.
+
+**Why is this useful?**
+
+1.  **Color Invariance:** If the color of an object isn't fundamental to its identity, these transforms force the network to learn shape, texture, and context cues instead. Consider classifying fruit: you want the model to recognize an apple whether it's red or green. `ToGray` removes the color information entirely for some training samples, while `ChannelDropout` removes partial color information, forcing reliance on shape.
+
+2.  **Generalizing Across Conditions:** Real-world lighting can drastically alter perceived colors. Training with `ToGray` or `ChannelDropout` can make the model more robust to these variations.
+
+3.  **Focusing on Texture/Shape:** For tasks where fine-grained texture or shape is critical (e.g., medical image analysis, defect detection), reducing the influence of color channels can sometimes help the model focus on these structural patterns.
+
+**Recommendation:** If color is not a consistently reliable feature for your task, or if you need robustness to color variations, consider adding [`A.ToGray`](https://explore.albumentations.ai/transform/ToGray) or [`A.ChannelDropout`](https://explore.albumentations.ai/transform/ChannelDropout) with a moderate probability.
+
+```python
+import albumentations as A
+
+TARGET_SIZE = 256
+
+# Example adding OneOf color dropout transforms
+train_pipeline_step4 = A.Compose([
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.HorizontalFlip(p=0.5),
+    # Assuming previous dropout step is also included:
+    A.OneOf([
+        A.CoarseDropout(max_holes=8, max_height=16, max_width=16, p=1.0),
+        A.GridDropout(p=1.0)
+    ], p=0.5),
+    # Now, apply one of the color-reducing transforms:
+    A.OneOf([
+        A.ToGray(p=1.0), # p=1.0 inside OneOf
+        A.ChannelDropout(p=1.0) # p=1.0 inside OneOf
+    ], p=0.1), # Apply one of these 10% of the time
     # ... other transforms ...
 ])
 ```
