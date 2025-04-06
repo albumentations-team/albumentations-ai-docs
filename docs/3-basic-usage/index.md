@@ -1,8 +1,10 @@
 # Basic Usage Guides
 
-This section provides guides for common augmentation tasks and data types.
+This section provides guides for common augmentation tasks, data types, and optimization strategies.
 
-*   **[Choosing Augmentations](./choosing-augmentations.md):** General advice on selecting appropriate augmentations for your task.
+*   **[Optimizing Pipelines for Speed](./performance-tuning.md):** Strategies to make your augmentation pipelines run faster and avoid CPU bottlenecks.
+
+*   **[Choosing Augmentations for Generalization](./choosing-augmentations.md):** How to select augmentations that help improve your model's performance on unseen data.
 
 *   **[Image Classification](./image-classification.md):** Augmenting images for classification tasks.
 
