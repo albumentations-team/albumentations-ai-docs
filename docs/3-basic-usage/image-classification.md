@@ -1,133 +1,206 @@
-# Image augmentation for classification
+# Image Classification with Albumentations
 
-We can divide the process of image augmentation into four steps:
+This guide demonstrates the practical steps for setting up and applying image augmentations for classification tasks using Albumentations. It focuses on the *how-to* aspects of defining and integrating augmentation pipelines.
 
-1. Import albumentations and a library to read images from the disk (e.g., OpenCV).
-2. Define an augmentation pipeline.
-3. Read images from the disk.
-4. Pass images to the augmentation pipeline and receive augmented images.
+For background on *why* data augmentation is crucial and *which* specific augmentations are effective for improving model generalization, please refer to these guides:
 
-## Step 1. Import the required libraries.
+*   **[What is Data Augmentation?](../1-introduction/what-are-image-augmentations.md):** Explains the motivation and benefits.
+*   **[Choosing Augmentations](./choosing-augmentations.md):** Provides detailed strategies for selecting and tuning various augmentations.
 
-- Import Albumentations
+## Core Workflow
+
+Applying augmentations typically involves these steps:
+
+### 1. Setup: Import Libraries
+
+Import Albumentations, an image reading library (like OpenCV), and any necessary framework components.
 
 ```python
 import albumentations as A
-```
-
-- Import a library to read images from the disk. In this example, we will use [OpenCV](https://opencv.org/). It is an open-source computer vision library that supports many image formats. Albumentations has OpenCV as a dependency, so you already have OpenCV installed.
-
-```python
 import cv2
+import numpy as np
 ```
 
-## Step 2. Define an augmentation pipeline.
+### 2. Define Augmentation Pipelines
 
-To define an augmentation pipeline, you need to create an instance of the `Compose` class. As an argument to the `Compose` class, you need to pass a list of augmentations you want to apply. A call to `Compose` will return a transform function that will perform image augmentation.
+We use `A.Compose` to create a sequence of transformations. Separate pipelines are usually defined for training (with random augmentations) and validation/testing (with deterministic preprocessing).
 
- Let's look at an example:
+**Example Training Pipeline:**
+
+A common strategy involves resizing, cropping, basic geometric transforms, and normalization.
 
 ```python
-transform = A.Compose([
-    A.RandomCrop(width=256, height=256),
+TARGET_SIZE = 224 # Example input size
+
+train_transform = A.Compose([
+    # Resize shortest side to TARGET_SIZE, maintaining aspect ratio
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    # Take a random TARGET_SIZE x TARGET_SIZE crop
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
+    # Apply horizontal flip with 50% probability
     A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.2),
-], seed=137, strict=True)
-
-```
-
-In the example, `Compose` receives a list with three augmentations: `A.RandomCrop`, `A.HorizontalFlip`, and `A.RandomBrighntessContrast`. You can find the full list of all available augmentations [in the GitHub repository](https://github.com/albumentations-team/albumentations#pixel-level-transforms) and [in the API Docs](https://albumentations.ai/docs/api_reference/augmentations/). A demo playground that demonstrates how augmentations will transform the input image is available at [https://explore.albumentations.ai](https://explore.albumentations.ai).
-
-To create an augmentation, you create an instance of the required augmentation class and pass augmentation parameters to it. `A.RandomCrop` receives two parameters, `height` and `width`. `A.RandomCrop(width=256, height=256)` means that `A.RandomCrop` will take an input image, extract a random patch with size 256 by 256 pixels from it and then pass the result to the next augmentation in the pipeline (in this case to `A.HorizontalFlip`).
-
-`A.HorizontalFlip` in this example has one parameter named `p`. `p` is a special parameter that is supported by almost all augmentations. It controls the probability of applying the augmentation. `p=0.5` means that with a probability of 50%, the transform will flip the image horizontally, and with a probability of 50%, the transform won't modify the input image.
-
-`A.RandomBrighntessContrast` in the example also has one parameter, `p`. With a probability of 20%, this augmentation will change the brightness and contrast of the image received from `A.HorizontalFlip`. And with a probability of 80%, it will keep the received image unchanged.
-
-![A visualized version of the augmentation pipeline](../../img/getting_started/augmenting_images/augmentation_pipeline_visualized.webp "A visualized version of the augmentation pipeline")
-**A visualized version of the augmentation pipeline. You pass an image to it, the image goes through all transformations, and then you receive an augmented image from the pipeline.**
-
-
-## Step 3. Read images from the disk.
-
-To pass an image to the augmentation pipeline, you need to read it from the disk. The pipeline expects to receive an image in the form of a NumPy array. If it is a color image, it should have three channels in the following order: Red, Green, Blue (so a regular RGB image).
-
-To read images from the disk, you can use [OpenCV](https://opencv.org/) - a popular library for image processing. It supports a lot of input formats and is installed along with Albumentations since Albumentations utilizes that library under the hood for a lot of augmentations.
-
-To import OpenCV
-
-```python
-import cv2
-```
-
-To read an image with OpenCV
-
-```python
-image = cv2.imread("/path/to/image.jpg", cv2.IMREAD_COLOR_RGB)
-```
-
-!!! note ""
-    Besides OpenCV, you can use other image processing libraries.
-
-    #### Pillow
-    [Pillow](https://pillow.readthedocs.io/) is a popular Python image processing library.
-
-    - Install Pillow
-
-    ``` Bash
-        pip install pillow
-    ```
-
-    - Import Pillow and NumPy (we need NumPy to convert a Pillow image to a NumPy array. NumPy is already installed along with Albumentations).
-
-    ```python
-    from PIL import Image
-    import numpy as np
-    ```
-
-    - Read an image with Pillow and convert it to a NumPy array.
-    ```python
-    pillow_image = Image.open("image.jpg")
-    image = np.array(pillow_image)
-    ```
-
-
-## Step 4. Pass images to the augmentation pipeline and receive augmented images.
-
-
-To pass an image to the augmentation pipeline you need to call the `transform` function created by a call to `A.Compose` at Step 2. In the `image` argument to that function, you need to pass an image that you want to augment.
-
-```python
-transformed = transform(image=image)
-```
-
-`transform` will return a dictionary with a single key `image`. Value at that key will contain an augmented image.
-
-```python
-transformed_image = transformed["image"]
-```
-
-To augment the next image, you need to call `transform` again and pass a new image as the `image` argument:
-
-
-```python
-another_transformed_image = transform(image=another_image)["image"]
-```
-
-Each augmentation will change the input image with the probability set by the parameter `p`. Also, many augmentations have parameters that control the magnitude of changes that will be applied to an image. For example, `A.RandomBrightnessContrast` has two parameters: `brightness_limit` that controls the magnitude of adjusting brightness and `contrast_limit` that controls the magnitude of adjusting contrast. The bigger the value, the more the augmentation will change an image. During augmentation, a magnitude of the transformation is sampled from a uniform distribution limited by `brightness_limit` and `contrast_limit`. That means that if you make multiple calls to `transform` with the same input image, you will get a different output image each time.
-
-```python
-transform = A.Compose([
-    A.RandomBrightnessContrast(brightness_limit=1, contrast_limit=1, p=1.0),
+    # Normalize using ImageNet presets
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    # Convert to PyTorch tensor format
+    A.ToTensorV2(),
 ])
-transformed_image_1 = transform(image=image)['image']
-transformed_image_2 = transform(image=image)['image']
-transformed_image_3 = transform(image=image)['image']
 ```
 
-![Passing the same image multiple times to `transform` will produce different output images](../../img/getting_started/augmenting_images/transform_multiple_times.webp "Passing the same image multiple times to `transform` will produce different output images")
+**Example Validation Pipeline:**
 
-## Examples
-- [Defining a simple augmentation pipeline for image augmentation](../../examples/example/)
-- [Weather augmentations in Albumentations](../../examples/example-weather-transforms/)
-- [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](../../examples/showcase/)
+Typically includes resizing, center cropping, and normalization, without random elements.
+
+```python
+val_transform = A.Compose([
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    # Take a crop from the center
+    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
+    # Normalize using ImageNet presets
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    # Convert to PyTorch tensor format
+    A.ToTensorV2(),
+])
+```
+
+*Alternative:* [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop) is another popular transform for training, combining resizing and cropping with scale/aspect ratio changes in one step.
+
+### 3. Load Image Data
+
+Load images into NumPy arrays. Remember that OpenCV reads images in BGR format by default, so convert to RGB if necessary.
+
+```python
+image_path = "/path/to/your/image.jpg"
+
+# Read image and convert to RGB
+image = cv2.imread(image_path)
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+print(f"Loaded image shape: {image.shape}, dtype: {image.dtype}")
+# Expected output e.g.: Loaded image shape: (512, 512, 3), dtype: uint8
+```
+
+### 4. Apply the Transform
+
+The `Compose` object acts as a callable function. Pass the image as a keyword argument `image`. The output is a dictionary, with the transformed image under the `'image'` key.
+
+```python
+# Apply the training transform to a single image
+augmented_data = train_transform(image=image)
+augmented_image = augmented_data['image']
+
+print(f"Augmented image shape: {augmented_image.shape}, dtype: {augmented_image.dtype}")
+# Expected output e.g.: Augmented image shape: torch.Size([3, 224, 224]), dtype: torch.float32
+```
+
+### 5. Integrate into Framework Data Loader
+
+In practice, you apply the transform within your deep learning framework's data loading pipeline (e.g., `torch.utils.data.Dataset` for PyTorch).
+
+**Conceptual PyTorch `Dataset`:**
+
+```python
+from torch.utils.data import Dataset, DataLoader
+
+class ClassificationDataset(Dataset):
+    def __init__(self, image_paths, labels, transform=None):
+        self.image_paths = image_paths
+        self.labels = labels
+        self.transform = transform # Assign the A.Compose object here
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        image_path = self.image_paths[idx]
+        label = self.labels[idx]
+
+        # Read image
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Apply Albumentations transforms
+        if self.transform:
+            # Pass image, get dictionary back
+            augmented = self.transform(image=image)
+            # Extract the transformed image tensor
+            image = augmented['image']
+
+        return image, label
+
+# --- Usage Example ---
+# Assuming train_paths, train_labels, val_paths, val_labels are defined
+# train_dataset = ClassificationDataset(train_paths, train_labels, transform=train_transform)
+# val_dataset = ClassificationDataset(val_paths, val_labels, transform=val_transform)
+
+# train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+# val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+# # Training loop would iterate through train_loader
+# for batch_images, batch_labels in train_loader:
+#     # Model training steps...
+#     pass
+```
+
+### 6. Visualize Augmentations (Crucial Debugging Step)
+
+Always visualize the output of your *training* pipeline on sample images *before* starting a full training run. This helps verify that the transformations look reasonable and haven't corrupted the data.
+
+**Important:** Visualize the output *before* applying `A.Normalize` and `A.ToTensorV2`, as these change the data type and value range, making direct display difficult.
+
+```python
+import matplotlib.pyplot as plt
+import torch # For checking tensor type
+
+def visualize_augmentations(dataset, idx=0, samples=5):
+    # Make a copy of the transform list to modify for visualization
+    if isinstance(dataset.transform, A.Compose):
+        vis_transform_list = [
+            t for t in dataset.transform
+            if not isinstance(t, (A.Normalize, A.ToTensorV2))
+        ]
+        vis_transform = A.Compose(vis_transform_list)
+    else:
+        # Handle cases where transform might not be Compose (optional)
+        print("Warning: Could not automatically strip Normalize/ToTensor for visualization.")
+        vis_transform = dataset.transform
+
+    figure, ax = plt.subplots(1, samples + 1, figsize=(12, 5))
+
+    # --- Get the original image --- #
+    # Temporarily disable transform to get raw image
+    original_transform = dataset.transform
+    dataset.transform = None
+    image, label = dataset[idx]
+    dataset.transform = original_transform # Restore original transform
+
+    # Display original
+    ax[0].imshow(image)
+    ax[0].set_title("Original")
+    ax[0].axis("off")
+
+    # --- Apply and display augmented versions --- #
+    for i in range(samples):
+        # Apply the visualization transform
+        if vis_transform:
+            augmented = vis_transform(image=image)
+            aug_image = augmented['image']
+        else:
+             # Should not happen if dataset had a transform
+            aug_image = image
+
+        ax[i+1].imshow(aug_image)
+        ax[i+1].set_title(f"Augmented {i+1}")
+        ax[i+1].axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+# Assuming train_dataset is created with train_transform:
+# visualize_augmentations(train_dataset, samples=4)
+```
+
+## Next Steps
+
+This guide covered the basic mechanics of applying augmentations for classification. To build more effective pipelines, explore the wide variety of transforms available in Albumentations.
+
+Refer back to the **[Choosing Augmentations](./choosing-augmentations.md)** guide for detailed advice on selecting, combining, and tuning transforms to maximize your model's performance.
