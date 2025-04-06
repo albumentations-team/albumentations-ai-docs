@@ -36,7 +36,7 @@ transform = A.Compose([
     A.RandomCrop(height=224, width=224),
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.2),
-], seed=42)
+], seed=137)
 ```
 
 ### Example video data
