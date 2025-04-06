@@ -97,8 +97,11 @@ train_pipeline_step3 = A.Compose([
     A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
     A.HorizontalFlip(p=0.5),
     A.OneOf([
-        A.CoarseDropout(max_holes=8, max_height=16, max_width=16, p=1.0), # p=1.0 inside OneOf
-        A.GridDropout(p=1.0) # p=1.0 inside OneOf
+        # Use ranges for number/size of holes
+        A.CoarseDropout(num_holes_range=(1, 8), hole_height_range=(0.1, 0.25),
+                        hole_width_range=(0.1, 0.25), fill_value=0, p=1.0),
+        # Use ratio and unit size range for grid
+        A.GridDropout(ratio=0.5, unit_size_range=(0.1, 0.2), p=1.0)
     ], p=0.5), # Apply one of the dropouts 50% of the time
     # ... other transforms ...
 ])
@@ -132,8 +135,9 @@ train_pipeline_step4 = A.Compose([
     A.HorizontalFlip(p=0.5),
     # Assuming previous dropout step is also included:
     A.OneOf([
-        A.CoarseDropout(max_holes=8, max_height=16, max_width=16, p=1.0),
-        A.GridDropout(p=1.0)
+        A.CoarseDropout(num_holes_range=(1, 8), hole_height_range=(0.1, 0.25),
+                        hole_width_range=(0.1, 0.25), fill_value=0, p=1.0),
+        A.GridDropout(ratio=0.5, unit_size_range=(0.1, 0.2), p=1.0)
     ], p=0.5),
     # Now, apply one of the color-reducing transforms:
     A.OneOf([
