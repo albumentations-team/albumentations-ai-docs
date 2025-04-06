@@ -45,6 +45,8 @@ Segmentation masks should match the volume dimensions:
 - `(D, H, W)` - Binary or single-class masks
 - `(D, H, W, C)` - Multi-class masks
 
+When applying augmentations, pass these masks using the `mask3d` keyword argument.
+
 ## Basic Usage
 
 ```python
@@ -78,29 +80,30 @@ transformed = transform(volume=volume, mask3d=mask)
 transformed_volume = transformed['volume']
 transformed_mask = transformed['mask3d']
 ```
+*Note: Geometric transforms like `RandomCrop3D` are automatically applied identically to both the `volume` and the `mask3d` when passed together, ensuring synchronization.*
 
 ## Available 3D Transforms
 
 Here are some examples of available 3D transforms:
 
-- `CenterCrop3D` - Crop the center part of a 3D volume
-- `RandomCrop3D` - Randomly crop a part of a 3D volume
-- `Pad3D` - Pad a 3D volume
-- `PadIfNeeded3D` - Pad if volume size is less than desired size
-- `CoarseDropout3D` - Random dropout of 3D cubic regions
-- `CubicSymmetry` - Apply random cubic symmetry transformations
+- [`CenterCrop3D`](https://explore.albumentations.ai/transform/CenterCrop3D) - Crop the center part of a 3D volume
+- [`RandomCrop3D`](https://explore.albumentations.ai/transform/RandomCrop3D) - Randomly crop a part of a 3D volume
+- [`Pad3D`](https://explore.albumentations.ai/transform/Pad3D) - Pad a 3D volume
+- [`PadIfNeeded3D`](https://explore.albumentations.ai/transform/PadIfNeeded3D) - Pad if volume size is less than desired size
+- [`CoarseDropout3D`](https://explore.albumentations.ai/transform/CoarseDropout3D) - Random dropout of 3D cubic regions
+- [`CubicSymmetry`](https://explore.albumentations.ai/transform/CubicSymmetry) - Apply random cubic symmetry transformations
 
 For a complete and up-to-date list of all available 3D transforms, please see our [API Reference](api-reference/augmentations/3d-transforms.md).
 
 ## Combining 2D and 3D Transforms
 
-You can combine 2D and 3D transforms in the same pipeline. 2D transforms will be applied slice-by-slice in the XY plane:
+You can combine 2D and 3D transforms in the same pipeline. When 2D transforms are included, Albumentations samples their random parameters *once* per call and applies them identically to each XY slice along the depth axis. This ensures consistency across slices for transforms like flips or color adjustments.
 
 ```python
 transform = A.Compose([
     # 3D transforms
     A.RandomCrop3D(size=(64, 128, 128)),
-    # 2D transforms (applied to each XY slice)
+    # 2D transforms (applied identically to each XY slice)
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.2),
 ])
@@ -111,9 +114,9 @@ transformed_mask = transformed['mask3d']
 ```
 
 
-## Best Practices
+## Memory Management
 
-1. **Memory Management**: 3D volumes can be large. Consider using smaller crop sizes or processing in patches.
+3D volumes can be large. Consider using smaller crop sizes or processing in patches.
    - Place cropping operations at the beginning of your pipeline for better performance
    - Example: A `256x256x256` volume cropped to `64x64x64` will process subsequent transforms ~64x faster
 
@@ -134,22 +137,6 @@ A.RandomBrightnessContrast(...), # Processing full volume
 A.RandomCrop3D(size=(64, 64, 64)) # Cropping at the end
 ])
 ```
-
-2. **Avoid Interpolation Artifacts**: For highest quality augmentation, prefer transforms that only rearrange existing voxels without interpolation:
-
-   a) Available Artifact-Free Transforms:
-      - `HorizontalFlip`, `VerticalFlip` - Mirror images across X or Y axes
-      - `RandomRotate90` - Rotate by 90 degrees in XY plane
-      - `D4` - All possible combinations of flips and 90-degree rotations in XY plane (8 variants)
-      - `CubicSymmetry` - 3D extension of D4, includes all 48 possible cube symmetries
-
-   These transforms maintain perfect image quality because they only move existing voxels to new positions without creating new values through interpolation.
-
-    b) Benefits of Artifact-Free Transforms:
-    - Preserve original voxel values exactly
-    - Maintain spatial relationships between tissues
-    - No blurring or information loss
-    - Faster computation (no interpolation needed)
 
 ## Example Pipeline
 
