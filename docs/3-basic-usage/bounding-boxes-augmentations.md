@@ -1,273 +1,304 @@
-# Bounding boxes augmentation for object detection
+# Bounding Box Augmentation for Object Detection
 
-## Different annotations formats
+This guide explains how to apply augmentations to images and their corresponding bounding boxes for object detection tasks using Albumentations. The key is ensuring transformations are applied consistently to both image pixels and box coordinates.
 
-Bounding boxes are rectangles that mark objects on an image. There are multiple formats of bounding boxes annotations. Each format uses its specific representation of bounding boxes coordinates. Albumentations supports four formats: `pascal_voc`, `albumentations`, `coco`, and `yolo` .
+For background on *why* data augmentation is important and *which* specific augmentations might be suitable for object detection, please refer to:
 
-Let's take a look at each of those formats and how they represent coordinates of bounding boxes.
+*   **[What is Data Augmentation?](../1-introduction/what-are-image-augmentations.md)**
+*   **[Choosing Augmentations](./choosing-augmentations.md)**
 
-As an example, we will use an image from the dataset named [Common Objects in Context](http://cocodataset.org/). It contains one bounding box that marks a cat. The image width is 640 pixels, and its height is 480 pixels. The width of the bounding box is 322 pixels, and its height is 117 pixels.
+## Understanding Bounding Box Formats
 
-The bounding box has the following `(x, y)` coordinates of its corners: top-left is `(x_min, y_min)` or `(98px, 345px)`, top-right is `(x_max, y_min)` or `(420px, 345px)`, bottom-left is `(x_min, y_max)` or `(98px, 462px)`, bottom-right is `(x_max, y_max)` or `(420px, 462px)`. As you see, coordinates of the bounding box's corners are calculated with respect to the top-left corner of the image which has `(x, y)` coordinates `(0, 0)`.
+Bounding boxes mark object locations. Albumentations needs to know the format of your bounding box coordinates. It supports four common formats:
 
-![An example image with a bounding box from the COCO dataset](../../img/getting_started/augmenting_bboxes/bbox_example.webp "An example image with a bounding box from the COCO dataset")
-**An example image with a bounding box from the COCO dataset**
+*   **`pascal_voc`**: `[x_min, y_min, x_max, y_max]` in absolute pixel coordinates. `(x_min, y_min)` is the top-left corner, and `(x_max, y_max)` is the bottom-right corner.
+*   **`albumentations`**: Similar to `pascal_voc`, but uses normalized coordinates: `[normalized_x_min, normalized_y_min, normalized_x_max, normalized_y_max]`. These are calculated as `x_pixel / image_width` and `y_pixel / image_height`.
+*   **`coco`**: `[x_min, y_min, bbox_width, bbox_height]` in absolute pixel coordinates. `(x_min, y_min)` is the top-left corner.
+*   **`yolo`**: `[normalized_x_center, normalized_y_center, normalized_bbox_width, normalized_bbox_height]`. These are normalized coordinates.
 
-### pascal_voc
+**Example:** For a 640x480 image (image_width=640, image_height=480) with a box from (98, 345) to (420, 462):
 
-`pascal_voc` is a format used by the [Pascal VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/).
-Coordinates of a bounding box are encoded with four values in pixels: `[x_min, y_min, x_max, y_max]`.  `x_min` and `y_min` are coordinates of the top-left corner of the bounding box. `x_max` and `y_max` are coordinates of bottom-right corner of the bounding box.
+![Bounding box example](../../img/getting_started/augmenting_bboxes/bbox_example.webp "Bounding box example")
 
-Coordinates of the example bounding box in this format are `[98, 345, 420, 462]`.
+The formats represent this box as:
 
-### albumentations
+*   `pascal_voc`: `[x_min, y_min, x_max, y_max]` -> Direct pixel coordinates: `[98, 345, 420, 462]`
+*   `albumentations`: `[x_min/image_width, y_min/image_height, x_max/image_width, y_max/image_height]` -> Normalized `pascal_voc`: `[98/640, 345/480, 420/640, 462/480]` ≈ `[0.153, 0.719, 0.656, 0.962]`
+*   `coco`: `[x_min, y_min, bbox_width, bbox_height]` -> Top-left corner + box dimensions: `bbox_width=420-98=322`, `bbox_height=462-345=117`. Result: `[98, 345, 322, 117]`
+*   `yolo`: `[x_center/image_width, y_center/image_height, bbox_width/image_width, bbox_height/image_height]` -> Normalized center + normalized box dimensions: `x_center=(98+420)/2=259`, `y_center=(345+462)/2=403.5`. Result: `[259/640, 403.5/480, 322/640, 117/480]` ≈ `[0.405, 0.861, 0.503, 0.244]`
 
-`albumentations` is similar to `pascal_voc`, because it also uses four values `[x_min, y_min, x_max, y_max]` to represent a bounding box. But unlike `pascal_voc`, `albumentations` uses normalized values. To normalize values, we divide coordinates in pixels for the x- and y-axis by the width and the height of the image.
+![Comparison of bounding box formats](../../img/getting_started/augmenting_bboxes/bbox_formats.webp "Comparison of bounding box formats")
 
-Coordinates of the example bounding box in this format are `[98 / 640, 345 / 480, 420 / 640, 462 / 480]` which are `[0.153125, 0.71875, 0.65625, 0.9625]`.
+You must specify the format you are providing so Albumentations can process it correctly.
 
-Albumentations uses this format internally to work with bounding boxes and augment them.
+## Augmenting Bounding Boxes: Step-by-Step
 
-### coco
-`coco` is a format used by the [Common Objects in Context \(COCO\)](http://cocodataset.org/) dataset.
+The process involves 4 main steps:
 
-In `coco`, a bounding box is defined by four values in pixels `[x_min, y_min, width, height]`. They are coordinates of the top-left corner along with the width and height of the bounding box.
+1.  Import libraries.
+2.  Define an augmentation pipeline with bounding box parameters.
+3.  Read image and bounding box data.
+4.  Apply the pipeline to the image and boxes.
 
-Coordinates of the example bounding box in this format are `[98, 345, 322, 117]`.
-
-### yolo
-In `yolo`, a bounding box is represented by four values `[x_center, y_center, width, height]`. `x_center` and `y_center` are the normalized coordinates of the center of the bounding box. To make coordinates normalized, we take pixel values of x and y, which marks the center of the bounding box on the x- and y-axis. Then we divide the value of x by the width of the image and value of y by the height of the image. `width` and `height` represent the width and the height of the bounding box. They are normalized as well.
-
-Coordinates of the example bounding box in this format are `[((420 + 98) / 2) / 640, ((462 + 345) / 2) / 480, 322 / 640, 117 / 480]` which are `[0.4046875, 0.840625, 0.503125, 0.24375]`.
-
-
-![How different formats represent coordinates of a bounding box](../../img/getting_started/augmenting_bboxes/bbox_formats.webp "How different formats represent coordinates of a bounding box")
-**How different formats represent coordinates of a bounding box**
-
-
-## Bounding boxes augmentation
-
-Just like with [images](image-augmentation.md) and [masks](mask-augmentation.md) augmentation, the process of augmenting bounding boxes consists of 4 steps.
-
-1. You import the required libraries.
-2. You define an augmentation pipeline.
-3. You read images and bounding boxes from the disk.
-4. You pass an image and bounding boxes to the augmentation pipeline and receive augmented images and boxes.
-
-!!! note "Note"
-    Some transforms in Albumentation don't support bounding boxes. If you try to use them you will get an exception. Please refer to [this article](transforms-and-targets.md) to check whether a transform can augment bounding boxes.
-
-## Step 1. Import the required libraries.
+### Step 1: Import Libraries
 
 ```python
 import albumentations as A
 import cv2
+import numpy as np
 ```
 
-## Step 2. Define an augmentation pipeline.
+### Step 2: Define Augmentation Pipeline
 
-Here an example of a minimal declaration of an augmentation pipeline that works with bounding boxes.
+Create an `A.Compose` pipeline, passing `A.BboxParams` to the `bbox_params` argument.
 
 ```python
-transform = A.Compose([
-    A.RandomCrop(width=450, height=450),
+# Example pipeline (matches original doc for consistency with images)
+train_transform = A.Compose([
+    A.RandomCrop(width=450, height=450, p=1.0), # Example random crop
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.2),
-], bbox_params=A.BboxParams(format='coco'))
+], bbox_params=A.BboxParams(format='coco', # Specify input format
+                           label_fields=['class_labels'] # Specify label argument name(s)
+                           ))
 ```
 
-Note that unlike image and masks augmentation, `Compose` now has an additional parameter `bbox_params`. You need to pass an instance of `A.BboxParams` to that argument. `A.BboxParams` specifies settings for working with bounding boxes. `format` sets the format for bounding boxes coordinates.
+**Cropping Strategies for Object Detection:**
 
-It can either be `pascal_voc`, `albumentations`, `coco` or `yolo`. This value is required because Albumentation needs to know the coordinates' source format for bounding boxes to apply augmentations correctly.
+The example above uses `A.RandomCrop`. While simple, this transform might randomly crop a region that contains *none* of the original bounding boxes, which is often undesirable for training object detectors. Albumentations provides specialized cropping transforms that are safer for bounding boxes:
 
-Besides `format`, `A.BboxParams` supports a few more settings.
+*   **[`A.AtLeastOneBboxRandomCrop`](https://albumentations.ai/docs/api-reference/augmentations/crops/transforms/#AtLeastOneBboxRandomCrop):** This transform crops a random area but guarantees that **at least one** bounding box from the original image is present within the crop. It's useful when you want diverse crops but are willing to lose *some* boxes, perhaps focusing training on individual objects or when images contain many redundant boxes.
 
-Here is an example of `Compose` that shows all available settings with `A.BboxParams`:
+*   **[`A.BBoxSafeRandomCrop`](https://albumentations.ai/docs/api-reference/augmentations/crops/transforms/#BBoxSafeRandomCrop):** This transform also crops a random area but guarantees that **all** bounding boxes are preserved within the crop (potentially by cropping a smaller area if needed). This is suitable when losing *any* bounding box is problematic (e.g., detecting all instances is critical, or you have rare objects).
 
+*   **[`A.RandomSizedBBoxSafeCrop`](https://albumentations.ai/docs/api-reference/augmentations/crops/transforms/#RandomSizedBBoxSafeCrop):** This is a very common and powerful transform. It crops a random portion of the image (with varying size and aspect ratio, similar to `RandomResizedCrop` in classification) while ensuring **all** bounding boxes remain within the cropped area. It then resizes this potentially non-square crop to your target `height` and `width`. This provides scale and aspect ratio augmentation while preserving all objects.
 
-```python
-transform = A.Compose([
-    A.RandomCrop(width=450, height=450),
-    A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.2),
-], bbox_params=A.BboxParams(format='coco', min_area=1024, min_visibility=0.1, label_fields=['class_labels']))
-```
+Consider replacing `A.RandomCrop` with one of these safer alternatives depending on your specific requirements for handling bounding boxes during cropping.
 
-### `min_area` and `min_visibility`
+**Understanding `A.BboxParams`:**
 
-`min_area` and `min_visibility` parameters control what Albumentations should do to the augmented bounding boxes if their size has changed after augmentation. The size of bounding boxes could change if you apply spatial augmentations, for example, when you crop a part of an image or when you resize an image.
+*   **`format` (Required):** Specifies the format of the input bounding boxes (`'pascal_voc'`, `'albumentations'`, `'coco'`, or `'yolo'`).
+*   **`label_fields` (Recommended):** List of keyword argument names that will hold the labels corresponding to the bounding boxes passed to the transform call (e.g., `['class_labels']`). Using this is the preferred way to handle labels, ensuring they stay synchronized with boxes that are kept or dropped.
+*   **`min_area`:** Minimum pixel area. Boxes smaller than this after augmentation are dropped. Default: `0.0`.
+*   **`min_visibility`:** Minimum fraction (0.0-1.0) of the original box area that must remain visible after augmentation. Boxes below this threshold are dropped. Default: `0.0`.
+*   **`min_width`:** Minimum width of a bounding box (in pixels for absolute formats, normalized units for normalized formats). Boxes with width less than this value are removed. Default: `0.0`.
+*   **`min_height`:** Minimum height of a bounding box (in pixels or normalized units). Boxes with height less than this value are removed. Default: `0.0`.
+*   **`clip`:** If `True`, bounding box coordinates are clipped to stay within image boundaries (`[0, image_width]` for x, `[0, image_height]` for y) *before* applying transformations. Default: `False`.
+*   **`filter_invalid_bboxes`:** If `True`, filters out invalid boxes (e.g., `x_max < x_min`) *before* applying augmentations. If `clip=True`, filtering happens after clipping. Default: `False`.
+*   **`max_accept_ratio`:** Maximum allowed aspect ratio (`max(width/height, height/width)`). Boxes exceeding this ratio are filtered out. `None` disables this check. Default: `None`.
 
-`min_area` is a value in pixels. If the area of a bounding box after augmentation becomes smaller than `min_area`, Albumentations will drop that box. So the returned list of augmented bounding boxes won't contain that bounding box.
+**Handling Imperfect Annotations:** It's common for real-world datasets to have bounding boxes that partially or fully extend outside the image boundaries due to labeling errors or previous processing. Setting `clip=True` will force these coordinates back within the image dimensions *before* augmentations are applied. Subsequently, setting `filter_invalid_bboxes=True` can help remove boxes that might have become invalid (e.g., zero width/height) *after* clipping. Using both `clip=True` and `filter_invalid_bboxes=True` together is a common strategy to clean up such annotations before augmentation.
 
-`min_visibility` is a value between 0 and 1. If the ratio of the bounding box area after augmentation to `the area of the bounding box before augmentation` becomes smaller than `min_visibility`, Albumentations will drop that box. So if the augmentation process cuts the most of the bounding box, that box won't be present in the returned list of the augmented bounding boxes.
+**`min_area` / `min_visibility` Example:**
 
+Consider cropping an image with two boxes:
 
-Here is an example image that contains two bounding boxes. Bounding boxes coordinates are declared using the `coco` format.
+![Original image with two boxes](../../img/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_original.webp "Original image with two boxes")
 
-![An example image with two bounding boxes](../../img/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_original.webp "An example image with two bounding boxes")
-**An example image with two bounding boxes**
+Applying `A.CenterCrop` might result in smaller or partially visible boxes:
 
-First, we apply the `CenterCrop` augmentation without declaring parameters `min_area` and `min_visibility`. The augmented image contains two bounding boxes.
+![After CenterCrop (no min_area/visibility)](../../img/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_cropped.webp "After CenterCrop (no min_area/visibility)")
 
-![An example image with two bounding boxes after applying augmentation](../../img/getting_started/augmenting_bboxes/bbox_without_min_area_min_visibility_cropped.webp "An example image with two bounding boxes after applying augmentation")
-**An example image with two bounding boxes after applying augmentation**
+Using `min_area` can remove boxes that become too small:
 
-Next, we apply the same `CenterCrop` augmentation, but now we also use the `min_area` parameter. Now, the augmented image contains only one bounding box, because the other bounding box's area after augmentation became smaller than `min_area`, so Albumentations dropped that bounding box.
+![After CenterCrop with min_area](../../img/getting_started/augmenting_bboxes/bbox_with_min_area_cropped.webp "After CenterCrop with min_area")
 
-![An example image with one bounding box after applying augmentation with 'min_area'](../../img/getting_started/augmenting_bboxes/bbox_with_min_area_cropped.webp "An example image with one bounding box after applying augmentation with 'min_area'")
-**An example image with one bounding box after applying augmentation with 'min_area'**
+Using `min_visibility` can remove boxes that are mostly cropped out:
 
-Finally, we apply the `CenterCrop` augmentation with the `min_visibility`. After that augmentation, the resulting image doesn't contain any bounding box, because visibility of all bounding boxes after augmentation are below threshold set by `min_visibility`.
+![After CenterCrop with min_visibility](../../img/getting_started/augmenting_bboxes/bbox_with_min_visibility_cropped.webp "After CenterCrop with min_visibility")
 
-![An example image with zero bounding boxes after applying augmentation with 'min_visibility'](../../img/getting_started/augmenting_bboxes/bbox_with_min_visibility_cropped.webp "An example image with zero bounding boxes after applying augmentation with 'min_visibility'")
-**An example image with zero bounding boxes after applying augmentation with 'min_visibility'**
+**Handling Class Labels:**
 
+Each bounding box needs a corresponding class label. Because bounding boxes are processed as NumPy arrays (which require homogeneous data types), labels **must** be passed separately from the coordinates.
 
-### Class labels for bounding boxes
+![Image with multiple bounding boxes](../../img/getting_started/augmenting_bboxes/multiple_bboxes.webp "Image with multiple bounding boxes")
 
-Besides coordinates, each bounding box should have an associated class label that tells which object lies inside the bounding box. There are two ways to pass a label for a bounding box.
+This is done using the `label_fields` parameter in `A.BboxParams`. You define one or more names in `label_fields` (e.g., `['class_labels', 'difficult_flag']`). Then, when calling the transform, you pass lists corresponding to these names (e.g., `transform(..., class_labels=my_labels, difficult_flag=my_flags)`). Albumentations ensures these label lists are kept synchronized with the bounding boxes if any boxes are dropped during augmentation.
 
-Let's say you have an example image with three objects: `dog`, `cat`, and `sports ball`. Bounding boxes coordinates in the `coco` format for those objects are `[23, 74, 295, 388]`, `[377, 294, 252, 161]`, and `[333, 421, 49, 49]`.
+### Step 3: Read Image and Bounding Boxes
 
-![An example image with 3 bounding boxes from the COCO dataset](../../img/getting_started/augmenting_bboxes/multiple_bboxes.webp "An example image with 3 bounding boxes from the COCO dataset")
-**An example image with 3 bounding boxes from the COCO dataset**
-
-#### 1. You can pass labels along with bounding boxes coordinates by adding them as additional values to the list of coordinates.
-
-For the image above, bounding boxes with class labels will become `[23, 74, 295, 388, 'dog']`, `[377, 294, 252, 161, 'cat']`, and `[333, 421, 49, 49, 'sports ball']`.
-
-!!! note ""
-    Class labels could be of any type: integer, string, or any other Python data type. For example, integer values as class labels will look the following: `[23, 74, 295, 388, 18]`, `[377, 294, 252, 161, 17]`, and `[333, 421, 49, 49, 37].`
-
-Also, you can use multiple class values for each bounding box, for example `[23, 74, 295, 388, 'dog', 'animal']`, `[377, 294, 252, 161, 'cat', 'animal']`, and `[333, 421, 49, 49, 'sports ball', 'item']`.
-
-#### 2.You can pass labels for bounding boxes as a separate list (the preferred way).
-
-For example, if you have three bounding boxes like `[23, 74, 295, 388]`, `[377, 294, 252, 161]`, and `[333, 421, 49, 49]` you can create a separate list with values like `['cat', 'dog', 'sports ball']`, or `[18, 17, 37]` that contains class labels for those bounding boxes. Next, you pass that list with class labels as a separate argument to the `transform` function. Albumentations needs to know the names of all those lists with class labels to join them with augmented bounding boxes correctly. Then, if a bounding box is dropped after augmentation because it is no longer visible, Albumentations will drop the class label for that box as well. Use `label_fields` parameter to set names for all arguments in `transform` that will contain label descriptions for bounding boxes (more on that in Step 4).
-
-## Step 3. Read images and bounding boxes from the disk.
-
-Read an image from the disk.
+Load your image (e.g., into an RGB NumPy array) and prepare your bounding box data.
 
 ```python
-image = cv2.imread("/path/to/image.webp")
+# Load Image
+image_path = "/path/to/your/image.jpg"
+image = cv2.imread(image_path)
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-```
 
-Bounding boxes can be stored on the disk in different serialization formats: JSON, XML, YAML, CSV, etc. So the code to read bounding boxes depends on the actual format of data on the disk.
-
-After you read the data from the disk, you need to prepare bounding boxes for Albumentations.
-
-Albumentations expects that bounding boxes will be represented as a list of lists. Each list contains information about a single bounding box. A bounding box definition should have at list four elements that represent the coordinates of that bounding box. The actual meaning of those four values depends on the format of bounding boxes (either `pascal_voc`, `albumentations`, `coco`, or `yolo`). Besides four coordinates, each definition of a bounding box may contain one or more extra values. You can use those extra values to store additional information about the bounding box, such as a class label of the object inside the box. During augmentation, Albumentations will not process those extra values. The library will return them as is along with the updated coordinates of the augmented bounding box.
-
-## Step 4. Pass an image and bounding boxes to the augmentation pipeline and receive augmented images and boxes.
-
-As discussed in Step 2, there are two ways of passing class labels along with bounding boxes coordinates:
-
-### 1. Pass class labels along with coordinates
-
-So, if you have coordinates of three bounding boxes that look like this:
-
-```python
-bboxes = [
+# Prepare Bounding Boxes (example using 'coco' format)
+# Each inner list is [x_min, y_min, bbox_width, bbox_height]
+bboxes = np.array([
     [23, 74, 295, 388],
     [377, 294, 252, 161],
     [333, 421, 49, 49],
-]
+])
+
+# Prepare Labels (using the name specified in label_fields)
+class_labels = ['dog', 'cat', 'sports ball']
+# Example with multiple label fields if defined in BboxParams:
+# class_categories = ['animal', 'animal', 'item']
 ```
 
-you can add a class label for each bounding box as an additional element of the list along with four coordinates. So now a list with bounding boxes and their coordinates will look the following:
+Albumentations expects `bboxes` as a NumPy array `(num_boxes, 4)`. Each inner list/row must contain the 4 coordinate values according to the specified `format`.
+
+### Step 4: Apply the Pipeline
+
+Pass the image, bounding boxes (as `bboxes`), and the corresponding label lists using the keyword arguments defined in `label_fields`.
 
 ```python
-bboxes = [
-    [23, 74, 295, 388, 'dog'],
-    [377, 294, 252, 161, 'cat'],
-    [333, 421, 49, 49, 'sports ball'],
-]
+# Using train_transform defined earlier which has label_fields=['class_labels']
+augmented = train_transform(image=image, bboxes=bboxes, class_labels=class_labels)
+
+transformed_image = augmented['image']
+transformed_bboxes = augmented['bboxes']
+# Access transformed labels using the key from label_fields
+transformed_class_labels = augmented['class_labels']
+
+# If multiple label fields were defined (e.g., label_fields=['class_labels', 'category_id'])
+# and passed like: transform(..., class_labels=..., category_id=...)
+# then access them: transformed_category_ids = augmented['category_id']
 ```
 
-or with multiple labels per each bounding box:
-```python
-bboxes = [
-    [23, 74, 295, 388, 'dog', 'animal'],
-    [377, 294, 252, 161, 'cat', 'animal'],
-    [333, 421, 49, 49, 'sports ball', 'item'],
-]
-```
+![Input/Output with separate labels](../../img/getting_started/augmenting_bboxes/bbox_augmentation_example_2.webp "Input/Output with separate labels")
 
-!!! note ""
-    You can use any data type for declaring class labels. It can be string, integer, or any other Python data type.
+The output dictionary contains the augmented image and the corresponding augmented bounding boxes and labels, potentially filtered by `min_area` or `min_visibility`.
 
-Next, you pass an image and bounding boxes for it to the `transform` function and receive the augmented image and bounding boxes.
+### Visualization
 
+Visualizing the augmented image with its boxes is crucial for debugging. Always check the output of your *training* pipeline on sample images *before* starting a full training run.
 
-
-```python
-
-transformed = transform(image=image, bboxes=bboxes)
-transformed_image = transformed['image']
-transformed_bboxes = transformed['bboxes']
-```
-
-![Example input and output data for bounding boxes augmentation](../../img/getting_started/augmenting_bboxes/bbox_augmentation_example.webp "Example input and output data for bounding boxes augmentation")
-**Example input and output data for bounding boxes augmentation**
-
-
-#### 2. Pass class labels in a separate argument to `transform` (the preferred way).
-
-Let's say you have coordinates of three bounding boxes
-```python
-bboxes = [
-    [23, 74, 295, 388],
-    [377, 294, 252, 161],
-    [333, 421, 49, 49],
-]
-```
-
-You can create a separate list that contains class labels for those bounding boxes:
+**Important:** Visualize the output *before* applying `A.Normalize` and `A.ToTensorV2`, as these change the data type and value range, making direct display difficult.
 
 ```python
-class_labels = ['cat', 'dog', 'parrot']
-```
+import matplotlib.pyplot as plt
+import random
+import numpy as np # Ensure numpy is imported
+import cv2 # Ensure cv2 is imported
 
-Then you pass both bounding boxes and class labels to `transform`. Note that to pass class labels, you need to use the name of the argument that you declared in `label_fields` when creating an instance of Compose in step 2. In our case, we set the name of the argument to `class_labels`.
+# Helper function to draw bounding boxes (adjust format handling as needed)
+def draw_bboxes(image_np, bboxes, labels, class_name_map=None, color=(0, 255, 0), thickness=2):
+    img_res = image_np.copy()
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.5
+    font_thickness = 1
 
-```python
+    if not isinstance(bboxes, (list, np.ndarray)):
+        print(f"Warning: bboxes is not a list or ndarray: {type(bboxes)}")
+        return img_res
+    if not isinstance(labels, (list, np.ndarray)):
+        print(f"Warning: labels is not a list or ndarray: {type(labels)}")
+        # Attempt to proceed if labels seem usable, otherwise return
+        if len(bboxes) != len(labels):
+            print("Warning: bbox and label length mismatch, cannot draw labels.")
+            labels = ['?' for _ in bboxes] # Placeholder
+        elif not all(isinstance(l, (str, int, float)) for l in labels):
+             print("Warning: labels contain non-primitive types, cannot draw reliably.")
+             labels = ['?' for _ in bboxes]
 
-transformed = transform(image=image, bboxes=bboxes, class_labels=class_labels)
-transformed_image = transformed['image']
-transformed_bboxes = transformed['bboxes']
-transformed_class_labels = transformed['class_labels']
-```
+    for bbox, label in zip(bboxes, labels):
+        # Assuming bbox format allows direct conversion to int x_min, y_min, x_max, y_max
+        # This might need adjustment based on the ACTUAL format in your bboxes list
+        # Example for pascal_voc or albumentations (after denormalizing)
+        try:
+             # Check if bbox has at least 4 elements
+            if len(bbox) < 4:
+                print(f"Warning: Skipping invalid bbox (fewer than 4 coords): {bbox}")
+                continue
+            x_min, y_min, x_max, y_max = map(int, bbox[:4])
+        except (ValueError, TypeError) as e:
+            print(f"Warning: Could not convert bbox coords to int: {bbox}, Error: {e}")
+            continue # Skip this bbox
 
-![Example input and output data for bounding boxes augmentation with a separate argument for class labels](../../img/getting_started/augmenting_bboxes/bbox_augmentation_example_2.webp "Example input and output data for bounding boxes augmentation with a separate argument for class labels")
-**Example input and output data for bounding boxes augmentation with a separate argument for class labels**
+        cv2.rectangle(img_res, (x_min, y_min), (x_max, y_max), color, thickness)
 
+        label_name = str(label) if class_name_map is None else class_name_map.get(label, str(label))
+        # Simple text placement above the box
+        (text_width, text_height), baseline = cv2.getTextSize(label_name, font, font_scale, font_thickness)
+        text_y = y_min - baseline if y_min - baseline > text_height else y_min + text_height
+        cv2.putText(img_res, label_name, (x_min, text_y), font, font_scale, color, font_thickness)
 
-Note that `label_fields` expects a list, so you can set multiple fields that contain labels for your bounding boxes. So if you declare Compose like
+    return img_res
 
-```python
-transform = A.Compose([
-    A.RandomCrop(width=450, height=450),
-    A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.2),
-], bbox_params=A.BboxParams(format='coco', label_fields=['class_labels', 'class_categories'])))
-```
+def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
+    """Visualizes original image and augmented versions."""
+    # Prepare visualization pipeline (strip Normalize, ToTensor)
+    vis_transform = None
+    if isinstance(transform, A.Compose):
+        vis_transform_list = [
+            t for t in transform
+            if not isinstance(t, (A.Normalize, A.ToTensorV2))
+        ]
+        # Recreate Compose with original bbox_params if they exist
+        bbox_params = getattr(transform, 'bbox_params', None)
+        vis_transform = A.Compose(vis_transform_list, bbox_params=bbox_params)
+    else:
+        print("Cannot strip Normalize/ToTensor: transform is not an A.Compose instance.")
+        vis_transform = transform # Use original transform
 
-you can use those multiple arguments to pass info about class labels, like
+    if vis_transform is None or not hasattr(vis_transform, 'bbox_params'):
+         print("Cannot visualize: Pipeline needs A.BboxParams for visualization.")
+         return
 
-```python
-class_labels = ['cat', 'dog', 'parrot']
-class_categories = ['animal', 'animal', 'item']
+    figure, ax = plt.subplots(1, samples + 1, figsize=(15, 5))
 
-transformed = transform(image=image, bboxes=bboxes, class_labels=class_labels, class_categories=class_categories)
-transformed_image = transformed['image']
-transformed_bboxes = transformed['bboxes']
-transformed_class_labels = transformed['class_labels']
-transformed_class_categories = transformed['class_categories']
-```
+    # Draw original
+    original_drawn = draw_bboxes(image, bboxes, labels)
+    ax[0].imshow(original_drawn)
+    ax[0].set_title("Original")
+    ax[0].axis("off")
+
+    # Draw augmented samples
+    for i in range(samples):
+        try:
+            # Apply the visualization transform
+            # Ensure labels are passed correctly based on label_fields
+            label_args = {field: labels for field in vis_transform.bbox_params.label_fields}
+            augmented = vis_transform(image=image, bboxes=bboxes, **label_args)
+
+            aug_image = augmented['image']
+            aug_bboxes = augmented['bboxes']
+            # Extract labels correctly based on label_fields
+            if vis_transform.bbox_params.label_fields:
+                aug_labels = augmented[vis_transform.bbox_params.label_fields[0]]
+            else:
+                aug_labels = ['?' for _ in aug_bboxes] # Placeholder if no labels
+
+            augmented_drawn = draw_bboxes(aug_image, aug_bboxes, aug_labels)
+            ax[i+1].imshow(augmented_drawn)
+            ax[i+1].set_title(f"Augmented {i+1}")
+        except Exception as e:
+            print(f"Error during augmentation sample {i+1}: {e}")
+            ax[i+1].imshow(image) # Show original on error
+            ax[i+1].set_title(f"Aug Error {i+1}")
+        finally:
+            ax[i+1].axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+# --- Example Usage --- #
+# Assuming 'image', 'bboxes', 'class_labels', and 'train_transform' are defined as in Step 3/4
+
+# Load a sample image and annotations
+# image = cv2.imread('your_image.jpg')
+# image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# bboxes = [[...], [...]] # In 'coco' format for this example
+# class_labels = ['label1', 'label2']
+
+# Define the transform (must include bbox_params with correct format and label_fields)
+# train_transform = A.Compose([
+#     A.RandomCrop(width=450, height=450, p=1.0),
+#     A.HorizontalFlip(p=0.5),
+#     A.RandomBrightnessContrast(p=0.2),
+#     # A.Normalize(...), # Include if used, will be stripped by visualize func
+#     # A.ToTensorV2(),  # Include if used, will be stripped by visualize func
+# ], bbox_params=A.BboxParams(format='coco', label_fields=['class_labels']))
+
+# Visualize
+# visualize_bbox_augmentations(image, bboxes, class_labels, train_transform, samples=4)
 
 ## Examples
-- [Using Albumentations to augment bounding boxes for object detection tasks](../../examples/example-bboxes/)
-- [How to use Albumentations for detection tasks if you need to keep all bounding boxes](../../examples/example-bboxes2/)
-- [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](../../examples/showcase/)
+
+*   [Using Albumentations to augment bounding boxes for object detection tasks](../../examples/example-bboxes/)
+*   [How to use Albumentations for detection tasks if you need to keep all bounding boxes](../../examples/example-bboxes2/)
+*   [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](../../examples/showcase/)
