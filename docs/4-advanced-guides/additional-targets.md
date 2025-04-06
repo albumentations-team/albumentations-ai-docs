@@ -153,5 +153,5 @@ print("Image1, Image2, and Mask_extra all vertically flipped identically.")
 
 ## Next Steps
 
-*   See the [Compose API documentation](https://albumentations.ai/docs/api-reference/core/composition/#albumentations.core.composition.Compose) for details.
+*   See the [Compose API documentation](https://albumentations.ai/docs/api-reference/core/composition/#Compose) for details.
 *   Explore the [Transforms Overview](../3-basic-usage/transforms-and-targets.md) to see which transforms support which targets.
