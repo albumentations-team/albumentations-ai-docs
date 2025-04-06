@@ -6,6 +6,14 @@ Selecting the right set of augmentations is key to helping your model generalize
 
 This guide focuses on strategies for selecting augmentations that are *useful* for improving model performance.
 
+## Key Principles for Choosing Augmentations
+
+Before building your pipeline, keep these points in mind:
+
+*   **Add Incrementally:** Don't add dozens of transforms at once. Start with a basic set (like cropping and flips) and add new augmentations one by one or in small groups. Monitor your validation metric (loss, accuracy, F1-score, etc.) after adding each new augmentation. If the metric improves, keep it; if it worsens or stays the same, reconsider or remove it.
+*   **Parameter Tuning is Empirical:** There's no single formula to determine the *best* parameters (e.g., rotation angle, dropout probability, brightness limit) for an augmentation. Choosing good parameters relies heavily on domain knowledge, experience, and experimentation. What works well for one dataset might not work for another.
+*   **Visualize Your Augmentations:** Always visualize the output of your augmentation pipeline on sample images from *your* dataset. This is crucial to ensure the augmented images are still realistic and don't distort the data in ways that would harm learning. Use tools like the interactive UI at [explore.albumentations.ai](https://explore.albumentations.ai/) to quickly test different transforms and parameters on your own images.
+
 ## A Practical Approach to Building Your Pipeline
 
 Instead of adding transforms randomly, here's a structured approach to build an effective pipeline:
@@ -15,20 +23,45 @@ Instead of adding transforms randomly, here's a structured approach to build an 
 Often, the images in your dataset (e.g., 1024x1024) are larger than the input size required by your model (e.g., 256x256). Resizing or cropping to the target size should almost always be the **first** step in your pipeline. As highlighted in the performance guide, processing smaller images significantly speeds up all subsequent transforms.
 
 *   **Training Pipeline:** Use [`A.RandomCrop`](https://explore.albumentations.ai/transform/RandomCrop) or [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop). If your original images might be *smaller* than the target crop size, ensure you set `pad_if_needed=True` within the crop transform itself (instead of using a separate `A.PadIfNeeded`).
+    *   **Note on Classification:** For many image classification tasks (e.g., ImageNet training), [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop) is often preferred. It performs cropping along with potentially aggressive resizing (changing aspect ratios) and scaling, effectively combining the cropping step with some geometric augmentation. Using `RandomResizedCrop` might mean you don't need a separate `A.Affine` transform for scaling later.
 *   **Validation/Inference Pipeline:** Typically use [`A.CenterCrop`](https://explore.albumentations.ai/transform/CenterCrop). Again, use `pad_if_needed=True` if necessary.
+
+### Step 1.5: Alternative Resizing Strategies (`SmallestMaxSize`, `LongestMaxSize`)
+
+Instead of directly cropping to the final `TARGET_SIZE`, two common strategies involve resizing based on the shortest or longest side first, often followed by padding or cropping.
+
+*   **[`A.SmallestMaxSize`](https://explore.albumentations.ai/transform/SmallestMaxSize) (Shortest Side Resizing):**
+    *   Resizes the image keeping the aspect ratio, such that the *shortest* side equals `max_size`.
+    *   **Common Use Case (ImageNet Style Preprocessing):** This is frequently used *before* cropping in classification tasks. For example, resize with `SmallestMaxSize(max_size=TARGET_SIZE)` and then apply `A.RandomCrop(TARGET_SIZE, TARGET_SIZE)` or `A.CenterCrop(TARGET_SIZE, TARGET_SIZE)`. This ensures the image is large enough in its smaller dimension for the crop to extract a `TARGET_SIZE` x `TARGET_SIZE` patch without needing internal padding, while still allowing the crop to sample different spatial locations.
+
+*   **[`A.LongestMaxSize`](https://explore.albumentations.ai/transform/LongestMaxSize) (Longest Side Resizing):**
+    *   Resizes the image keeping the aspect ratio, such that the *longest* side equals `max_size`.
+    *   **Common Use Case (Letterboxing/Pillarboxing):** This is often used when you need to fit images of varying aspect ratios into a fixed square input (e.g., `TARGET_SIZE` x `TARGET_SIZE`) *without* losing any image content via cropping. Apply `LongestMaxSize(max_size=TARGET_SIZE)` first. The resulting image will have one dimension equal to `TARGET_SIZE` and the other less than or equal to `TARGET_SIZE`. Then, apply `A.PadIfNeeded(min_height=TARGET_SIZE, min_width=TARGET_SIZE, border_mode=cv2.BORDER_CONSTANT, value=0)` to pad the shorter dimension with a constant value (e.g., black) to reach the square `TARGET_SIZE` x `TARGET_SIZE`. This process is known as letterboxing (padding top/bottom) or pillarboxing (padding left/right).
 
 ```python
 import albumentations as A
+import cv2 # For border_mode constant
 
 TARGET_SIZE = 256
 
-train_pipeline_start = A.Compose([
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+# Example: SmallestMaxSize + RandomCrop (ImageNet style)
+train_pipeline_shortest_side = A.Compose([
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
+    # ... other transforms like HorizontalFlip ...
+])
+
+val_pipeline_shortest_side = A.Compose([
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     # ... other transforms ...
 ])
 
-val_pipeline_start = A.Compose([
-    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+# Example: LongestMaxSize + PadIfNeeded (Letterboxing)
+pipeline_letterbox = A.Compose([
+    A.LongestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.PadIfNeeded(min_height=TARGET_SIZE, min_width=TARGET_SIZE,
+                  border_mode=cv2.BORDER_CONSTANT, value=0, p=1.0),
     # ... other transforms ...
 ])
 ```
@@ -50,14 +83,16 @@ TARGET_SIZE = 256
 
 # Example for typical natural images
 train_pipeline_step2_natural = A.Compose([
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     A.HorizontalFlip(p=0.5),
     # ... other transforms ...
 ])
 
 # Example for aerial/medical images with rotational symmetry
 train_pipeline_step2_aerial = A.Compose([
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     A.SquareSymmetry(p=0.5), # Applies one of 8 symmetries
     # ... other transforms ...
 ])
@@ -94,7 +129,8 @@ TARGET_SIZE = 256
 
 # Example adding OneOf dropout transforms
 train_pipeline_step3 = A.Compose([
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     A.HorizontalFlip(p=0.5),
     A.OneOf([
         # Use ranges for number/size of holes
@@ -131,7 +167,8 @@ TARGET_SIZE = 256
 
 # Example adding OneOf color dropout transforms
 train_pipeline_step4 = A.Compose([
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     A.HorizontalFlip(p=0.5),
     # Assuming previous dropout step is also included:
     A.OneOf([
@@ -163,6 +200,7 @@ After basic flips, the next common category involves geometric transformations l
     *   **Rotation:** Small rotations (e.g., `rotate=(-15, 15)`) can simulate slight camera tilts or object orientations.
     *   **Translation/Shear:** Less commonly used for general robustness, but can be relevant in specific domains.
 *   **Why `Affine`?** Albumentations offers other related transforms like [`ShiftScaleRotate`](https://explore.albumentations.ai/transform/ShiftScaleRotate), [`SafeRotate`](https://explore.albumentations.ai/transform/SafeRotate), [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), and [`Rotate`](https://explore.albumentations.ai/transform/Rotate). However, `Affine` efficiently combines these operations, often making it a preferred choice for applying scale and rotation together.
+    *   Additionally, [`A.Perspective`](https://explore.albumentations.ai/transform/Perspective) is another powerful geometric transform. While `Affine` performs parallel-preserving transformations, `Perspective` introduces non-parallel distortions, effectively simulating viewing objects or scenes from different angles or camera positions. It can be used in addition to or sometimes as an alternative to `Affine`, depending on the desired type of geometric variation.
 
 ```python
 import albumentations as A
@@ -171,7 +209,8 @@ TARGET_SIZE = 256
 
 # Example adding Affine after flips
 train_pipeline_step5 = A.Compose([
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, pad_if_needed=True, p=1.0),
+    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     A.HorizontalFlip(p=0.5),
     A.Affine(
         scale=(0.8, 1.2),      # Zoom in/out by 80-120%
@@ -194,3 +233,247 @@ train_pipeline_step5 = A.Compose([
     # ... other transforms ...
 ])
 ```
+
+### Step 6: Domain-Specific and Advanced Augmentations
+
+Once you have a solid baseline pipeline with cropping, basic invariances (like flips), dropout, and potentially color reduction and affine transformations, you can explore more specialized augmentations tailored to your specific domain, task, or desired model robustness. The augmentations below are generally applied *after* the initial cropping and geometric transforms.
+
+*   **Context Independence:**
+    *   **[`A.GridShuffle`](https://explore.albumentations.ai/transform/GridShuffle):** If your task should not rely on the spatial context between different parts of the image (e.g., certain texture analysis tasks), this transform splits the image into grid cells and randomly shuffles them.
+
+*   **Non-Linear Distortions (Medical Imagery, etc.):**
+    *   For domains where straight lines might deform (common in medical imaging like endoscopy or MRI due to tissue movement or lens effects), consider transforms that simulate these distortions:
+        *   [`A.ElasticTransform`](https://explore.albumentations.ai/transform/ElasticTransform)
+        *   [`A.GridDistortion`](https://explore.albumentations.ai/transform/GridDistortion)
+        *   [`A.Perspective`](https://explore.albumentations.ai/transform/Perspective) (Can create distortions)
+        *   [`A.ThinPlateSpline`](https://explore.albumentations.ai/transform/ThinPlateSpline`)
+
+*   **Spectrogram Augmentation:**
+    *   When working with spectrograms (visual representations of audio frequencies over time), standard dropout might not be ideal. Instead, use masking techniques specific to this domain:
+        *   [`A.XYMasking`](https://explore.albumentations.ai/transform/XYMasking): Masks out random vertical (time) and horizontal (frequency) stripes, simulating noise or interruptions in specific time or frequency bands.
+
+*   **Histopathology (H&E Stain Augmentation):**
+    *   For histopathology images stained with Hematoxylin and Eosin (H&E), color variations due to staining processes are common.
+        *   [`A.ColorJitter`](https://explore.albumentations.ai/transform/ColorJitter) can simulate variations in brightness, contrast, saturation, and hue.
+        *   [`A.RandomToneCurve`](https://explore.albumentations.ai/transform/RandomToneCurve) can simulate non-linear changes in image tones.
+        *   More advanced techniques sometimes involve specific stain separation and augmentation methods, which might require custom implementations or specialized libraries.
+
+*   **Robustness to Color Variations:**
+    *   To make your model less sensitive to lighting and color shifts:
+        *   [`A.RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast)
+        *   [`A.ColorJitter`](https://explore.albumentations.ai/transform/ColorJitter)
+        *   [`A.RandomGamma`](https://explore.albumentations.ai/transform/RandomGamma)
+        *   [`A.HueSaturationValue`](https://explore.albumentations.ai/transform/HueSaturationValue)
+        *   [`A.PlanckianJitter`](https://explore.albumentations.ai/transform/PlanckianJitter): Simulates color temperature variations along the Planckian locus (useful for outdoor scenes).
+
+*   **Robustness to Noise:**
+    *   Simulate sensor noise or transmission errors:
+        *   [`A.GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise)
+        *   [`A.ISONoise`](https://explore.albumentations.ai/transform/ISONoise): Simulates camera sensor noise at different ISO levels.
+        *   [`A.MultiplicativeNoise`](https://explore.albumentations.ai/transform/MultiplicativeNoise)
+        *   [`A.Spatter`](https://explore.albumentations.ai/transform/Spatter)
+        *   [`A.SaltAndPepper`](https://explore.albumentations.ai/transform/SaltAndPepper): Randomly replaces pixels with black or white noise.
+
+*   **Robustness to Blur:**
+    *   Simulate motion blur, defocus, or atmospheric effects:
+        *   [`A.GaussianBlur`](https://explore.albumentations.ai/transform/GaussianBlur)
+        *   [`A.MedianBlur`](https://explore.albumentations.ai/transform/MedianBlur)
+        *   [`A.MotionBlur`](https://explore.albumentations.ai/transform/MotionBlur)
+        *   [`A.AdvancedBlur`](https://explore.albumentations.ai/transform/AdvancedBlur): Combines different blur types.
+        *   [`A.ZoomBlur`](https://explore.albumentations.ai/transform/ZoomBlur)
+
+*   **Robustness to Compression and Resizing Artifacts:**
+    *   Simulate effects of saving images in lossy formats or resizing:
+        *   [`A.Downscale`](https://explore.albumentations.ai/transform/Downscale): Downscales then upscales the image, simulating loss of detail.
+        *   [`A.ImageCompression`](https://explore.albumentations.ai/transform/ImageCompression): Simulates JPEG, WebP, etc., compression artifacts.
+
+*   **Simulating Environmental Effects:**
+    *   [`A.RandomSunFlare`](https://explore.albumentations.ai/transform/RandomSunFlare): Adds sun flare effects.
+    *   [`A.RandomShadow`](https://explore.albumentations.ai/transform/RandomShadow): Adds shadows.
+    *   [`A.RandomFog`](https://explore.albumentations.ai/transform/RandomFog)
+    *   [`A.RandomRain`](https://explore.albumentations.ai/transform/RandomRain)
+    *   [`A.RandomSnow`](https://explore.albumentations.ai/transform/RandomSnow)
+        *   *Note:* While `RandomSunFlare` and `RandomShadow` were initially designed for street scenes, they have shown surprising utility in other domains like Optical Character Recognition (OCR), potentially by adding complex occlusions or lighting variations.
+
+*   **Mixing Transforms (Style/Content Transfer & Domain Adaptation):**
+    *   These transforms combine information from multiple images, often used for style transfer-like effects or domain adaptation without complex generative models:
+        *   [`A.FDA`](https://explore.albumentations.ai/transform/FDA) (Fourier Domain Adaptation): Swaps low-frequency components between images.
+        *   [`A.HistogramMatching`](https://explore.albumentations.ai/transform/HistogramMatching): Modifies an image's histogram to match a reference image's histogram.
+        *   *Use Case Example:* If you have abundant data from CT Scanner A but limited data from Scanner B, you can use images from Scanner B as the "style" reference for `FDA` or `HistogramMatching` applied to images from Scanner A. This helps the model train on data that resembles Scanner B's distribution, improving generalization.
+
+*   **Batch-Based Augmentations (Mixing Samples):**
+    *   While Albumentations primarily focuses on per-image transforms, techniques that mix multiple samples within a batch are highly effective, especially for regularization. Implementing them typically requires custom dataloader logic or using libraries that integrate them, but they are highly recommended for certain tasks.
+        *   **MixUp:** Linearly interpolates pairs of images and their labels. Strongly recommended for classification. (Requires custom implementation or use libraries like timm that integrate it).
+        *   **CutMix:** Cuts a patch from one image and pastes it onto another; labels are mixed proportionally to the patch area. Effective for classification and detection. (Requires custom implementation).
+        *   **Mosaic:** Combines four images into one larger image. Common in object detection (e.g., YOLO). (Requires custom dataloader logic).
+        *   **CopyPaste:** Copies object instances (using masks) from one image and pastes them onto another. Useful for segmentation and detection, especially when dealing with rare objects or wanting to increase instance density. (Albumentations provides building blocks, but full implementation often needs custom logic).
+
+Remember to visualize the effects of these advanced augmentations to ensure they are plausible for your domain and don't introduce unrealistic artifacts. Start with lower probabilities and magnitudes, and tune based on validation performance.
+
+### Step 7: Final Normalization - Standard vs. Sample-Specific
+
+The final step in nearly all pipelines is normalization, typically using [`A.Normalize`](https://explore.albumentations.ai/transform/Normalize). This transform subtracts a mean and divides by a standard deviation (or performs other scaling) for each channel.
+
+*   **Standard Practice (Fixed Mean/Std):** The most common approach is to use pre-computed `mean` and `std` values calculated across a large dataset (like ImageNet). These constants are then applied uniformly to all images during training and inference using the default `normalization="standard"` setting. This standardizes the input distribution for the model.
+
+    ```python
+    # Example using typical ImageNet mean/std (default behaviour)
+    normalize_fixed = A.Normalize(mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225],
+                                max_pixel_value=255.0,
+                                normalization="standard", # Default
+                                p=1.0)
+    ```
+
+*   **Sample-Specific Normalization (Built-in):** Albumentations' `A.Normalize` also directly supports calculating the `mean` and `std` *for each individual augmented image* just before normalization, using these statistics to normalize the image. This can act as an additional regularization technique.
+    *   *Note:* This technique is highlighted by practitioners like [Christof Henkel](https://www.kaggle.com/christofhenkel) (Kaggle Competitions Grandmaster with more than 40 gold medals from Machine Learning competitions) as a useful regularization method.
+    *   **How it works:** When `normalization` is set to `"image"` or `"image_per_channel"`, the transform calculates the statistics from the current image *after* all preceding augmentations have been applied. These dynamic statistics are then used for normalization.
+        *   `normalization="image"`: Calculates a single mean and std across all channels and pixels, then normalizes the entire image by these values.
+        *   `normalization="image_per_channel"`: Calculates the mean and std independently for each channel, then normalizes each channel by its own statistics.
+    *   **Why it helps:**
+        *   **Regularization:** This introduces randomness in the final normalized values based on the specific augmentations applied to the sample, acting as a form of data-dependent noise.
+        *   **Robustness:** Normalizing by the *current* image's statistics makes the model less sensitive to global shifts in brightness (due to mean subtraction) and contrast/intensity scaling (due to standard deviation division). The model learns to interpret features relative to the image's own statistical properties.
+    *   **Implementation:** Simply set the `normalization` parameter accordingly. The `mean`, `std`, and `max_pixel_value` arguments are ignored when using `"image"` or `"image_per_channel"$.
+
+        ```python
+        # Example using sample-specific normalization (per channel)
+        normalize_sample_per_channel = A.Normalize(normalization="image_per_channel", p=1.0)
+
+        # Example using sample-specific normalization (global)
+        normalize_sample_global = A.Normalize(normalization="image", p=1.0)
+
+        # Other options like min-max scaling are also available:
+        normalize_min_max = A.Normalize(normalization="min_max", p=1.0)
+        ```
+
+Choosing between fixed (`"standard"`) and sample-specific (`"image"`, `"image_per_channel"`) normalization depends on the task and observed performance. Fixed normalization is the standard and usually the starting point, while sample-specific normalization can be experimented with as an advanced regularization strategy.
+
+*   **Min-Max Scaling:** `A.Normalize` also supports `"min_max"` and `"min_max_per_channel"` scaling, which rescale pixel values to the [0, 1] range based on the image's (or channel's) minimum and maximum values. This is another form of sample-dependent normalization.
+
+## Putting It All Together: A Comprehensive (and Potentially Excessive) Example
+
+Below is an example of a complex pipeline combining many of the discussed techniques. **Disclaimer:** It is highly unlikely you would use *all* of these transforms simultaneously in a real-world scenario. This is primarily for illustration purposes to show how different augmentations can be combined, often using `A.OneOf` to select from related groups of transforms. Remember the principle: start simple and add complexity incrementally based on validation results!
+
+```python
+import albumentations as A
+import cv2
+from albumentations.pytorch import ToTensorV2 # If using PyTorch
+
+TARGET_SIZE = 256
+
+# Define a potentially very heavy augmentation pipeline
+heavy_train_pipeline = A.Compose(
+    [
+        # 1. Initial Resizing/Cropping (Choose one strategy)
+        # Option A: ImageNet style
+        A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
+        A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
+        # Option B: RandomResizedCrop (Combines scaling/cropping)
+        # A.RandomResizedCrop(height=TARGET_SIZE, width=TARGET_SIZE, scale=(0.8, 1.0), ratio=(0.75, 1.33), p=1.0),
+        # Option C: Letterboxing (if needed)
+        # A.LongestMaxSize(max_size=TARGET_SIZE, p=1.0),
+        # A.PadIfNeeded(min_height=TARGET_SIZE, min_width=TARGET_SIZE, border_mode=cv2.BORDER_CONSTANT, value=0, p=1.0),
+
+        # 2. Basic Geometric
+        A.HorizontalFlip(p=0.5),
+        # A.SquareSymmetry(p=0.5) # Use if appropriate (e.g., aerial)
+
+        # 3. Affine and Perspective
+        A.OneOf([
+            A.Affine(
+                scale=(0.8, 1.2),      # Zoom
+                rotate=(-15, 15),      # Rotate
+                translate_percent=(-0.1, 0.1), # Translate
+                shear=(-10, 10),          # Shear
+                p=0.8 # Probability within OneOf
+            ),
+            A.Perspective(scale=(0.05, 0.1), p=0.8) # Probability within OneOf
+        ], p=0.7), # Probability of applying Affine OR Perspective
+
+        # 4. Dropout / Occlusion
+        A.OneOf([
+            A.CoarseDropout(num_holes_range=(1, 8), hole_height_range=(0.1, 0.25),
+                        hole_width_range=(0.1, 0.25), fill_value=0, p=1.0),
+            A.GridDropout(ratio=0.5, unit_size_range=(0.05, 0.1), p=0.5),
+            A.RandomErasing(p=0.5, scale=(0.02, 0.1), ratio=(0.3, 3.3))
+        ], p=0.5), # Probability of applying one dropout type
+
+        # 5. Color Space / Type Reduction
+        A.OneOf([
+            A.ToGray(p=0.3),
+            A.ChannelDropout(channel_drop_range=(1, 1), fill_value=0, p=0.3),
+        ], p=0.2), # Low probability for significant color changes
+
+        # 6. Color Augmentations (Brightness, Contrast, Saturation, Hue)
+        A.OneOf([
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.8),
+            A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1, p=0.8),
+            A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.8),
+            A.RandomGamma(gamma_limit=(80, 120), p=0.8),
+        ], p=0.7), # Apply one type of color jittering
+
+        # 7. Blur
+        A.OneOf([
+            A.GaussianBlur(blur_limit=(3, 7), p=0.5),
+            A.MedianBlur(blur_limit=5, p=0.5),
+            A.MotionBlur(blur_limit=(3, 7), p=0.5),
+        ], p=0.3), # Apply one type of blur
+
+        # 8. Noise
+        A.OneOf([
+            A.GaussNoise(std_limit=(0.1, 0.2), p=0.5),
+            A.ISONoise(color_shift=(0.01, 0.05), intensity=(0.1, 0.5), p=0.5),
+            A.MultiplicativeNoise(multiplier=(0.9, 1.1), per_channel=True, p=0.5),
+            A.SaltAndPepper(p=0.5)
+        ], p=0.3), # Apply one type of noise
+
+        # 9. Distortion (Use if relevant to domain)
+        # A.OneOf([
+        #     A.ElasticTransform(alpha=1, sigma=50, alpha_affine=50, p=0.5),
+        #     A.GridDistortion(num_steps=5, distort_limit=0.3, p=0.5),
+        #     A.OpticalDistortion(distort_limit=0.05, shift_limit=0.05, p=0.5),
+        #     A.ThinPlateSpline(p=0.5)
+        # ], p=0.3),
+
+        # 10. Compression / Downscaling Artifacts
+        A.OneOf([
+            A.ImageCompression(quality_range=(20, 80), p=0.5),
+            A.Downscale(scale_range=(0.25, 0.5), p=0.5),
+        ], p=0.2),
+
+        # --- Final Steps ---
+
+        # 11. Normalization (Choose one)
+        # Option A: Fixed (e.g., ImageNet)
+        A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], max_pixel_value=255.0, normalization="standard", p=1.0),
+        # Option B: Sample-specific per channel
+        # A.Normalize(normalization="image_per_channel", p=1.0),
+        # Option C: Sample-specific global
+        # A.Normalize(normalization="image", p=1.0),
+
+        # 12. Convert to Tensor (Example for PyTorch)
+        # ToTensorV2(p=1.0),
+    ],
+    # Add bbox_params or keypoint_params if dealing with bounding boxes or keypoints
+    # bbox_params=A.BboxParams(format='pascal_voc', label_fields=[])
+)
+
+# Remember to visualize the output!
+# import matplotlib.pyplot as plt
+# import numpy as np
+# def visualize(image):
+#     plt.figure(figsize=(10, 10))
+#     plt.axis('off')
+#     plt.imshow(image)
+#     plt.show()
+
+# # Load an image (example)
+# # image = cv2.imread('your_image.jpg')
+# # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+# # Apply augmentations
+# # augmented = heavy_train_pipeline(image=image)
+# # augmented_image = augmented['image']
+
+# # Visualize
+# # visualize(augmented_image)
