@@ -1,111 +1,285 @@
-# Working with Video Data in Albumentations
+# Video Augmentation with Albumentations
 
-## Overview
+Albumentations can apply augmentations consistently across video frames, which is essential for maintaining temporal coherence in tasks like video object detection or pose estimation. This guide focuses on the mechanics of applying transforms to video frames and associated targets like bounding boxes and keypoints.
 
-While Albumentations is primarily known for image augmentation, it can effectively process video data by treating it as a sequence of frames. When you pass a video as a numpy array, Albumentations will apply the same transform with identical parameters to each frame, ensuring temporal consistency.
+## Core Concept: Consistent Augmentation via `images` Target
 
-## Data Format
+The key is to treat your video clip as a sequence of images. Load your video frames into a NumPy array with the shape `(N, H, W, C)` (for color) or `(N, H, W)` (for grayscale), where `N` is the number of frames.
 
-### Video Frames
-Albumentations accepts video data as numpy arrays in the following formats:
-- `(N, H, W)` - Grayscale video (N frames)
-- `(N, H, W, C)` - Color video (N frames)
+When you pass this array to the `images` (plural) argument of your `A.Compose` pipeline, Albumentations understands that the first dimension represents the sequence. It will:
 
-Where:
-- N = Number of frames
-- H = Height
-- W = Width
-- C = Channels (e.g., 3 for RGB)
+1.  Sample random parameters for each augmentation *once* per call.
+2.  Apply the augmentation with those *identical parameters* to every frame (`image`) along the first dimension.
 
-### Video Masks
-For video segmentation tasks, masks should match the frame dimensions:
-- `(N, H, W)` - Binary or single-class masks
-- `(N, H, W, C)` - Multi-class masks
+This ensures spatial augmentations (like crops, flips, rotations) and color augmentations are consistent across the clip.
 
-## Basic Usage
+## Basic Workflow (Image Frames Only)
+
+### 1. Setup
 
 ```python
 import albumentations as A
+import cv2
 import numpy as np
 ```
 
-## Create transform pipeline
+### 2. Define Pipeline
+
+Define a standard pipeline. No special parameters are needed just for video frames themselves.
 
 ```python
-transform = A.Compose([
+transform_video_frames = A.Compose([
+    A.Resize(height=256, width=256),
     A.RandomCrop(height=224, width=224),
     A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.2),
-], seed=137)
+    A.ColorJitter(p=0.2),
+    # Add Normalize and ToTensorV2 if needed for your model
+    # A.Normalize(...),
+    # A.ToTensorV2(),
+])
 ```
 
-### Example video data
+### 3. Load Video Frames
+
+Load your video into the expected NumPy format.
 
 ```python
-video = np.random.rand(32, 256, 256, 3) # 32 RGB frames
-masks = np.zeros((32, 256, 256)) # 32 binary masks
+# Example: 10 RGB frames of size 360x480
+num_frames = 10
+height, width = 360, 480
+video = np.random.randint(0, 256, (num_frames, height, width, 3), dtype=np.uint8)
 ```
 
-### Apply transform
+### 4. Apply Transform
+
+Pass the video array to the `images` argument.
 
 ```python
-augmented_video = transform(images=video, masks=masks)
-```
+augmented = transform_video_frames(images=video)
+augmented_video_frames = augmented['images']
 
-### Apply transforms - same parameters for all frames
-
+print(f"Original shape: {video.shape}")
+print(f"Augmented shape: {augmented_video_frames.shape}")
+# Example output (shape depends on pipeline): Augmented shape: (10, 224, 224, 3)
 ```python
-transformed = transform(images=video, mask=masks)
-transformed_video = transformed['image']
-transformed_masks = transformed['mask']
-```
+
+The same crop, flip, and color jitter parameters were applied to all 10 frames.
+
+# Conceptual Example: Applying transforms to video frames and masks
+
+# 1. Prepare Data
+num_frames = 10
+height, width = 360, 480
+video = np.random.randint(0, 256, (num_frames, height, width, 3), dtype=np.uint8)
+# Example: Binary masks (0 or 1) for each frame
+video_masks = np.random.randint(0, 2, (num_frames, height, width), dtype=np.uint8)
+
+# 2. Define Pipeline
+transform_video_seg = A.Compose([
+    A.Resize(height=256, width=256),
+    A.RandomCrop(height=224, width=224),
+    A.HorizontalFlip(p=0.5),
+    # Only image gets color jitter
+    A.ColorJitter(p=0.2),
+    # Normalize image only
+    # A.Normalize(...),
+    # ToTensorV2 converts both image and mask
+    # A.ToTensorV2(),
+])
+
+# 3. Apply Transform
+augmented = transform_video_seg(images=video, masks=video_masks) # Use 'masks' (plural)
+augmented_video_frames = augmented['images']
+augmented_video_masks = augmented['masks'] # Extract 'masks' (plural)
+
+print(f"Original Video Shape: {video.shape}")
+print(f"Original Masks Shape: {video_masks.shape}")
+print(f"Augmented Video Shape: {augmented_video_frames.shape}")
+print(f"Augmented Masks Shape: {augmented_video_masks.shape}")
+
+## Handling Bounding Boxes and Keypoints for Video
+
+Synchronizing bounding boxes or keypoints across video frames requires careful handling of how targets are passed alongside the `images` array.
+
+**Important Note:** The standard examples for bounding boxes and keypoints typically show passing `image` (singular) and `bboxes`/`keypoints` (plural, for that single image). Applying this directly to video frames passed as `images` (plural) needs consideration of how per-frame targets are structured and processed.
+
+Here are potential approaches:
+
+### Approach 1: Flatten Targets + `frame_id` in `label_fields`
+
+This approach flattens all bounding boxes (or keypoints) from all frames into a single list and uses `label_fields` to track the original frame index for each target.
+
+1.  **Prepare Data:**
+    *   Create a single flat list `all_bboxes` containing all boxes from all frames.
+    *   Create a corresponding list `frame_indices` indicating the frame index (0 to N-1) for each box in `all_bboxes`.
+    *   Create a list `class_labels` for the actual class of each box in `all_bboxes`.
+
+    ```python
+    # Conceptual Example Data Preparation (BBoxes)
+    # Assume video has 2 frames (N=2)
+    # Frame 0 boxes: [[10, 10, 50, 50], [70, 70, 90, 90]] Labels: ['cat', 'dog']
+    # Frame 1 boxes: [[20, 20, 60, 60]] Label: ['cat']
+
+    all_bboxes = np.array([[10, 10, 50, 50], [70, 70, 90, 90], [20, 20, 60, 60]])
+    frame_indices = [0, 0, 1] # Frame ID for each box
+    class_labels = ['cat', 'dog', 'cat'] # Actual class label for each box
+
+    # Conceptual Example Data Preparation (Keypoints)
+    # Assume video has 2 frames (N=2)
+    # Frame 0 keypoints: [(15, 15), (25, 25)] Labels: ['eye', 'nose']
+    # Frame 1 keypoints: [(35, 35)] Label: ['eye']
+
+    # Prepare as NumPy array (N_kp, 2) for 'xy' format
+    all_keypoints = np.array([
+        [15, 15],
+        [25, 25],
+        [35, 35]
+    ], dtype=np.float32)
+    kp_frame_indices = [0, 0, 1]
+    kp_class_labels = ['eye', 'nose', 'eye']
+    ```
+
+2.  **Define Pipeline:** Include `frame_indices` (or similar) in `label_fields` for `bbox_params` or `keypoint_params`.
+
+    ```python
+    transform_video_bboxes = A.Compose([
+        A.Resize(height=256, width=256),
+        A.HorizontalFlip(p=0.5),
+        # ... other transforms ...
+    ], bbox_params=A.BboxParams(format='pascal_voc',
+                               label_fields=['class_labels', 'frame_indices']))
+
+    transform_video_keypoints = A.Compose([
+        A.Resize(height=256, width=256),
+        A.HorizontalFlip(p=0.5),
+        # ... other transforms ...
+    ], keypoint_params=A.KeypointParams(format='xy',
+                                       label_fields=['kp_class_labels', 'kp_frame_indices']))
+    ```
+
+3.  **Apply Transform:** Pass the video frames, the flattened targets, and the corresponding label lists.
+
+    ```python
+    # For BBoxes
+    augmented_bbox_data = transform_video_bboxes(
+        images=video,
+        bboxes=all_bboxes,
+        class_labels=class_labels,
+        frame_indices=frame_indices
+    )
+    augmented_bboxes = augmented_bbox_data['bboxes']
+    augmented_labels = augmented_bbox_data['class_labels']
+    augmented_frame_indices = augmented_bbox_data['frame_indices']
+
+    # For Keypoints
+    augmented_kp_data = transform_video_keypoints(
+        images=video,
+        keypoints=all_keypoints,
+        kp_class_labels=kp_class_labels,
+        kp_frame_indices=kp_frame_indices
+    )
+    augmented_keypoints = augmented_kp_data['keypoints']
+    augmented_kp_labels = augmented_kp_data['kp_class_labels']
+    augmented_kp_frame_indices = augmented_kp_data['kp_frame_indices']
+    ```
+
+4.  **Post-processing (Regrouping):** You **must** regroup the augmented targets based on the frame indices to reconstruct the per-frame annotations. This can be done efficiently using NumPy indexing.
+
+    ```python
+    # Example regrouping for bounding boxes using NumPy
+    num_augmented_frames = augmented_bbox_data['images'].shape[0]
+
+    # Ensure label/index lists are NumPy arrays for efficient indexing
+    # augmented_bboxes is already a NumPy array if input was NumPy
+    augmented_labels_np = np.array(augmented_labels) # Adjust dtype if necessary
+    augmented_frame_indices_np = np.array(augmented_frame_indices, dtype=int)
+
+    bboxes_by_frame = []
+    for i in range(num_augmented_frames):
+        frame_mask = (augmented_frame_indices_np == i)
+        bboxes_for_frame = augmented_bboxes[frame_mask] # Index directly
+        labels_for_frame = augmented_labels_np[frame_mask]
+        bboxes_by_frame.append(bboxes_for_frame) # List of NumPy arrays
+
+    # Now bboxes_by_frame[i] contains a NumPy array of boxes for augmented frame i
+    # Same logic applies for regrouping keypoints using kp_frame_indices
+    ```
+This approach ensures consistent geometric transformations but requires careful pre- and post-processing. Transforms involving cropping or visibility checks (`RandomCrop`, `min_visibility`, `min_area`) might behave unexpectedly on the flattened list; verify their behavior for your use case.
 
 
-## Key Features
+### Approach 2: Using `xyz` format for Keypoints
 
-1. **Temporal Consistency**: The same transform with identical parameters is applied to all frames, preserving temporal consistency.
+For keypoints only, one can encode the frame index as the `z` coordinate using the `xyz` format.
 
-2. **Memory Efficiency**: Frames are processed as a batch, avoiding repeated parameter generation.
+1.  **Prepare Data:** Create keypoints where the third element is the frame index.
 
-3. **Compatible with All Transforms**: Works with any Albumentations transform that supports the image target.
+    ```python
+    # Conceptual Example Data Preparation (Keypoints)
+    # Frame 0 keypoints: [(15, 15, 0), (25, 25, 0)] Labels: ['eye', 'nose']
+    # Frame 1 keypoints: [(35, 35, 1)] Label: ['eye']
 
-## Example Pipeline for Video Processing
+    # Prepare as NumPy array (N_kp, 3) for 'xyz' format
+    all_keypoints_xyz = np.array([
+        [15, 15, 0],
+        [25, 25, 0],
+        [35, 35, 1]
+    ], dtype=np.float32)
+    kp_class_labels = ['eye', 'nose', 'eye']
+    ```
 
+2.  **Define Pipeline:** Use `format='xyz'`.
 
-```python
-def create_video_pipeline(
-    crop_size=(224, 224),
-    p_spatial=0.5,
-    p_color=0.3
-    ):
-    return A.Compose([
-        # Spatial transforms - same crop/flip for all frames
-        A.RandomCrop(
-            height=crop_size[0],
-            width=crop_size[1],
-            p=1.0
-        ),
-        A.HorizontalFlip(p=p_spatial),
-        # Color transforms - same adjustment for all frames
-        A.ColorJitter(
-            brightness=0.2,
-            contrast=0.2,
-            saturation=0.2,
-            hue=0.1,
-            p=p_color
-        ),
-        # Noise/blur - same pattern for all frames
-        A.GaussianBlur(p=0.3),
-    ])
-```
+    ```python
+    transform_video_keypoints_xyz = A.Compose([
+        A.Resize(height=256, width=256),
+        A.HorizontalFlip(p=0.5),
+        A.Rotate(limit=30, p=0.5),
+        # ... other 2D transforms ...
+    ], keypoint_params=A.KeypointParams(format='xyz',
+                                       label_fields=['kp_class_labels']))
+    ```
 
-## Best Practices
+3.  **Apply Transform:**
 
-1. **Performance Optimization**:
-   - Place cropping operations first to reduce computation
-   - Consider frame rate and whether all frames need processing
+    ```python
+    augmented_kp_data_xyz = transform_video_keypoints_xyz(
+        images=video,
+        keypoints=all_keypoints_xyz,
+        kp_class_labels=kp_class_labels
+    )
+    augmented_keypoints_xyz = augmented_kp_data_xyz['keypoints']
+    augmented_kp_labels = augmented_kp_data_xyz['kp_class_labels']
+    ```
 
+4.  **Post-processing:** Extract the frame index from the third element (`z`) of each augmented keypoint and regroup.
+
+    ```python
+    # Example regrouping for XYZ keypoints using NumPy
+    num_augmented_frames = augmented_kp_data_xyz['images'].shape[0]
+
+    # Ensure label list is NumPy array for efficient indexing
+    # augmented_keypoints_xyz is already a NumPy array if input was NumPy
+    augmented_kp_labels_np = np.array(augmented_kp_labels) # Adjust dtype if necessary
+
+    keypoints_by_frame_xyz = [[] for _ in range(num_augmented_frames)]
+    labels_by_frame_xyz = [[] for _ in range(num_augmented_frames)]
+
+    # Extract frame index (z-coordinate) and x, y
+    frame_indices_float = augmented_keypoints_xyz[:, 2]
+    frame_indices_int = np.round(frame_indices_float).astype(int)
+    xy_coords = augmented_keypoints_xyz[:, :2]
+
+    for i in range(num_augmented_frames):
+        frame_mask = (frame_indices_int == i)
+        keypoints_for_frame = xy_coords[frame_mask]
+        labels_for_frame = augmented_kp_labels_np[frame_mask]
+        keypoints_by_frame_xyz[i] = keypoints_for_frame # Assign array directly
+        labels_by_frame_xyz[i] = labels_for_frame # Assign array directly
+
+    # Now keypoints_by_frame_xyz[i] contains a NumPy array of (x,y) keypoints for frame i
+    ```
 
 ## Next Steps
 
-- Learn about [Volumetric Data (3D)](./volumetric-augmentation.md) for volumetric data
+*   Learn about [Volumetric Data (3D)](./volumetric-augmentation.md) if working with true 3D volumes rather than frame sequences.
+*   Refer to [Choosing Augmentations](./choosing-augmentations.md) for selecting appropriate transforms.
