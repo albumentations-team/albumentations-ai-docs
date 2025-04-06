@@ -350,6 +350,35 @@ Choosing between fixed (`"standard"`) and sample-specific (`"image"`, `"image_pe
 
 *   **Min-Max Scaling:** `A.Normalize` also supports `"min_max"` and `"min_max_per_channel"` scaling, which rescale pixel values to the [0, 1] range based on the image's (or channel's) minimum and maximum values. This is another form of sample-dependent normalization.
 
+### Advanced Uses of `OneOf`
+
+While `A.OneOf` is commonly used to select one transform from a list of different transform *types* (e.g., one type of blur, one type of noise), it can also be used in more nuanced ways:
+
+1.  **Creating Distributions over Parameters:** You can use `OneOf` to apply the *same* transform type but with different fixed parameters, effectively creating a custom distribution. For example, to randomly apply either JPEG or WebP compression with a certain quality range:
+
+    ```python
+    import albumentations as A
+
+    compression_types = ["jpeg", "webp"]
+    compression_variation = A.OneOf([
+        A.ImageCompression(quality_range=(20, 80), compression_type=ctype, p=1.0)
+        for ctype in compression_types
+    ], p=0.5) # Apply one of the compression types 50% of the time
+    ```
+
+2.  **Creating Distributions over Methods:** Some transforms have different internal methods for achieving their goal. You can use `OneOf` to randomly select which method is used. For example, to apply grayscale conversion using different algorithms:
+
+    ```python
+    import albumentations as A
+
+    grayscale_methods = ["weighted_average", "from_lab", "desaturation", "average", "max", "pca"]
+    grayscale_variation = A.OneOf([
+        A.ToGray(method=m, p=1.0) for m in grayscale_methods
+    ], p=0.3) # Apply one grayscale method 30% of the time
+    ```
+
+This allows for finer-grained control over the types of variations introduced by your pipeline.
+
 ## Putting It All Together: A Comprehensive (and Potentially Excessive) Example
 
 Below is an example of a complex pipeline combining many of the discussed techniques. **Disclaimer:** It is highly unlikely you would use *all* of these transforms simultaneously in a real-world scenario. This is primarily for illustration purposes to show how different augmentations can be combined, often using `A.OneOf` to select from related groups of transforms. Remember the principle: start simple and add complexity incrementally based on validation results!
