@@ -257,7 +257,7 @@ class RandomShiftMultiTargetManual(DualTransform):
         self.fill = fill
         self.fill_mask = fill_mask
 
-    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    def get_params_dependent_on_data(self, params, data):
         height, width = data['image'].shape[:2]
 
         # CORRECT: Use self.py_random for reproducibility
@@ -282,20 +282,20 @@ class RandomShiftMultiTargetManual(DualTransform):
             "width": width
             }
 
-    def apply(self, img: np.ndarray, matrix: np.ndarray, height: int, width: int, **params) -> np.ndarray:
+    def apply(self, img: np.ndarray, matrix: np.ndarray, height: int, width: int, **params):
         return cv2.warpAffine(
             img, matrix, (width, height),
             flags=self.interpolation, borderMode=self.border_mode, borderValue=self.fill
         )
 
-    def apply_to_mask(self, mask: np.ndarray, matrix: np.ndarray, height: int, width: int, **params) -> np.ndarray:
+    def apply_to_mask(self, mask: np.ndarray, matrix: np.ndarray, height: int, width: int, **params):
         return cv2.warpAffine(
             mask, matrix, (width, height),
             flags=self.mask_interpolation, borderMode=self.border_mode, borderValue=self.fill_mask
         )
 
     # Correct method name and signature for multiple bounding boxes
-    def apply_to_bboxes(self, bboxes: np.ndarray, x_shift: int, y_shift: int, height: int, width: int, **params) -> np.ndarray:
+    def apply_to_bboxes(self, bboxes: np.ndarray, x_shift: int, y_shift: int, height: int, width: int, **params):
         """
         Applies shift to an array of bounding boxes.
         Assumes bboxes array is in internal normalized format [:, [x_min, y_min, x_max, y_max, ...]].
@@ -313,7 +313,7 @@ class RandomShiftMultiTargetManual(DualTransform):
         return bboxes_shifted
 
     # Correct method name and signature for multiple keypoints
-    def apply_to_keypoints(self, keypoints: np.ndarray, x_shift: int, y_shift: int, **params) -> np.ndarray:
+    def apply_to_keypoints(self, keypoints: np.ndarray, x_shift: int, y_shift: int, **params):
         """
         Applies shift to an array of keypoints.
         Assumes keypoints array is in internal format [:, [x, y, angle, scale, ...]] where x, y are absolute pixels.
@@ -401,7 +401,7 @@ class CustomBlur(ImageOnlyTransform):
         self.sigma = sigma
         self.kernel_size = kernel_size
 
-    def apply(self, img: np.ndarray, **params) -> np.ndarray:
+    def apply(self, img: np.ndarray, **params):
         if self.sigma is not None:
             # Ensure sigma is > 0 for cv2.GaussianBlur
             sigma_safe = max(self.sigma, 1e-6)
@@ -467,7 +467,7 @@ Albumentations provides a mechanism for this using the `targets_as_params` prope
 
     ```python
     @property
-    def targets_as_params(self) -> list[str]:
+    def targets_as_params(self):
         return ["my_custom_metadata_key", "overlay_image_data"]
     ```
 
@@ -495,7 +495,7 @@ Albumentations provides a mechanism for this using the `targets_as_params` prope
 3.  **Access Data in `get_params_dependent_on_data`:** The data you passed (associated with the keys listed in `targets_as_params`) will be available inside the `data` dictionary argument of your `get_params_dependent_on_data` method.
 
     ```python
-    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]):
         # Access standard params like shape
         height, width = params["shape"]
 
@@ -524,14 +524,12 @@ Albumentations provides a mechanism for this using the `targets_as_params` prope
 4.  **Use Parameters in `apply...` Methods:** The dictionary returned by `get_params_dependent_on_data` is passed via `**params` to your `apply`, `apply_to_mask`, `apply_to_bboxes`, etc., methods.
 
     ```python
-    def apply(self, img: np.ndarray, blur_sigma: float, processed_overlay: dict, **params) -> np.ndarray:
+    def apply(self, img: np.ndarray, blur_sigma: float, processed_overlay: dict, **params):
         img = apply_blur(img, blur_sigma)
-        img = blend_overlay(img, processed_overlay["image"], processed_overlay["offset"])
-        return img
+        return blend_overlay(img, processed_overlay["image"], processed_overlay["offset"])
 
-    def apply_to_mask(self, mask: np.ndarray, processed_overlay: dict, **params) -> np.ndarray:
-        mask = apply_overlay_mask(mask, processed_overlay["mask"], processed_overlay["mask_id"])
-        return mask
+    def apply_to_mask(self, mask: np.ndarray, processed_overlay: dict, **params):
+        return apply_overlay_mask(mask, processed_overlay["mask"], processed_overlay["mask_id"])
     ```
 
 **Complete Example: `AverageWithExternalImage` Transform**
@@ -562,11 +560,11 @@ class AverageWithExternalImage(ImageOnlyTransform):
         self.external_image_key = external_image_key
 
     @property
-    def targets_as_params(self) -> list[str]:
+    def targets_as_params(self):
         """Specifies that the external image data should be passed as a parameter."""
         return [self.external_image_key]
 
-    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]):
         """
         Retrieves the external image and resizes it to match the target image shape.
         """
@@ -587,7 +585,7 @@ class AverageWithExternalImage(ImageOnlyTransform):
 
         return {"resized_external_image": resized_external_image}
 
-    def apply(self, img: np.ndarray, resized_external_image: np.ndarray | None, **params: Any) -> np.ndarray:
+    def apply(self, img: np.ndarray, resized_external_image: np.ndarray | None, **params: Any):
         """
         Averages the input image with the resized external image.
         """
@@ -608,10 +606,6 @@ class AverageWithExternalImage(ImageOnlyTransform):
 
         # Ensure the output dtype matches the input dtype
         return avg_image.astype(img.dtype)
-
-    def get_transform_init_args_names(self) -> tuple[str, ...]:
-        """Returns the names of the arguments used in __init__."""
-        return ("external_image_key",)
 
 # --- Example Usage ---
 pipeline = A.Compose([
