@@ -218,3 +218,16 @@ Some augmentations may affect class labels and make them incorrect. For example,
 ## Examples
 
 - [Using Albumentations to augment keypoints](../../examples/example-keypoints/)
+
+## Where to Go Next?
+
+Now that you know how to augment keypoints, you might want to:
+
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Understand the fundamentals of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
+-   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Get advice on selecting transforms suitable for keypoint-based tasks (and be mindful of transforms like `HorizontalFlip` potentially affecting labels).
+-   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your augmentation pipeline.
+-   **Explore Related Tasks:**
+    -   [Object Detection (Bounding Boxes)](./bounding-boxes-augmentations.md)
+    -   [Semantic Segmentation](./semantic-segmentation.md)
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore custom transforms, serialization, or handling additional targets.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with different spatial and pixel-level augmentations.

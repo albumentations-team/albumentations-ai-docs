@@ -60,3 +60,11 @@ python -c "import albumentations as A; print(A.__version__)"
 ```
 
 This should print the installed version number of Albumentations.
+
+## Where to Go Next?
+
+Now that you have Albumentations installed, here are some logical next steps:
+
+-   **[Understand Core Concepts](../2-core-concepts/index.md):** Learn about transforms, pipelines, targets, and probabilities – the fundamental building blocks of Albumentations.
+-   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore how to apply augmentations for common computer vision tasks.
+-   **[Explore Transforms](https://explore.albumentations.ai):** Visually experiment with different augmentations and their parameters.

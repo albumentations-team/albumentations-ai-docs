@@ -279,7 +279,17 @@ For keypoints only, one can encode the frame index as the `z` coordinate using t
     # Now keypoints_by_frame_xyz[i] contains a NumPy array of (x,y) keypoints for frame i
     ```
 
-## Next Steps
+## Where to Go Next?
 
-*   Learn about [Volumetric Data (3D)](./volumetric-augmentation.md) if working with true 3D volumes rather than frame sequences.
-*   Refer to [Choosing Augmentations](./choosing-augmentations.md) for selecting appropriate transforms.
+After learning how to augment video frames and associated targets:
+
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Understand how [Targets](../2-core-concepts/targets.md) (especially `images`) and [Pipelines](../2-core-concepts/pipelines.md) work fundamentally.
+-   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Consider which transforms are most suitable for video data while maintaining temporal consistency.
+-   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your pipeline, which is crucial for potentially large video datasets.
+-   **Explore Related Task Guides:** See how targets are handled in other contexts:
+    -   [Bounding Box Augmentation](./bounding-boxes-augmentations.md)
+    -   [Keypoint Augmentation](./keypoint-augmentations.md)
+    -   [Semantic Segmentation](./semantic-segmentation.md)
+    -   [Volumetric Augmentation](./volumetric-augmentation.md) (For true 3D data)
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore custom transforms or serialization if needed for complex video workflows.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with transforms to see their effect, keeping temporal consistency in mind.

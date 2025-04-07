@@ -17,3 +17,12 @@ This section breaks down the essential mechanics of the library:
     Explore how the `p` parameter controls the probability of applying a transform or an entire pipeline, allowing you fine-grained control over the augmentation process.
 
 By grasping these concepts, you'll be well-equipped to design augmentation strategies tailored to your specific needs. Dive into the individual pages to learn more about each component.
+
+## Where to Go Next?
+
+After familiarizing yourself with the core concepts, you can:
+
+-   **[See Basic Usage Examples](../3-basic-usage/index.md):** Put the concepts into practice with code examples for common tasks like classification, segmentation, and object detection.
+-   **[Learn How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get guidance on selecting the right transforms for your specific problem.
+-   **[Explore Advanced Guides](../4-advanced-guides/index.md):** Dive deeper into topics like creating custom transforms or serializing pipelines.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with individual transforms and their parameters interactively.

@@ -92,3 +92,13 @@ Generally, if a transform is applied (i.e., `p=1` or the random chance based on 
     *   Example: [`ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=10, p=1)`](https://explore.albumentations.ai/transform/ShiftScaleRotate) could randomly sample shift=0, scale=1, and rotate=0 simultaneously.
 
 So, while `p` controls the probability of a transform *being executed*, the specific internal logic and random parameter sampling of the transform determine if that execution *results* in a visually modified image.
+
+## Where to Go Next?
+
+Understanding probabilities is crucial for controlling your augmentation pipelines. Now you can:
+
+-   **[Review Pipelines](./pipelines.md):** See how probabilities function within different composition utilities like `Compose`, `OneOf`, `SomeOf`, and `Sequential`.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with different augmentations, their parameters, and consider the impact of their `p` values.
+-   **[See Basic Usage Examples](../3-basic-usage/index.md):** Look at practical code applying pipelines with specific probabilities for different tasks.
+-   **[Learn How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get insights into choosing appropriate transforms and their probabilities.
+-   **[Understand Reproducibility](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation):** Learn how seeds interact with probabilities to ensure consistent results when needed.

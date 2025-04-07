@@ -100,3 +100,13 @@ print("Loaded additional_targets:", loaded_complex.additional_targets)
 *   Use `A.save()` and `A.load()` for saving/loading pipelines.
 *   Choose between `'json'` (default, standard) and `'yaml'` (requires `PyYAML`).
 *   Pipeline parameters (`bbox_params`, `keypoint_params`, `additional_targets`) are correctly serialized.
+
+## Where to Go Next?
+
+After understanding how to serialize pipelines:
+
+-   **Apply Serialization:** Use `A.save` and `A.load` in your workflows for reproducibility, configuration management, or sharing pipelines.
+-   **Understand Limitations:** Be aware that serialization might have issues with lambda functions or complex custom transforms unless they are specifically designed for it. Refer to the [Creating Custom Transforms](./creating-custom-transforms.md) guide for potential considerations.
+-   **Consult API Reference:** Look up the detailed documentation for [`A.save`](https://albumentations.ai/docs/api-reference/core/serialization/#save) and [`A.load`](https://albumentations.ai/docs/api-reference/core/serialization/#load).
+-   **Explore Other Advanced Guides:** See how serialization might interact with [Custom Transforms](./creating-custom-transforms.md) or [Additional Targets](./additional-targets.md).
+-   **Review [Pipelines](../2-core-concepts/pipelines.md):** Reinforce your understanding of the `Compose` objects that you are serializing.

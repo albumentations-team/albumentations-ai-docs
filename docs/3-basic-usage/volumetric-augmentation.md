@@ -179,6 +179,16 @@ transformed = transform(volume=volume, mask3d=mask)
 ```
 
 
-## Next Steps
+## Where to Go Next?
 
-- Learn about [Video Augmentation](./video-augmentation.md) for sequential data
+After learning the basics of volumetric augmentation:
+
+-   **[Explore 3D Transforms API](../reference/augmentations/3d-transforms.md):** See the full list of available 3D-specific augmentations and their parameters.
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Understand how [Targets](../2-core-concepts/targets.md) (`volume`, `mask3d`) and [Pipelines](../2-core-concepts/pipelines.md) handle 3D data and mixed 2D/3D transforms.
+-   **[Refine Augmentation Choices](./choosing-augmentations.md):** Consider which 2D (slice-wise) and 3D transforms best suit your specific volumetric data and task.
+-   **[Optimize Performance](./performance-tuning.md):** Apply strategies to efficiently process large 3D volumes, especially the 'crop early' technique.
+-   **Explore Related Task Guides:**
+    -   [Video Augmentation](./video-augmentation.md) (For sequences of 2D frames)
+    -   [Semantic Segmentation](./semantic-segmentation.md) (For 2D segmentation concepts)
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Learn about creating custom transforms (potentially 3D) or serialization.
+-   **[Visually Explore 2D Transforms](https://explore.albumentations.ai):** Experiment with the 2D transforms that can be applied slice-wise to your volumes.

@@ -133,3 +133,16 @@ print("Class Labels (unchanged):", transformed['class_labels'])
 *   Spatial transforms automatically synchronize coordinates across compatible targets (image, mask(s), bboxes, keypoints, volume(s), mask3d(s)).
 *   Pixel-level transforms typically only modify the `image` (and potentially `images` or `volume(s)`).
 *   Consult the documentation for specific transforms to see exactly which targets they support.
+
+## Where to Go Next?
+
+Now that you know how Albumentations handles different data targets, you can:
+
+-   **See Task-Specific Examples:**
+    -   [Semantic Segmentation](../3-basic-usage/semantic-segmentation.md) (using `image` and `mask`)
+    -   [Bounding Box Augmentation](../3-basic-usage/bounding-boxes-augmentations.md) (using `image`, `bboxes`, and `bbox_params`)
+    -   [Keypoint Augmentation](../3-basic-usage/keypoint-augmentations.md) (using `image`, `keypoints`, and `keypoint_params`)
+    -   [Volumetric Augmentation](../3-basic-usage/volumetric-augmentation.md) (using `volume`, `mask3d`, etc.)
+-   **Learn About [Additional Targets](../4-advanced-guides/additional-targets.md):** Define how to handle custom data types beyond the standard ones.
+-   **Review [Pipelines](./pipelines.md):** Understand how `A.Compose` orchestrates the application of transforms across all provided targets.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** See which augmentations are spatial (affecting targets) and which are pixel-level.

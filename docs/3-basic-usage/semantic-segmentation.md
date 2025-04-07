@@ -296,3 +296,16 @@ Integrating Albumentations pipelines with models from `segmentation-models-pytor
 ## Next Steps
 
 This guide provides the foundation for applying augmentations in semantic segmentation. Explore the **[Choosing Augmentations](./choosing-augmentations.md)** guide to discover more transforms (like elastic distortions, grid distortion, etc.) that are particularly relevant for segmentation tasks and learn how to tune parameters effectively.
+
+## Where to Go Next?
+
+With the basics of semantic segmentation augmentation covered, you might want to:
+
+-   **[Deepen Your Augmentation Strategy](./choosing-augmentations.md):** Focus on selecting and tuning transforms specifically for segmentation performance.
+-   **[Optimize Pipeline Speed](./performance-tuning.md):** Learn techniques to make your image and mask augmentations faster.
+-   **Explore Related Tasks:**
+    -   [Object Detection (Bounding Boxes)](./bounding-boxes-augmentations.md)
+    -   [Keypoint Augmentation](./keypoint-augmentations.md)
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Revisit the fundamentals of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore custom transforms, serialization, or additional targets.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with spatial transforms (like `ElasticTransform`, `GridDistortion`) and pixel-level transforms.

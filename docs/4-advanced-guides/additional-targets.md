@@ -154,4 +154,15 @@ print("Image1, Image2, and Mask_extra all vertically flipped identically.")
 ## Next Steps
 
 *   See the [Compose API documentation](https://albumentations.ai/docs/api-reference/core/composition/#Compose) for details.
-*   Explore the [Transforms Overview](../3-basic-usage/transforms-and-targets.md) to see which transforms support which targets.
+*   Explore the [Transforms Overview](../reference/supported-targets-by-transform.md) to see which transforms support which targets.
+
+## Where to Go Next?
+
+After learning how to use additional targets:
+
+-   **Integrate into Task Pipelines:** Apply this technique in relevant basic usage scenarios like [Video Augmentation](../3-basic-usage/video-augmentation.md) (if treating frames separately), multi-modal data, or image restoration setups.
+-   **Review Core Concepts:** Revisit [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md) to solidify your understanding of how `A.Compose` manages different inputs.
+-   **Explore Other Advanced Guides:**
+    -   [Serialization](./serialization.md): Save pipelines that use additional targets.
+    -   [Custom Transforms](./creating-custom-transforms.md): Learn how to handle additional targets within your own custom transforms.
+-   **Consult API Documentation:** Refer to the [Compose documentation](https://albumentations.ai/docs/api-reference/core/composition/#Compose) and the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) list for detailed information.
