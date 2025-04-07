@@ -33,6 +33,7 @@ This documentation will guide you through installing the library, understanding 
 
 *   **[Comparing with Torchvision/Kornia](./torchvision-kornia2albumentations.md):** See how Albumentations compares to other libraries.
 *   **[Frequently Asked Questions (FAQ)](./faq.md):** Find answers to common questions.
+*   **[Supported Targets by Transform](./reference/supported-targets-by-transform.md):** Check which transforms work with images, masks, bounding boxes, keypoints, etc.
 *   **(API Reference)** *(Link to generated API reference if available)*
 *   **[GitHub Repository](https://github.com/albumentations-team/albumentations):** Source code, issue tracking, and contributions.
 *   **[Examples Folder (on GitHub)](https://github.com/albumentations-team/albumentations/tree/main/examples):** Many practical examples in the main repository.
