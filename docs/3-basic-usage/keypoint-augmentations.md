@@ -19,7 +19,7 @@ To define a keypoint, you usually need two values, x and y coordinates of the ke
 
 Some classical computer vision algorithms, such as SIFT, may use four values to describe a keypoint. In addition to the x and y coordinates, there are keypoint scale and keypoint angle. Albumentations support those values as well.
 
-![A keypoint may also has associated scale and angle values.](../../img/getting_started/augmenting_keypoints/keypoint_with_scale_and_angle_v2.webp "A keypoint may also has associated scale and angle values.")
+![A keypoint may also have associated scale and angle values.](../../img/getting_started/augmenting_keypoints/keypoint_with_scale_and_angle_v2.webp "A keypoint may also have associated scale and angle values.")
 **A keypoint may also has associated scale and angle values**
 
 Keypoint angles are counter-clockwise. For example, in the following image, the angle value is 65°. You can read more about angle of rotation in the [Wikipedia article](https://en.wikipedia.org/wiki/Angle_of_rotation).
@@ -40,7 +40,7 @@ Keypoint angles are counter-clockwise. For example, in the following image, the 
 
 - `xysa`. A keypoint is defined by x and y coordinates in pixels, the scale, and the angle.
 
-- `xyz`. A keypoint is defined by x, y an z coordinates. If used with 2D transoforms, works as `xy` and z coordinate is ignored.
+- `xyz`. A keypoint is defined by x, y and z coordinates. If used with 2D transoforms, works as `xy` and z coordinate is ignored.
 
 
 ## Augmenting keypoints
