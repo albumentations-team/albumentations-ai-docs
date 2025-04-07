@@ -2,7 +2,7 @@
 
 While individual [Transforms](./transforms.md) are useful, data augmentation often involves applying a *sequence* of different operations. Albumentations makes this easy using **Pipelines**.
 
-A pipeline, defined using `albumentations.Compose`, chains multiple transforms together. When the pipeline is called, it applies the contained transforms sequentially to the input data.
+A pipeline, defined using [`albumentations.Compose`](https://albumentations.ai/docs/api-reference/core/composition/#Compose), chains multiple transforms together. When the pipeline is called, it applies the contained transforms sequentially to the input data.
 
 ## Defining a Simple Pipeline
 
@@ -88,9 +88,9 @@ This means that on any given call to the pipeline, a different subset of the def
 
 Beyond the basic sequential application in `Compose`, Albumentations offers several utilities to build more complex pipelines with conditional or altered execution flow.
 
-### `OneOf`: Apply Exactly One Transform
+### [`OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf): Apply Exactly One Transform
 
-`A.OneOf` takes a list of transforms and applies *exactly one* of them, chosen randomly based on their individual `p` values (which are normalized within the `OneOf` block). The `OneOf` block itself also has a `p` parameter determining if *any* transform within it gets applied.
+[`A.OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf) takes a list of transforms and applies *exactly one* of them, chosen randomly based on their individual `p` values (which are normalized within the `OneOf` block). The `OneOf` block itself also has a `p` parameter determining if *any* transform within it gets applied.
 
 ```python
 import albumentations as A
@@ -112,9 +112,9 @@ pipeline = A.Compose([
 # - Independently, 50% chance HorizontalFlip is applied.
 ```
 
-### `SomeOf`: Apply a Random Subset of Transforms
+### [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf): Apply a Random Subset of Transforms
 
-`A.SomeOf` takes a list of transforms and a number `n`. If the `SomeOf` block itself is activated (based on its main `p` value), it randomly selects `n` transforms from the list and attempts to apply them sequentially.
+[`A.SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) takes a list of transforms and a number `n`. If the `SomeOf` block itself is activated (based on its main `p` value), it randomly selects `n` transforms from the list and attempts to apply them sequentially.
 
 **Key Features:**
 
@@ -148,9 +148,9 @@ pipeline = A.Compose([
 # - Independently, 50% chance HorizontalFlip is applied.
 ```
 
-### `OneOrOther`: Apply One of Two Transforms/Blocks
+### [`OneOrOther`](https://albumentations.ai/docs/api-reference/core/composition/#OneOrOther): Apply One of Two Transforms/Blocks
 
-`A.OneOrOther` applies either its `first` transform (or composed block) or its `second` transform (or composed block), chosen randomly based on their `p` values. It provides a clearer structure for simple A/B choices compared to `OneOf` with two elements.
+[`A.OneOrOther`](https://albumentations.ai/docs/api-reference/core/composition/#OneOrOther) applies either its `first` transform (or composed block) or its `second` transform (or composed block), chosen randomly based on their `p` values. It provides a clearer structure for simple A/B choices compared to `OneOf` with two elements.
 
 ```python
 import albumentations as A
@@ -171,9 +171,9 @@ pipeline = A.Compose([
 # - Independently, 80% chance RandomBrightnessContrast is applied.
 ```
 
-### `RandomOrder`: Apply Transforms in Random Sequence
+### [`RandomOrder`](https://albumentations.ai/docs/api-reference/core/composition/#RandomOrder): Apply Transforms in Random Sequence
 
-`A.RandomOrder` takes a list of transforms and applies them sequentially, but shuffles the *order* of application randomly on each call. The `RandomOrder` block itself does *not* have a `p` parameter; it always executes and shuffles its children.
+[`A.RandomOrder`](https://albumentations.ai/docs/api-reference/core/composition/#RandomOrder) takes a list of transforms and applies them sequentially, but shuffles the *order* of application randomly on each call. The `RandomOrder` block itself does *not* have a `p` parameter; it always executes and shuffles its children.
 
 ```python
 import albumentations as A
@@ -194,9 +194,9 @@ pipeline = A.Compose([
 # - Independently, 30% chance GaussianBlur is applied *after* the RandomOrder block.
 ```
 
-### `SelectiveChannelTransform`: Apply Transforms to Specific Channels
+### [`SelectiveChannelTransform`](https://albumentations.ai/docs/api-reference/core/composition/#SelectiveChannelTransform): Apply Transforms to Specific Channels
 
-`A.SelectiveChannelTransform` applies its contained transforms only to specific channels of the input image. You specify the channels (by index) to affect.
+[`A.SelectiveChannelTransform`](https://albumentations.ai/docs/api-reference/core/composition/#SelectiveChannelTransform) applies its contained transforms only to specific channels of the input image. You specify the channels (by index) to affect.
 
 A common use case is working with multi-channel data like RGBA images where you might want to apply certain augmentations only to the RGB channels (indices 0, 1, 2) and leave the Alpha channel (index 3) untouched.
 
@@ -225,9 +225,9 @@ transformed_image = transformed_data['image']
 # - Independently, 50% chance the *entire* RGBA image is flipped.
 ```
 
-### `Sequential`: Group Transforms with a Single Probability
+### [`Sequential`](https://albumentations.ai/docs/api-reference/core/composition/#Sequential): Group Transforms with a Single Probability
 
-`A.Sequential` applies a list of transforms sequentially, just like `A.Compose`. The key difference is that `Sequential` itself has a top-level `p` parameter. If the random check for `Sequential`'s `p` fails, *none* of the transforms inside it are applied.
+[`A.Sequential`](https://albumentations.ai/docs/api-reference/core/composition/#Sequential) applies a list of transforms sequentially, just like `A.Compose`. The key difference is that `Sequential` itself has a top-level `p` parameter. If the random check for `Sequential`'s `p` fails, *none* of the transforms inside it are applied.
 
 This contrasts with `A.Compose`, which *always* executes and iterates through its contained transforms, letting their individual `p` values determine if they activate. `Compose` also handles the setup for applying augmentations consistently across multiple targets (images, masks, bounding boxes), while `Sequential` is a simpler wrapper primarily for grouping transforms under a single probability.
 
