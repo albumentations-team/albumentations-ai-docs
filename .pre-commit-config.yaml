@@ -90,3 +90,10 @@ repos:
         types: [markdown]
         # Optionally exclude specific files/directories if needed
         # exclude: '^docs/changelog.md'
+      - id: check-img-formats
+        name: Check for forbidden image formats in img/
+        entry: python scripts/check_image_formats.py
+        language: python
+        files: ^img/  # Run only on files in img/ directory
+        types: [file] # Run on all file types within img/
+        pass_filenames: true # Pass filenames as arguments to the script
