@@ -92,7 +92,7 @@ video = np.random.rand(32, 256, 256, 3) # 32 RGB frames
 transform = A.Compose([
   A.RandomCrop(height=224, width=224),
   A.HorizontalFlip(p=0.5)
-], seed=42)
+], seed=137)
 
 transformed = transform(image=video)['image']
 ```
