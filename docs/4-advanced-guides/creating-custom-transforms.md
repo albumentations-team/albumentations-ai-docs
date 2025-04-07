@@ -221,7 +221,7 @@ This `PerImageNormalizeEfficient` class now correctly handles both single images
 
 ## Step 4: Geometric Transform Affecting Multiple Targets (Manual Implementation)
 
-This step shows how to implement a custom geometric transform inheriting from `A.DualTransform` and manually applying the transformation logic. Remember that `apply_to_bbox` and `apply_to_keypoint` receive data in a standardized internal format.
+This step shows how to implement a custom geometric transform inheriting from `A.DualTransform` and manually applying the transformation logic. Remember that `apply_to_bboxes` and `apply_to_keypoints` receive data in a standardized internal format.
 
 **Goal:** Create a transform that randomly shifts the image and all associated targets, implementing the target logic manually.
 
@@ -447,6 +447,192 @@ except ValidationError as e:
 
 ```
 This example demonstrates how `@model_validator` enforces complex rules involving multiple `__init__` parameters, ensuring the transform is configured correctly.
+
+## Passing Arbitrary Data via `targets_as_params`
+
+Standard Albumentations targets like `image`, `mask`, `bboxes`, `keypoints` are automatically handled by the base transform classes (`ImageOnlyTransform`, `DualTransform`, etc.). However, sometimes you need to pass arbitrary data through the pipeline to your custom transform – data that isn't one of the standard types but is needed to determine the augmentation parameters.
+
+Examples include:
+
+*   Overlay images/masks to be blended onto the main image.
+*   Metadata associated with the image (e.g., timestamps, sensor readings).
+*   Paths to auxiliary files.
+*   Pre-computed model weights or features.
+
+Albumentations provides a mechanism for this using the `targets_as_params` property.
+
+**How it Works:**
+
+1.  **Override `targets_as_params`:** In your custom transform class, override the `targets_as_params` property. It should return a list of strings. Each string is a key that you expect to find in the input data dictionary passed to the `Compose` pipeline.
+
+    ```python
+    @property
+    def targets_as_params(self) -> list[str]:
+        return ["my_custom_metadata_key", "overlay_image_data"]
+    ```
+
+2.  **Pass Data to `Compose`:** When calling the pipeline, include your custom data using the keys defined in `targets_as_params`.
+
+    ```python
+    pipeline = A.Compose([
+        MyCustomTransform(custom_metadata_key="my_custom_metadata_key", ...),
+        ...
+    ])
+
+    # Prepare your custom data
+    custom_metadata = {"info": "some_value", "timestamp": 12345}
+    overlay_data = {"image": overlay_img, "mask": overlay_mask}
+
+    # Pass it during the call
+    result = pipeline(
+        image=main_image,
+        mask=main_mask,
+        my_custom_metadata_key=custom_metadata, # Match the key
+        overlay_image_data=overlay_data       # Match the key
+    )
+    ```
+
+3.  **Access Data in `get_params_dependent_on_data`:** The data you passed (associated with the keys listed in `targets_as_params`) will be available inside the `data` dictionary argument of your `get_params_dependent_on_data` method.
+
+    ```python
+    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+        # Access standard params like shape
+        height, width = params["shape"]
+
+        # Access your custom data
+        custom_info = data["my_custom_metadata_key"]["info"]
+        overlay_img = data["overlay_image_data"]["image"]
+
+        # --- Now use this data to calculate augmentation parameters --- #
+        # Example: Decide blur strength based on custom_info
+        if custom_info == "high_detail":
+            blur_sigma = self.py_random.uniform(0.1, 0.5)
+        else:
+            blur_sigma = self.py_random.uniform(1.0, 2.0)
+
+        # Example: Process the overlay image (resize, calculate offset, etc.)
+        # (See full OverlayElements example below)
+        processed_overlay_params = self.process_overlay(overlay_img, (height, width))
+
+        # Return calculated parameters to be used in apply methods
+        return {
+            "blur_sigma": blur_sigma,
+            "processed_overlay": processed_overlay_params
+        }
+    ```
+
+4.  **Use Parameters in `apply...` Methods:** The dictionary returned by `get_params_dependent_on_data` is passed via `**params` to your `apply`, `apply_to_mask`, `apply_to_bboxes`, etc., methods.
+
+    ```python
+    def apply(self, img: np.ndarray, blur_sigma: float, processed_overlay: dict, **params) -> np.ndarray:
+        img = apply_blur(img, blur_sigma)
+        img = blend_overlay(img, processed_overlay["image"], processed_overlay["offset"])
+        return img
+
+    def apply_to_mask(self, mask: np.ndarray, processed_overlay: dict, **params) -> np.ndarray:
+        mask = apply_overlay_mask(mask, processed_overlay["mask"], processed_overlay["mask_id"])
+        return mask
+    ```
+
+**Complete Example: `AverageWithExternalImage` Transform**
+
+The following `AverageWithExternalImage` transform demonstrates passing an external image via a custom key and averaging it with the main input image.
+
+```python
+import albumentations as A
+from albumentations.core.transforms_interface import ImageOnlyTransform
+import numpy as np
+import cv2
+from typing import Any, Dict
+
+class AverageWithExternalImage(ImageOnlyTransform):
+    """
+    Averages the input image with an external image passed via `targets_as_params`.
+    The external image is resized to match the input image dimensions.
+    """
+
+    def __init__(self, external_image_key: str = "external_image", p: float = 0.5):
+        """
+        Args:
+            external_image_key (str): The key used to pass the external image data
+                                     when calling the pipeline.
+            p (float): Probability of applying the transform.
+        """
+        super().__init__(p=p)
+        self.external_image_key = external_image_key
+
+    @property
+    def targets_as_params(self) -> list[str]:
+        """Specifies that the external image data should be passed as a parameter."""
+        return [self.external_image_key]
+
+    def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Retrieves the external image and resizes it to match the target image shape.
+        """
+        if self.external_image_key not in data:
+            # If the key is missing, return empty params to indicate skipping
+            return {"resized_external_image": None}
+
+        external_image = data[self.external_image_key]
+        if not isinstance(external_image, np.ndarray):
+             raise TypeError(f"Expected '{self.external_image_key}' to be a NumPy ndarray, got {type(external_image)}")
+
+        target_height, target_width = params["shape"][:2]
+
+        # Resize external image to match target image size
+        resized_external_image = cv2.resize(
+            external_image, (target_width, target_height), interpolation=cv2.INTER_LINEAR
+        )
+
+        return {"resized_external_image": resized_external_image}
+
+    def apply(self, img: np.ndarray, resized_external_image: np.ndarray | None, **params: Any) -> np.ndarray:
+        """
+        Averages the input image with the resized external image.
+        """
+        if resized_external_image is None:
+            # Skip if external image was not provided or resizing failed
+            return img
+
+        # Ensure both images have the same shape and type for averaging
+        if img.shape != resized_external_image.shape:
+             # This might happen if channel numbers differ, handle appropriately
+             # For simplicity, we'll just return the original image here
+             # In a real scenario, you might want to convert grayscale to color or vice-versa
+             print(f"Warning: Shape mismatch between image ({img.shape}) and resized external ({resized_external_image.shape}). Skipping averaging.")
+             return img
+
+        # Perform averaging using float arithmetic for precision, then convert back
+        avg_image = cv2.addWeighted(img, 0.5, resized_external_image, 0.5, 0.0)
+
+        # Ensure the output dtype matches the input dtype
+        return avg_image.astype(img.dtype)
+
+    def get_transform_init_args_names(self) -> tuple[str, ...]:
+        """Returns the names of the arguments used in __init__."""
+        return ("external_image_key",)
+
+# --- Example Usage ---
+pipeline = A.Compose([
+    AverageWithExternalImage(external_image_key="reference_photo", p=1.0),
+    # Other transforms...
+])
+
+main_image = cv2.imread("path/to/main_image.jpg")
+reference_photo = cv2.imread("path/to/reference_photo.jpg")
+
+augmented_data = pipeline(image=main_image, reference_photo=reference_photo)
+averaged_image = augmented_data["image"]
+
+```
+
+This powerful mechanism allows custom transforms to leverage arbitrary external data or metadata during the augmentation process, enabling highly flexible and complex augmentation scenarios.
+
+## Step 4: Geometric Transform Affecting Multiple Targets (Manual Implementation)
+
+This step shows how to implement a custom geometric transform inheriting from `A.DualTransform` and manually applying the transformation logic. Remember that `apply_to_bboxes` and `apply_to_keypoints` receive data in a standardized internal format.
+
 
 ## Using Custom Transforms in Pipelines
 
