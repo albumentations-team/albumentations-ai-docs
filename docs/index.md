@@ -1,96 +1,42 @@
-# Welcome to Albumentations documentation
+# Welcome to Albumentations Documentation!
 
-Albumentations is a fast and flexible image augmentation library. The library is widely used in [industry](https://albumentations.ai/whos_using#industry), [deep learning research](https://albumentations.ai/whos_using#research), [machine learning competitions](https://albumentations.ai/whos_using#competitions), and [open source projects](https://albumentations.ai/whos_using#open-source). Albumentations is written in Python, and it is licensed under the MIT license. The source code is available at [https://github.com/albumentations-team/albumentations](https://github.com/albumentations-team/albumentations).
+Albumentations is a fast and flexible library for image augmentation. Whether you're working on classification, segmentation, object detection, or other computer vision tasks, Albumentations provides a comprehensive set of transforms and a powerful pipeline framework.
 
-If you are new to image augmentation, start with our ["Learning Path"](#learning-path) for beginners. It describes what image augmentation is, how it can boost deep neural networks' performance, and why you should use Albumentations.
+This documentation will guide you through installing the library, understanding its core concepts, applying it to various tasks, and exploring advanced features.
 
-For hands-on experience, check out our ["Quick Start Guide"](#quick-start-guide) and ["Examples"](#examples) sections. They show how you can use the library for different computer vision tasks: image classification, semantic segmentation, instance segmentation, object detection, and keypoint detection. Each example includes a link to Google Colab, where you can run the code by yourself.
+## Getting Started
 
-You can also visit [explore.albumentations.ai](https://explore.albumentations.ai) to visually explore and experiment with different augmentations in your browser. This interactive tool helps you better understand how each transform affects images before implementing it in your code.
+*   **[Introduction](./1-introduction/index.md):** Learn what data augmentation is and why it's important.
+*   **[Installation](./1-introduction/installation.md):** Set up Albumentations in your environment.
 
-["API Reference"](#api-reference) contains the description of Albumentations' methods and classes.
+## Learning the Basics
 
-## Quick Start Guide
+*   **[Core Concepts](./2-core-concepts/index.md):** Understand the fundamental building blocks: Transforms, Pipelines (Compose), Targets (image, mask, bboxes, keypoints), and Probabilities.
+*   **[Basic Usage Guides](./3-basic-usage/index.md):** Find practical examples for common computer vision tasks:
+    *   [Image Classification](./3-basic-usage/image-classification.md)
+    *   [Semantic Segmentation](./3-basic-usage/semantic-segmentation.md)
+    *   [Object Detection (Bounding Boxes)](./3-basic-usage/bounding-boxes-augmentations.md)
+    *   [Keypoint Augmentation](./3-basic-usage/keypoint-augmentations.md)
+    *   [Video Augmentation](./3-basic-usage/video-augmentation.md)
+    *   [Volumetric (3D) Augmentation](./3-basic-usage/volumetric-augmentation.md)
+*   **[Choosing Augmentations](./3-basic-usage/choosing-augmentations.md):** A detailed guide on selecting effective augmentation strategies for model generalization.
+*   **[Performance Tuning](./3-basic-usage/performance-tuning.md):** Tips for optimizing your augmentation pipeline speed.
 
-- [Installation](getting-started/installation.md)
-- [Frequently Asked Questions](faq.md)
-- [Your First Augmentation Pipeline](examples/example/)
+## Advanced Topics
 
-## Working with Multi-dimensional Data
+*   **[Advanced Guides](./4-advanced-guides/index.md):** Explore more complex features:
+    *   [Using Additional Targets](./4-advanced-guides/additional-targets.md)
+    *   [Creating Custom Transforms](./4-advanced-guides/creating-custom-transforms.md)
+    *   [Serialization](./4-advanced-guides/serialization.md)
 
-### Volumetric Data (3D)
-- [Introduction to 3D (Volumetric) Image Augmentation](getting-started/volumetric-augmentation.md)
-- [Available 3D Transforms](api-reference/augmentations/transforms3d/index.md)
+## Other Resources
 
-### Video and Sequential Data
-- [Video Frame Augmentation](getting-started/video-augmentation.md)
+*   **[Comparing with Torchvision/Kornia](./torchvision-kornia2albumentations.md):** See how Albumentations compares to other libraries.
+*   **[Frequently Asked Questions (FAQ)](./faq.md):** Find answers to common questions.
+*   **[Benchmarks](./benchmarks/index.md):** Performance comparison results.
+*   **[Supported Targets by Transform](./reference/supported-targets-by-transform.md):** Check which transforms work with images, masks, bounding boxes, keypoints, etc.
+*   **(API Reference)** *(Link to generated API reference if available)*
+*   **[GitHub Repository](https://github.com/albumentations-team/albumentations):** Source code, issue tracking, and contributions.
+*   **[Examples Folder (on GitHub)](https://github.com/albumentations-team/albumentations/tree/main/examples):** Many practical examples in the main repository.
 
-## Learning Path
-
-### Beginners
-
-- [What is Image Augmentation?](introduction/image-augmentation.md)
-- [Why Choose Albumentations?](introduction/why-albumentations.md)
-- [Basic Image Classification](getting-started/image-augmentation.md)
-
-### Intermediate
-
-- [Semantic Segmentation](getting-started/mask-augmentation.md)
-- [Object Detection](getting-started/bounding-boxes-augmentation.md)
-- [Keypoint Detection](getting-started/keypoints-augmentation.md)
-- [Multi-target Augmentation](getting-started/simultaneous-augmentation.md)
-
-### Advanced
-
-- [Pipeline Configuration](getting-started/setting-probabilities.md)
-- [Debugging with ReplayCompose](examples/replay/)
-- [Serialization](examples/serialization/)
-
-## Library Comparisons
-
-- [Transform Library Comparison](getting-started/augmentation-mapping.md) - Find equivalent transforms between Albumentations and other libraries (torchvision, Kornia)
-- [Migration from torchvision](examples/migrating-from-torchvision-to-albumentations/) - Step-by-step migration guide
-
-## Examples
-
-- [Defining a simple augmentation pipeline for image augmentation](examples/example/)
-- [Using Albumentations to augment bounding boxes for object detection tasks](examples/example-bboxes/)
-- [How to use Albumentations for detection tasks if you need to keep all bounding boxes](examples/example-bboxes2/)
-- [Using Albumentations for a semantic segmentation task](examples/example-kaggle-salt/)
-- [Using Albumentations to augment keypoints](examples/example-keypoints/)
-- [Applying the same augmentation with the same parameters to multiple images, masks, bounding boxes, or keypoints](examples/example-multi-target/)
-- [Weather augmentations in Albumentations](examples/example-weather-transforms/)
-- [Example of applying XYMasking transform](examples/example-xymasking/)
-- [Example of applying ChromaticAberration transform](examples/example-chromatic-aberration/)
-- [Example of applying Morphological transform](examples/example-documents/)
-- [Example of applying D4 transform](examples/example-d4/)
-- [Example of applying RandomGridShuffle transform](examples/example-gridshuffle/)
-- [Example of applying OverlayElements transform](examples/example-OverlayElements/)
-- [Example of applying TextImage transform](examples/example-textimage/)
-- [Debugging an augmentation pipeline with ReplayCompose](examples/replay/)
-- [How to save and load parameters of an augmentation pipeline](examples/serialization/)
-- [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](examples/showcase/)
-- [How to save and load transforms to HuggingFace Hub.](examples/example-hfhub/)
-
-## Examples of how to use Albumentations with different deep learning frameworks
-
-- [PyTorch and Albumentations for image classification](examples/pytorch-classification/)
-- [PyTorch and Albumentations for semantic segmentation](examples/pytorch-semantic-segmentation/)
-
-## External resources
-
-- [Blog posts, podcasts, talks, and videos about Albumentations](external-resources/blog-posts-podcasts-talks.md)
-- [Books that mention Albumentations](external-resources/books.md)
-- [Online courses that cover Albumentations](external-resources/online-courses.md)
-
-## Other topics
-
-- [Contributing](CONTRIBUTING.md)
-
-## API Reference
-
-- [Full API Reference on a single page](api-reference/full-reference.md)
-- [Index](api-reference/index.md)
-  - [Core API (albumentations.core)](api-reference/core/index.md)
-  - [Augmentations (albumentations.augmentations)](api-reference/augmentations/index.md)
-  - [PyTorch Helpers (albumentations.pytorch)](api-reference/pytorch/index.md)
+We hope this documentation helps you leverage the full power of Albumentations!

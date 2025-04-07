@@ -19,11 +19,11 @@ To define a keypoint, you usually need two values, x and y coordinates of the ke
 
 Some classical computer vision algorithms, such as SIFT, may use four values to describe a keypoint. In addition to the x and y coordinates, there are keypoint scale and keypoint angle. Albumentations support those values as well.
 
-![A keypoint may also has associated scale and angle values.](../../img/getting_started/augmenting_keypoints/keypoint_with_scale_and_angle_v2.png "A keypoint may also has associated scale and angle values.")
+![A keypoint may also have associated scale and angle values.](../../img/getting_started/augmenting_keypoints/keypoint_with_scale_and_angle_v2.webp "A keypoint may also have associated scale and angle values.")
 **A keypoint may also has associated scale and angle values**
 
 Keypoint angles are counter-clockwise. For example, in the following image, the angle value is 65°. You can read more about angle of rotation in the [Wikipedia article](https://en.wikipedia.org/wiki/Angle_of_rotation).
-![Keypoints angles are counter-clockwise.](../../img/getting_started/augmenting_keypoints/keypoint_angle.png "Keypoints angles are counter-clockwise")
+![Keypoints angles are counter-clockwise.](../../img/getting_started/augmenting_keypoints/keypoint_angle.webp "Keypoints angles are counter-clockwise")
 
 
 ## Supported formats for keypoints' coordinates.
@@ -39,6 +39,8 @@ Keypoint angles are counter-clockwise. For example, in the following image, the 
 - `xyas`. A keypoint is defined by x and y coordinates in pixels, the angle, and the scale.
 
 - `xysa`. A keypoint is defined by x and y coordinates in pixels, the scale, and the angle.
+
+- `xyz`. A keypoint is defined by x, y and z coordinates. If used with 2D transoforms, works as `xy` and z coordinate is ignored.
 
 
 ## Augmenting keypoints
@@ -116,13 +118,13 @@ Let's say you have an example image with five keypoints.
 A list with those five keypoints' coordinates in the `xy` format will look the following:
 
 ```python
-keypoints = [
+keypoints = np.array([
     (264, 203),
     (86, 88),
     (254, 160),
     (193, 103),
     (65, 341),
-]
+])
 ```
 
 Then you pass those keypoints to the `transform` function along with the image and receive the augmented versions of image and keypoints.
@@ -207,12 +209,25 @@ transformed_image = transformed['image']
 ![Example input and output data for keypoints augmentation with two separate arguments for class labels](../../img/getting_started/augmenting_keypoints/augmented_image_keypoints_and_class_labels.webp "Example input and output data for keypoints augmentation with two separate arguments for class labels")
 **Example input and output data for keypoints augmentation with two separate arguments for class labels**
 
-!!! note
-    Some augmentations may affect class labels and make them incorrect. For example, the `HorizontalFlip` augmentation mirrors the input image. When you apply that augmentation to keypoints that mark the side of body parts (left or right), those keypoints will point to the wrong side (since `left` on the mirrored image becomes `right`). So when you are creating an augmentation pipeline look carefully which augmentations could be applied to the input data.
 
-    ![HorizontalFlip may make keypoints' labels incorrect](../../img/getting_started/augmenting_keypoints/applying_horizontal_flip_to_keypoints.webp "HorizontalFlip may make keypoints' labels incorrect")
-    `HorizontalFlip` may make keypoints' labels incorrect
+Some augmentations may affect class labels and make them incorrect. For example, the [HorizontalFlip](https://explore.albumentations.ai/transform/HorizontalFlip) augmentation mirrors the input image. When you apply that augmentation to keypoints that mark the side of body parts (left or right), those keypoints will point to the wrong side (since `left` on the mirrored image becomes `right`). So when you are creating an augmentation pipeline look carefully which augmentations could be applied to the input data.
+
+![HorizontalFlip may make keypoints' labels incorrect](../../img/getting_started/augmenting_keypoints/applying_horizontal_flip_to_keypoints.webp "HorizontalFlip may make keypoints' labels incorrect")
+[HorizontalFlip](https://explore.albumentations.ai/transform/HorizontalFlip) may make keypoints' labels incorrect
 
 ## Examples
 
 - [Using Albumentations to augment keypoints](../../examples/example-keypoints/)
+
+## Where to Go Next?
+
+Now that you know how to augment keypoints, you might want to:
+
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Understand the fundamentals of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
+-   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Get advice on selecting transforms suitable for keypoint-based tasks (and be mindful of transforms like `HorizontalFlip` potentially affecting labels).
+-   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your augmentation pipeline.
+-   **Explore Related Tasks:**
+    -   [Object Detection (Bounding Boxes)](./bounding-boxes-augmentations.md)
+    -   [Semantic Segmentation](./semantic-segmentation.md)
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore custom transforms, serialization, or handling additional targets.
+-   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with different spatial and pixel-level augmentations.
