@@ -35,8 +35,8 @@ This documentation will guide you through installing the library, understanding 
 *   **[Frequently Asked Questions (FAQ)](./faq.md):** Find answers to common questions.
 *   **[Benchmarks](./benchmarks/index.md):** Performance comparison results.
 *   **[Supported Targets by Transform](./reference/supported-targets-by-transform.md):** Check which transforms work with images, masks, bounding boxes, keypoints, etc.
-*   **(API Reference)** *(Link to generated API reference if available)*
+*   **[API Reference](https://albumentations.ai/docs/api-reference)**
 *   **[GitHub Repository](https://github.com/albumentations-team/albumentations):** Source code, issue tracking, and contributions.
-*   **[Examples Folder (on GitHub)](https://github.com/albumentations-team/albumentations/tree/main/examples):** Many practical examples in the main repository.
+*   **[Examples Folder (on GitHub)](https://github.com/albumentations-team/albumentations_examples):** Many practical examples in the main repository.
 
 We hope this documentation helps you leverage the full power of Albumentations!
