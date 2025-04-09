@@ -197,24 +197,24 @@ def visualize_augmentations(dataset, idx=0, samples=5):
 
 # Assuming train_dataset is created with train_transform:
 # visualize_augmentations(train_dataset, samples=4)
+
+# Apply the Test Pipeline
+transformed_test = test_transform(image=image)
+test_image_tensor = transformed_test["image"]
 ```
-
-## Next Steps
-
-This guide covered the basic mechanics of applying augmentations for classification. To build more effective pipelines, explore the wide variety of transforms available in Albumentations.
-
-Refer back to the **[Choosing Augmentations](./choosing-augmentations.md)** guide for detailed advice on selecting, combining, and tuning transforms to maximize your model's performance.
 
 ## Where to Go Next?
 
-Now that you have seen how to apply augmentations for classification, you might want to:
+This guide covered the basic mechanics of applying augmentations for classification. To build more effective pipelines, explore the wide variety of transforms available in Albumentations and refer back to the **[Choosing Augmentations](./choosing-augmentations.md)** guide for detailed advice on selecting, combining, and tuning transforms to maximize your model's performance.
+
+Here are some further resources to explore:
 
 -   **[Learn How to Pick Augmentations](./choosing-augmentations.md):** Deepen your understanding of selecting effective transforms.
 -   **[Optimize Performance](./performance-tuning.md):** Learn strategies to speed up your augmentation pipeline.
--   **Explore Other Tasks:** See how augmentations are handled with targets:
+-   Explore Other Tasks: See how augmentations are handled with targets:
     -   [Semantic Segmentation](./semantic-segmentation.md)
     -   [Object Detection](./bounding-boxes-augmentations.md)
     -   [Keypoint Augmentation](./keypoint-augmentations.md)
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Browse the full range of available augmentations and their effects.
--   **[Review Core Concepts](../2-core-concepts/index.md):** Reinforce your understanding of the library's fundamentals.
--   **[Check Advanced Guides](../4-advanced-guides/index.md):** Look into topics like custom transforms or serialization.
+-   **[Review Core Concepts](../2-core-concepts):** Reinforce your understanding of the library's fundamentals.
+-   **[Check Advanced Guides](../4-advanced-guides):** Look into topics like custom transforms or serialization.

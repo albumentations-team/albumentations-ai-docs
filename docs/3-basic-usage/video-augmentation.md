@@ -61,10 +61,11 @@ augmented_video_frames = augmented['images']
 print(f"Original shape: {video.shape}")
 print(f"Augmented shape: {augmented_video_frames.shape}")
 # Example output (shape depends on pipeline): Augmented shape: (10, 224, 224, 3)
-```python
+```
 
 The same crop, flip, and color jitter parameters were applied to all 10 frames.
 
+```python
 # Conceptual Example: Applying transforms to video frames and masks
 
 # 1. Prepare Data
@@ -96,6 +97,7 @@ print(f"Original Video Shape: {video.shape}")
 print(f"Original Masks Shape: {video_masks.shape}")
 print(f"Augmented Video Shape: {augmented_video_frames.shape}")
 print(f"Augmented Masks Shape: {augmented_video_masks.shape}")
+```
 
 ## Handling Bounding Boxes and Keypoints for Video
 
@@ -283,7 +285,7 @@ For keypoints only, one can encode the frame index as the `z` coordinate using t
 
 After learning how to augment video frames and associated targets:
 
--   **[Review Core Concepts](../2-core-concepts/index.md):** Understand how [Targets](../2-core-concepts/targets.md) (especially `images`) and [Pipelines](../2-core-concepts/pipelines.md) work fundamentally.
+-   **[Review Core Concepts](../2-core-concepts):** Understand how [Targets](../2-core-concepts/targets.md) (especially `images`) and [Pipelines](../2-core-concepts/pipelines.md) work fundamentally.
 -   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Consider which transforms are most suitable for video data while maintaining temporal consistency.
 -   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your pipeline, which is crucial for potentially large video datasets.
 -   **Explore Related Task Guides:** See how targets are handled in other contexts:
@@ -291,5 +293,5 @@ After learning how to augment video frames and associated targets:
     -   [Keypoint Augmentation](./keypoint-augmentations.md)
     -   [Semantic Segmentation](./semantic-segmentation.md)
     -   [Volumetric Augmentation](./volumetric-augmentation.md) (For true 3D data)
--   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore custom transforms or serialization if needed for complex video workflows.
+-   **[Dive into Advanced Guides](../4-advanced-guides):** Explore custom transforms or serialization if needed for complex video workflows.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with transforms to see their effect, keeping temporal consistency in mind.

@@ -6,13 +6,13 @@ This documentation will guide you through installing the library, understanding 
 
 ## Getting Started
 
-*   **[Introduction](./1-introduction/index.md):** Learn what data augmentation is and why it's important.
+*   **[Introduction](./1-introduction):** Learn what data augmentation is and why it's important.
 *   **[Installation](./1-introduction/installation.md):** Set up Albumentations in your environment.
 
 ## Learning the Basics
 
-*   **[Core Concepts](./2-core-concepts/index.md):** Understand the fundamental building blocks: Transforms, Pipelines (Compose), Targets (image, mask, bboxes, keypoints), and Probabilities.
-*   **[Basic Usage Guides](./3-basic-usage/index.md):** Find practical examples for common computer vision tasks:
+*   **[Core Concepts](./2-core-concepts):** Understand the fundamental building blocks: Transforms, Pipelines (Compose), Targets (image, mask, bboxes, keypoints), and Probabilities.
+*   **[Basic Usage Guides](./3-basic-usage):** Find practical examples for common computer vision tasks:
     *   [Image Classification](./3-basic-usage/image-classification.md)
     *   [Semantic Segmentation](./3-basic-usage/semantic-segmentation.md)
     *   [Object Detection (Bounding Boxes)](./3-basic-usage/bounding-boxes-augmentations.md)
@@ -24,7 +24,7 @@ This documentation will guide you through installing the library, understanding 
 
 ## Advanced Topics
 
-*   **[Advanced Guides](./4-advanced-guides/index.md):** Explore more complex features:
+*   **[Advanced Guides](./4-advanced-guides):** Explore more complex features:
     *   [Using Additional Targets](./4-advanced-guides/additional-targets.md)
     *   [Creating Custom Transforms](./4-advanced-guides/creating-custom-transforms.md)
     *   [Serialization](./4-advanced-guides/serialization.md)
@@ -33,9 +33,9 @@ This documentation will guide you through installing the library, understanding 
 
 *   **[Comparing with Torchvision/Kornia](./torchvision-kornia2albumentations.md):** See how Albumentations compares to other libraries.
 *   **[Frequently Asked Questions (FAQ)](./faq.md):** Find answers to common questions.
-*   **[Benchmarks](./benchmarks/index.md):** Performance comparison results.
+*   **[Benchmarks](./benchmarks):** Performance comparison results.
 *   **[Supported Targets by Transform](./reference/supported-targets-by-transform.md):** Check which transforms work with images, masks, bounding boxes, keypoints, etc.
-*   **[API Reference](https://albumentations.ai/docs/api-reference)**
+*   **[API Reference](./api-reference)**
 *   **[GitHub Repository](https://github.com/albumentations-team/albumentations):** Source code, issue tracking, and contributions.
 *   **[Examples Folder (on GitHub)](https://github.com/albumentations-team/albumentations_examples):** Many practical examples in the main repository.
 

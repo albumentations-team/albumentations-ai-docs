@@ -42,15 +42,6 @@ Albumentations relies heavily on OpenCV.
     ```
     In most standard cases, this flag is **not** required.
 
-## Optional Dependencies
-
-While the core library requires only OpenCV and NumPy, a few specific transforms might need additional libraries:
-
-*   [`ElasticTransform`](https://explore.albumentations.ai/transform/ElasticTransform), [`GridDistortion`](https://explore.albumentations.ai/transform/GridDistortion): May require `scipy`.
-*   [`Superpixels`](https://explore.albumentations.ai/transform/Superpixels): Requires `scikit-image`.
-
-If you plan to use these specific transforms, install the necessary libraries separately (e.g., `pip install scipy scikit-image`). The library will raise an informative error if a required dependency for a transform is missing.
-
 ## Verify Installation
 
 After installation, you can verify it by running:
@@ -65,6 +56,6 @@ This should print the installed version number of Albumentations.
 
 Now that you have Albumentations installed, here are some logical next steps:
 
--   **[Understand Core Concepts](../2-core-concepts/index.md):** Learn about transforms, pipelines, targets, and probabilities – the fundamental building blocks of Albumentations.
--   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore how to apply augmentations for common computer vision tasks.
+-   **[Understand Core Concepts](../2-core-concepts):** Learn about transforms, pipelines, targets, and probabilities – the fundamental building blocks of Albumentations.
+-   **[See Basic Usage Examples](../3-basic-usage):** Explore how to apply augmentations for common computer vision tasks.
 -   **[Explore Transforms](https://explore.albumentations.ai):** Visually experiment with different augmentations and their parameters.

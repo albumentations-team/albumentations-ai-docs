@@ -34,7 +34,7 @@ At its core, data augmentation involves applying various transformations to your
 
 While the core idea is simple, the practical application of data augmentation involves trade-offs and strategic thinking. A smartly chosen augmentation pipeline almost always leads to better performing, more robust models. However, achieving the "optimal" pipeline is complex because it heavily depends on the specific context: the nature of the **task**, the chosen **model** architecture, the characteristics of the **dataset**, and even the **training hyperparameters** (like learning rate and optimizer).
 
-Generally, data augmentation tends to provide more relative value when working with smaller datasets, where the risk of overfitting on limited examples is higher. For very large datasets, the inherent diversity might already be sufficient, although augmentation often still provides benefits in robustness.
+Generally, data augmentation tends to provide more relative value when working with smaller datasets, where the risk of overfitting on limited examples is higher. For large datasets, the inherent diversity might already be sufficient, although augmentation often still provides benefits in robustness.
 
 There are currently no standard methods to automatically determine the best augmentation strategy for every problem. Selecting an effective pipeline often relies on the practitioner's experience and intuition, usually involving iterative experimentation. While researchers are exploring automated approaches (like AutoAugment and RandAugment), these methods aren't yet mature enough to reliably replace careful manual selection in most practical scenarios, and they can be computationally expensive.
 
@@ -131,9 +131,9 @@ While the concept is simple, effective implementation requires understanding you
 
 Now that you understand the concepts behind image augmentation, you might want to:
 
--   **[Get Started with Albumentations](../index.md):** An overview of the library itself.
+-   **[Get Started with Albumentations](..):** An overview of the library itself.
 -   **[Install Albumentations](./installation.md):** Set up the library in your environment.
--   **[Learn the Core Concepts](../2-core-concepts/index.md):** Understand how Albumentations implements transforms, pipelines, and target handling.
--   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore practical code for common tasks.
+-   **[Learn the Core Concepts](../2-core-concepts):** Understand how Albumentations implements transforms, pipelines, and target handling.
+-   **[See Basic Usage Examples](../3-basic-usage):** Explore practical code for common tasks.
 -   **[Read How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get practical advice on selecting transforms for your specific problem.
 -   **[Explore Transforms Visually](https://explore.albumentations.ai):** Experiment with different augmentations and their effects.
