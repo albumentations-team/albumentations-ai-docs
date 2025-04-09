@@ -94,5 +94,5 @@ With a grasp of individual transforms, you can:
 -   **Understand [Probabilities](./probabilities.md):** Dive deeper into how the `p` parameter controls transform application.
 -   **Study [Targets](./targets.md):** See how transforms interact with images, masks, bounding boxes, and keypoints.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Browse and experiment with the wide range of available augmentations.
--   **See [Basic Usage Examples](../3-basic-usage/index.md):** Look at practical code applying transforms and pipelines.
--   **Explore [Advanced Guides](../4-advanced-guides/index.md):** Learn about topics like creating your own custom transforms.
+-   **See [Basic Usage Examples](../3-basic-usage):** Look at practical code applying transforms and pipelines.
+-   **Explore [Advanced Guides](../4-advanced-guides):** Learn about topics like creating your own custom transforms.

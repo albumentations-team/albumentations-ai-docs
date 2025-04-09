@@ -151,18 +151,13 @@ print("Image1, Image2, and Mask_extra all vertically flipped identically.")
 *   **Multiple Attributes per BBox/Keypoint:** Use `label_fields` within `bbox_params`/`keypoint_params` to handle multiple labels or flags per box/keypoint.
 *   **Multiple Distinct Arrays (Image/Mask/BBox/Keypoint):** Use `additional_targets` to synchronize parameters across separate inputs when you need them treated according to a standard target processing logic (e.g., stereo pairs, multi-modal data, multiple masks, potentially multiple sets of bboxes/keypoints needing identical geometric transforms). Remember to provide `bbox_params` or `keypoint_params` if mapping to those types.
 
-## Next Steps
-
-*   See the [Compose API documentation](https://albumentations.ai/docs/api-reference/core/composition/#Compose) for details.
-*   Explore the [Transforms Overview](../reference/supported-targets-by-transform.md) to see which transforms support which targets.
-
 ## Where to Go Next?
 
-After learning how to use additional targets:
+After learning how to use additional targets, consider these resources and next steps:
 
 -   **Integrate into Task Pipelines:** Apply this technique in relevant basic usage scenarios like [Video Augmentation](../3-basic-usage/video-augmentation.md) (if treating frames separately), multi-modal data, or image restoration setups.
 -   **Review Core Concepts:** Revisit [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md) to solidify your understanding of how `A.Compose` manages different inputs.
 -   **Explore Other Advanced Guides:**
     -   [Serialization](./serialization.md): Save pipelines that use additional targets.
     -   [Custom Transforms](./creating-custom-transforms.md): Learn how to handle additional targets within your own custom transforms.
--   **Consult API Documentation:** Refer to the [Compose documentation](https://albumentations.ai/docs/api-reference/core/composition/#Compose) and the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) list for detailed information.
+-   **Consult API Documentation:** Refer to the [Compose API documentation](./api-reference/core/composition/#Compose) and the [Transforms Overview](../reference/supported-targets-by-transform.md) list for detailed information on parameters and target support.

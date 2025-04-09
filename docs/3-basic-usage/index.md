@@ -22,6 +22,6 @@ This section provides guides for common augmentation tasks, data types, and opti
 
 After exploring the basic usage examples relevant to your task, you might want to:
 
--   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore topics like creating custom transforms, serialization, or using additional targets.
--   **[Revisit Core Concepts](../2-core-concepts/index.md):** Solidify your understanding of transforms, pipelines, targets, and probabilities.
+-   **[Dive into Advanced Guides](../4-advanced-guides):** Explore topics like creating custom transforms, serialization, or using additional targets.
+-   **[Revisit Core Concepts](../2-core-concepts):** Solidify your understanding of transforms, pipelines, targets, and probabilities.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with the full range of available augmentations.

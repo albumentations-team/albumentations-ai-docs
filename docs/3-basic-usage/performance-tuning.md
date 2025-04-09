@@ -92,7 +92,7 @@ When each of your DataLoader workers spawns *multiple* OpenCV threads, they can 
 
 After optimizing your pipeline for speed, you might want to:
 
--   **[Apply to Your Task](./index.md):** Return to the specific basic usage guides (e.g., Classification, Segmentation) and integrate these performance tips.
+-   **[Apply to Your Task](./):** Return to the specific basic usage guides (e.g., Classification, Segmentation) and integrate these performance tips.
 -   **[Revisit Choosing Augmentations](./choosing-augmentations.md):** Evaluate the performance impact of the transforms you selected for generalization.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Check if combined transforms like `Affine` or `RandomResizedCrop` can replace multiple slower steps in your pipeline.
--   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore further customization and optimization options.
+-   **[Dive into Advanced Guides](../4-advanced-guides/):** Explore further customization and optimization options.

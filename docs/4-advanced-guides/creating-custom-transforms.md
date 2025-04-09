@@ -24,8 +24,6 @@ Let's start with the simplest case: a transform that only modifies the image pix
 
 **Goal:** Create a transform that multiplies the image pixel values by a random factor between 0.5 and 1.5.
 
-**Code:**
-
 ```python
 import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
@@ -82,8 +80,6 @@ Now, let's create a transform where the parameters calculated depend on the inpu
 
 **Goal:** Create a transform that normalizes the image using its per-channel mean and standard deviation.
 
-**Code:**
-
 ```python
 import albumentations as A
 from albumentations.core.transforms_interface import ImageOnlyTransform
@@ -138,8 +134,6 @@ While `ImageOnlyTransform` focuses on modifying only image pixels, it can still 
 For our `PerImageNormalize` example, this default behavior would be inefficient and incorrect (using the same mean/std for all images). We can override the `apply_to_images` method within our `ImageOnlyTransform` subclass to provide a correct and efficient vectorized implementation.
 
 **Goal:** Efficiently normalize each image in a sequence/batch using its *own* mean and standard deviation, while still inheriting from `ImageOnlyTransform`.
-
-**Code:**
 
 ```python
 import albumentations as A
@@ -224,8 +218,6 @@ This `PerImageNormalizeEfficient` class now correctly handles both single images
 This step shows how to implement a custom geometric transform inheriting from `A.DualTransform` and manually applying the transformation logic. Remember that `apply_to_bboxes` and `apply_to_keypoints` receive data in a standardized internal format.
 
 **Goal:** Create a transform that randomly shifts the image and all associated targets, implementing the target logic manually.
-
-**Code:**
 
 ```python
 import albumentations as A
@@ -325,6 +317,7 @@ class RandomShiftMultiTargetManual(DualTransform):
         # Angle and scale remain unchanged by translation
 
         return keypoints_shifted
+```
 
 ## Reproducibility and Random Number Generation
 
@@ -636,7 +629,7 @@ Once defined, your custom transform class is used just like any built-in Albumen
 
 Now that you can create your own custom transforms:
 
--   **Integrate Your Transform:** Add your custom transform to pipelines within the [Basic Usage Guides](../3-basic-usage/index.md) relevant to your task.
+-   **Integrate Your Transform:** Add your custom transform to pipelines within the [Basic Usage Guides](../3-basic-usage) relevant to your task.
 -   **Explore Base Class APIs:** Consult the [API Reference](https://albumentations.ai/api-reference/) for details on `ImageOnlyTransform`, `DualTransform`, `Transform3D`, and other base classes you might inherit from.
 -   **Handle Advanced Scenarios:** Learn how custom transforms interact with [Additional Targets](./additional-targets.md) or how they can be included in [Serialization](./serialization.md).
 -   **Revisit Core Concepts:** Ensure your custom transform correctly handles [Targets](../2-core-concepts/targets.md) and fits within the [Pipeline](../2-core-concepts/pipelines.md) structure.

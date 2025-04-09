@@ -240,19 +240,23 @@ transform = A.Compose([
 transform.save_pretrained("qubvel-hf/albu", key="train")
 # The 'key' parameter specifies the context or purpose of the saved transform,
 # allowing for organized and context-specific retrieval.
-# ^ this will save the transform to a directory "qubvel-hf/albu" with filename "albumentations_config_train.json"
+# ^ this will save the transform to a directory "qubvel-hf/albu"
+# with filename "albumentations_config_train.json"
 
 transform.save_pretrained("qubvel-hf/albu", key="train", push_to_hub=True)
-# ^ this will save the transform to a directory "qubvel-hf/albu" with filename "albumentations_config_train.json"
+# ^ this will save the transform to a directory "qubvel-hf/albu"
+# with filename "albumentations_config_train.json"
 # + push the transform to the Hub to the repository "qubvel-hf/albu"
 
 transform.push_to_hub("qubvel-hf/albu", key="train")
 # Use `save_pretrained` to save the transform locally and optionally push to the Hub.
 # Use `push_to_hub` to directly push the transform to the Hub without saving it locally.
-# ^ this will push the transform to the Hub to the repository "qubvel-hf/albu" (without saving it locally)
+# ^ this will push the transform to the Hub to the repository "qubvel-hf/albu"
+# (without saving it locally)
 
 loaded_transform = A.Compose.from_pretrained("qubvel-hf/albu", key="train")
-# ^ this will load the transform from local folder if exist or from the Hub repository "qubvel-hf/albu"
+# ^ this will load the transform from local folder if exist or from the Hub
+# repository "qubvel-hf/albu"
 ```
 
 See [this example](../examples/example-hfhub/) for more info.
