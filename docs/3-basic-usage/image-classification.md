@@ -197,11 +197,11 @@ def visualize_augmentations(dataset, idx=0, samples=5):
 
 # Assuming train_dataset is created with train_transform:
 # visualize_augmentations(train_dataset, samples=4)
-```
 
 # Apply the Test Pipeline
 transformed_test = test_transform(image=image)
 test_image_tensor = transformed_test["image"]
+```
 
 ## Where to Go Next?
 
