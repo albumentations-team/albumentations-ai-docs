@@ -300,9 +300,9 @@ def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
 
 ## Examples
 
-*   [Using Albumentations to augment bounding boxes for object detection tasks](../../examples/example-bboxes/)
-*   [How to use Albumentations for detection tasks if you need to keep all bounding boxes](../../examples/example-bboxes2/)
-*   [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](../../examples/showcase/)
+*   [Using Albumentations to augment bounding boxes for object detection tasks](https://www.albumentations.ai/docs/examples/example-bboxes/)
+*   [How to use Albumentations for detection tasks if you need to keep all bounding boxes](https://www.albumentations.ai/docs/examples/example-bboxes2/)
+*   [Showcase. Cool augmentation examples on diverse set of images from various real-world tasks.](https://www.albumentations.ai/docs/examples/showcase/)
 
 ## Where to Go Next?
 

@@ -2,7 +2,7 @@
 
 While individual [Transforms](./transforms.md) are useful, data augmentation often involves applying a *sequence* of different operations. Albumentations makes this easy using **Pipelines**.
 
-A pipeline, defined using [`albumentations.Compose`](https://albumentations.ai/docs/api-reference/core/composition/#Compose), chains multiple transforms together. When the pipeline is called, it applies the contained transforms sequentially to the input data.
+A pipeline, defined using [`albumentations.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose), chains multiple transforms together. When the pipeline is called, it applies the contained transforms sequentially to the input data.
 
 ## Defining a Simple Pipeline
 
@@ -64,10 +64,10 @@ compose = A.Compose(
 *   **`mask_interpolation` (int | None):** If set to an OpenCV interpolation flag (e.g., `cv2.INTER_LINEAR`), this value *overrides* the interpolation method used for masks in all applicable geometric transforms within the pipeline. If `None`, each transform uses its default mask interpolation (usually `cv2.INTER_NEAREST`). Default: `None`.
 *   **`seed` (int | None):** Controls the reproducibility of random augmentations *within this specific `Compose` instance*.
     *   Albumentations uses its own internal random state generators (`self.py_random`, `self.random_generator`), completely independent from global seeds (`random.seed()`, `np.random.seed()`).
-    *   Setting `seed` to an integer initializes these internal generators deterministically. Two `Compose` instances created with the same transforms and the same `seed` will produce the exact same sequence of random outcomes when called repeatedly on the same input.
+    *   Setting `seed` to an integer initializes these internal generators deterministically. Two [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) instances created with the same transforms and the same `seed` will produce the exact same sequence of random outcomes when called repeatedly on the same input.
     *   If `seed=None` (default), the internal state is initialized randomly, leading to different results each time a new `Compose` instance is created or run.
     *   See the [Creating Custom Transforms Guide](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation) for how to use the seeded generators in custom transforms. Default: `None`.
-*   **`save_applied_params` (bool):** If `True`, the dictionary returned by the `Compose` call will include an extra key `'applied_transforms'`. The value will be a list of dictionaries, where each dictionary contains the name of an applied transform and the exact parameters it used for that specific call. Useful for debugging, replay, or analysis. Default: `False`.
+*   **`save_applied_params` (bool):** If `True`, the dictionary returned by the [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) call will include an extra key `'applied_transforms'`. The value will be a list of dictionaries, where each dictionary contains the name of an applied transform and the exact parameters it used for that specific call. Useful for debugging, replay, or analysis. Default: `False`.
 
 ## How Probabilities Work in Pipelines
 
@@ -80,17 +80,17 @@ When a pipeline created with `A.Compose` is called:
 
 This means that on any given call to the pipeline, a different subset of the defined transforms might actually be applied, controlled by their individual probabilities.
 
-**Important Note:** `A.Compose` itself does *not* have a top-level `p` parameter to control whether the *entire* pipeline runs or not. It always executes and iterates through its contained transforms, letting their individual `p` values determine if they activate.
+**Important Note:** [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) itself does *not* have a top-level `p` parameter to control whether the *entire* pipeline runs or not. It always executes and iterates through its contained transforms, letting their individual `p` values determine if they activate.
 
 *(More content to follow on applying to targets, advanced pipelines, etc.)*
 
 ## Advanced Composition Utilities
 
-Beyond the basic sequential application in `Compose`, Albumentations offers several utilities to build more complex pipelines with conditional or altered execution flow.
+Beyond the basic sequential application in [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose), Albumentations offers several utilities to build more complex pipelines with conditional or altered execution flow.
 
 ### [`OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf): Apply Exactly One Transform
 
-[`A.OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf) takes a list of transforms and applies *exactly one* of them, chosen randomly based on their individual `p` values (which are normalized within the `OneOf` block). The `OneOf` block itself also has a `p` parameter determining if *any* transform within it gets applied.
+[`A.OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf) takes a list of transforms and applies *exactly one* of them, chosen randomly based on their individual `p` values (which are normalized within the [`OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf) block). The [`OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf) block itself also has a `p` parameter determining if *any* transform within it gets applied.
 
 ```python
 import albumentations as A
@@ -114,14 +114,14 @@ pipeline = A.Compose([
 
 ### [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf): Apply a Random Subset of Transforms
 
-[`A.SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) takes a list of transforms and a number `n`. If the `SomeOf` block itself is activated (based on its main `p` value), it randomly selects `n` transforms from the list and attempts to apply them sequentially.
+[`A.SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) takes a list of transforms and a number `n`. If the [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) block itself is activated (based on its main `p` value), it randomly selects `n` transforms from the list and attempts to apply them sequentially.
 
 **Key Features:**
 
 *   **Number of transforms (`n`):** This can be a fixed integer or a tuple `(min_n, max_n)`. If it's a tuple, the number of transforms *selected* will be a random integer chosen uniformly from the range `[min_n, max_n]` (inclusive) on each call.
 *   **Selection Method (`replace`):** By default (`replace=False`), transforms are selected *without* replacement. If `replace=True`, transforms are selected *with* replacement.
-*   **Main Probability (`p`):** Controls the probability that the `SomeOf` block executes at all. If this check fails, none of the transforms inside are considered.
-*   **Individual Probabilities:** Crucially, after `SomeOf` selects the transforms, it attempts to apply each one. **Each selected transform is only applied if its own individual `p` value passes.** The `p` values inside the list are *not* ignored after selection.
+*   **Main Probability (`p`):** Controls the probability that the [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) block executes at all. If this check fails, none of the transforms inside are considered.
+*   **Individual Probabilities:** Crucially, after [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) selects the transforms, it attempts to apply each one. **Each selected transform is only applied if its own individual `p` value passes.** The `p` values inside the list are *not* ignored after selection.
 
 ```python
 import albumentations as A
@@ -150,7 +150,7 @@ pipeline = A.Compose([
 
 ### [`OneOrOther`](https://albumentations.ai/docs/api-reference/core/composition/#OneOrOther): Apply One of Two Transforms/Blocks
 
-[`A.OneOrOther`](https://albumentations.ai/docs/api-reference/core/composition/#OneOrOther) applies either its `first` transform (or composed block) or its `second` transform (or composed block), chosen randomly based on their `p` values. It provides a clearer structure for simple A/B choices compared to `OneOf` with two elements.
+[`A.OneOrOther`](https://albumentations.ai/docs/api-reference/core/composition/#OneOrOther) applies either its `first` transform (or composed block) or its `second` transform (or composed block), chosen randomly based on their `p` values. It provides a clearer structure for simple A/B choices compared to [`OneOf`](https://albumentations.ai/docs/api-reference/core/composition/#OneOf) with two elements.
 
 ```python
 import albumentations as A
@@ -173,7 +173,7 @@ pipeline = A.Compose([
 
 ### [`RandomOrder`](https://albumentations.ai/docs/api-reference/core/composition/#RandomOrder): Apply Transforms in Random Sequence
 
-[`A.RandomOrder`](https://albumentations.ai/docs/api-reference/core/composition/#RandomOrder) takes a list of transforms and applies them sequentially, but shuffles the *order* of application randomly on each call. The `RandomOrder` block itself does *not* have a `p` parameter; it always executes and shuffles its children.
+[`A.RandomOrder`](https://albumentations.ai/docs/api-reference/core/composition/#RandomOrder) takes a list of transforms and applies them sequentially, but shuffles the *order* of application randomly on each call. The [`RandomOrder`](https://albumentations.ai/docs/api-reference/core/composition/#RandomOrder) block itself does *not* have a `p` parameter; it always executes and shuffles its children.
 
 ```python
 import albumentations as A
@@ -229,9 +229,9 @@ transformed_image = transformed_data['image']
 
 [`A.Sequential`](https://albumentations.ai/docs/api-reference/core/composition/#Sequential) applies a list of transforms sequentially, just like `A.Compose`. The key difference is that `Sequential` itself has a top-level `p` parameter. If the random check for `Sequential`'s `p` fails, *none* of the transforms inside it are applied.
 
-This contrasts with `A.Compose`, which *always* executes and iterates through its contained transforms, letting their individual `p` values determine if they activate. `Compose` also handles the setup for applying augmentations consistently across multiple targets (images, masks, bounding boxes), while `Sequential` is a simpler wrapper primarily for grouping transforms under a single probability.
+This contrasts with [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose), which *always* executes and iterates through its contained transforms, letting their individual `p` values determine if they activate. `Compose` also handles the setup for applying augmentations consistently across multiple targets (images, masks, bounding boxes), while [`Sequential`](https://albumentations.ai/docs/api-reference/core/composition/#Sequential) is a simpler wrapper primarily for grouping transforms under a single probability.
 
-Use `Sequential` when you want to treat a whole sequence of operations as a single augmentation block that either runs entirely or not at all, based on one probability value.
+Use [`Sequential`](https://albumentations.ai/docs/api-reference/core/composition/#Sequential) when you want to treat a whole sequence of operations as a single augmentation block that either runs entirely or not at all, based on one probability value.
 
 ```python
 import albumentations as A
@@ -253,7 +253,7 @@ pipeline = A.Compose([
 
 ## Nested Compositions
 
-The real power of these composition utilities (`OneOf`, `SomeOf`, `Sequential`, etc.) comes from nesting them within each other or within a main `A.Compose` block. This allows you to build highly customized and complex augmentation pipelines.
+The real power of these composition utilities (`OneOf`, `SomeOf`, `Sequential`, etc.) comes from nesting them within each other or within a main [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) block. This allows you to build highly customized and complex augmentation pipelines.
 
 Here's an example combining several concepts:
 

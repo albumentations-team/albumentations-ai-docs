@@ -217,7 +217,7 @@ Some augmentations may affect class labels and make them incorrect. For example,
 
 ## Examples
 
-- [Using Albumentations to augment keypoints](../../examples/example-keypoints/)
+- [Using Albumentations to augment keypoints](https://www.albumentations.ai/docs/examples/example-keypoints/)
 
 ## Where to Go Next?
 
