@@ -165,27 +165,35 @@ print(transform["applied_transforms"])
 
 ### How to apply CutOut augmentation?
 
-Albumentations provides the [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) transform, which is a generalization of the [CutOut](https://arxiv.org/abs/1708.04552) augmentation technique. If you are looking for CutOut, you should use [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout).
+Albumentations provides the [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) transform, which is a generalization of the [CutOut](https://arxiv.org/abs/1708.04552) and [Random Erasing](https://arxiv.org/abs/1708.04896) augmentation techniques. If you are looking for CutOut or Random Erasing, you should use [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout).
 
-[`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) generalizes CutOut by allowing:
-- **Multiple holes:** You can specify the minimum and maximum number of holes to drop (`min_holes`, `max_holes`).
-- **Variable hole size:** Holes can be rectangular, with independent minimum and maximum height and width (`min_height`, `max_height`, `min_width`, `max_width`). CutOut typically uses a single square hole.
-- **Custom fill value:** You can specify the value used to fill the dropped-out regions (`fill`, `fill_mask`).
+[`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) generalizes these techniques by allowing:
+- **Variable number of holes:** You specify a range for the number of holes (`num_holes_range`) instead of a fixed number or just one.
+- **Variable hole size:** Holes can be rectangular, with ranges for height (`hole_height_range`) and width (`hole_width_range`). Sizes can be specified in pixels (int) or as fractions of image dimensions (float).
+- **Flexible fill values:** You can fill the holes with a constant value (int/float), per-channel values (tuple), random noise per pixel (`'random'`), a single random color per hole (`'random_uniform'`), or using OpenCV inpainting methods (`'inpaint_telea'`, `'inpaint_ns'`).
+- **Optional mask filling:** You can specify a separate `fill_mask` value to fill corresponding areas in the mask, or leave the mask unchanged (`None`).
 
-Example:
+Example using random uniform fill:
 ```python
 import albumentations as A
 import numpy as np
 
 image = np.random.randint(0, 256, size=(256, 256, 3), dtype=np.uint8)
 
-# Apply CoarseDropout, which acts like CutOut
-transform = A.CoarseDropout(max_holes=8, max_height=8, max_width=8, min_holes=1, min_height=8, min_width=8, p=1.0)
+# Apply CoarseDropout with 3-6 holes, each 10-20 pixels in size,
+# filled with a random uniform color.
+transform = A.CoarseDropout(
+    num_holes_range=(3, 6),
+    hole_height_range=(10, 20),
+    hole_width_range=(10, 20),
+    fill="random_uniform",
+    p=1.0
+)
 
 augmented_image = transform(image=image)['image']
 ```
 
-This transform randomly removes rectangular regions from an image, similar to CutOut.
+This transform randomly removes rectangular regions from an image, similar to CutOut, but with more configuration options.
 
 ### How to perform balanced scaling?
 
