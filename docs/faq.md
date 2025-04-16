@@ -195,6 +195,22 @@ augmented_image = transform(image=image)['image']
 
 This transform randomly removes rectangular regions from an image, similar to CutOut, but with more configuration options.
 
+To specifically mimic the original **CutOut** behavior, you can configure `CoarseDropout` as follows:
+- Set `num_holes_range=(1, 1)` to always create exactly one hole.
+- Set `hole_height_range` and `hole_width_range` to the same fixed value (e.g., `(16, 16)` for a 16x16 pixel square or `(0.1, 0.1)` for a square 10% of the image size).
+- Set `fill=0` to fill the hole with black.
+
+Example mimicking CutOut with a fixed 16x16 hole:
+```python
+cutout_transform = A.CoarseDropout(
+    num_holes_range=(1, 1),
+    hole_height_range=(16, 16),
+    hole_width_range=(16, 16),
+    fill=0,
+    p=1.0 # Apply always, or adjust probability as needed
+)
+```
+
 ### How to perform balanced scaling?
 
 The default scaling logic in [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), [`ShiftScaleRotate`](https://explore.albumentations.ai/transform/ShiftScaleRotate), and [`Affine`](https://explore.albumentations.ai/transform/Affine) transformations is biased towards upscaling.
