@@ -27,12 +27,12 @@ As you explore Albumentations, you'll encounter these key ideas:
 Ready to dive in? Here are some recommended next steps:
 
 -   **[Installation](./installation.md):** Get Albumentations set up in your environment.
--   **[Core Concepts](../2-core-concepts):** Understand the building blocks:
+-   **[Core Concepts](../2-core-concepts/index.md):** Understand the building blocks:
     -   [Transforms](../2-core-concepts/transforms.md): Individual augmentation operations.
     -   [Pipelines (Compose)](../2-core-concepts/pipelines.md): Sequencing multiple transforms.
     -   [Targets](../2-core-concepts/targets.md): Applying transforms to images, masks, bounding boxes, etc.
     -   [Setting Probabilities](../2-core-concepts/probabilities.md): Controlling the likelihood of applying transforms.
--   **[Basic Usage Examples](../3-basic-usage):** See how to apply augmentations for common tasks like:
+-   **[Basic Usage Examples](../3-basic-usage/index.md):** See how to apply augmentations for common tasks like:
     -   [Image Classification](../3-basic-usage/image-classification.md)
     -   [Semantic Segmentation](../3-basic-usage/semantic-segmentation.md)
     -   [Bounding Box Augmentation](../3-basic-usage/bounding-boxes-augmentations.md)

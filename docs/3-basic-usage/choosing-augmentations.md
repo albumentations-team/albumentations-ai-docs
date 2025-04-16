@@ -515,5 +515,5 @@ Armed with strategies for choosing augmentations, you can now:
 -   **[Apply to Your Specific Task](./):** Integrate your chosen transforms into the pipeline for your task (e.g., Classification, Segmentation, Detection).
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment interactively with the specific transforms and parameters you are considering.
 -   **[Optimize Pipeline Speed](./performance-tuning.md):** Ensure your selected augmentation pipeline is efficient and doesn't bottleneck training.
--   **[Review Core Concepts](../2-core-concepts):** Reinforce your understanding of how pipelines, probabilities, and targets work with your chosen transforms.
--   **[Dive into Advanced Guides](../4-advanced-guides):** If standard transforms aren't enough, learn how to create custom ones.
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Reinforce your understanding of how pipelines, probabilities, and targets work with your chosen transforms.
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** If standard transforms aren't enough, learn how to create custom ones.

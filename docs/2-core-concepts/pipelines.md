@@ -318,6 +318,6 @@ Now that you understand how to build pipelines, consider these next steps:
 -   **[Transforms](./transforms.md):** Explore the individual augmentation operations you can include in your pipelines.
 -   **[Setting Probabilities](./probabilities.md):** Get a deeper understanding of how the `p` parameter works for both individual transforms and composition blocks.
 -   **[Working with Targets](./targets.md):** Learn how pipelines consistently apply augmentations to images, masks, bounding boxes, and keypoints.
--   **[Basic Usage Examples](../3-basic-usage):** See complete code examples of pipelines applied to common computer vision tasks.
--   **[Advanced Guides](../4-advanced-guides):** Discover techniques like serialization or creating custom transforms to integrate into your pipelines.
+-   **[Basic Usage Examples](../3-basic-usage/index.md):** See complete code examples of pipelines applied to common computer vision tasks.
+-   **[Advanced Guides](../4-advanced-guides/index.md):** Discover techniques like serialization or creating custom transforms to integrate into your pipelines.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with combining transforms in the interactive tool.

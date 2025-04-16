@@ -308,11 +308,11 @@ def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
 
 After mastering bounding box augmentation, you might want to:
 
--   **[Review Core Concepts](../2-core-concepts):** Solidify your understanding of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Solidify your understanding of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
 -   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Get specific advice on selecting effective transforms for object detection.
 -   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your detection augmentation pipeline.
 -   **Explore Related Tasks:**
     -   [Keypoint Augmentation](./keypoint-augmentations.md)
     -   [Semantic Segmentation](./semantic-segmentation.md) (useful for instance segmentation alongside boxes)
--   **[Dive into Advanced Guides](../4-advanced-guides):** Learn about custom transforms, serialization, or handling additional targets.
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Learn about custom transforms, serialization, or handling additional targets.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with different spatial and pixel-level transforms.
