@@ -108,7 +108,7 @@ See [Working with Volumetric Data (3D)](./3-basic-usage/volumetric-augmentation.
 
 ### My computer vision pipeline works with a sequence of images. I want to apply the same augmentations with the same parameters to each image in the sequence. Can Albumentations do it?
 
-Yes. You can define additional images, masks, bounding boxes, or keypoints through the `additional_targets` argument to `Compose`. You can then pass those additional targets to the augmentation pipeline, and Albumentations will augment them in the same way. See [this example](../examples/example-multi-target/) for more info.
+Yes. You can define additional images, masks, bounding boxes, or keypoints through the `additional_targets` argument to [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose). You can then pass those additional targets to the augmentation pipeline, and Albumentations will augment them in the same way. See [this example](https://www.albumentations.ai/docs/examples/example-multi-target/) for more info.
 
 But if you want only to the sequence of images, you may just use `images` target that accepts
 `list[numpy.ndarray]` or np.ndarray with shape `(N, H, W, C) / (N, H, W)`.
@@ -122,8 +122,8 @@ To have reproducible augmentations, set the `seed` parameter in your transform p
 Note that Albumentations uses its own internal random state that is completely independent from global random seeds. This means:
 
 1. Setting `np.random.seed()` or `random.seed()` will NOT affect Albumentations' randomization
-2. Two Compose instances with the same seed will produce identical augmentation sequences
-3. Each call to the same Compose instance still produces random augmentations, but these sequences are reproducible between different instances
+2. Two [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) instances with the same seed will produce identical augmentation sequences
+3. Each call to the same [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) instance still produces random augmentations, but these sequences are reproducible between different instances
 
 Example of reproducible augmentations:
 ```python
@@ -147,7 +147,7 @@ random.seed(137)
 
 ### How can I find which augmentations were applied to the input data and which parameters they used?
 
-You may pass `save_applied_params=True` to `Compose` to save the parameters of the applied augmentations. You can access them later using `applied_transforms`.
+You may pass `save_applied_params=True` to [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) to save the parameters of the applied augmentations. You can access them later using `applied_transforms`.
 
 ```python
 transform = A.Compose([
@@ -163,19 +163,43 @@ transformed = transform(image=image)['image']
 print(transform["applied_transforms"])
 ```
 
+### How to apply CutOut augmentation?
+
+Albumentations provides the [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) transform, which is a generalization of the [CutOut](https://arxiv.org/abs/1708.04552) augmentation technique. If you are looking for CutOut, you should use [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout).
+
+[`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) generalizes CutOut by allowing:
+- **Multiple holes:** You can specify the minimum and maximum number of holes to drop (`min_holes`, `max_holes`).
+- **Variable hole size:** Holes can be rectangular, with independent minimum and maximum height and width (`min_height`, `max_height`, `min_width`, `max_width`). CutOut typically uses a single square hole.
+- **Custom fill value:** You can specify the value used to fill the dropped-out regions (`fill`, `fill_mask`).
+
+Example:
+```python
+import albumentations as A
+import numpy as np
+
+image = np.random.randint(0, 256, size=(256, 256, 3), dtype=np.uint8)
+
+# Apply CoarseDropout, which acts like CutOut
+transform = A.CoarseDropout(max_holes=8, max_height=8, max_width=8, min_holes=1, min_height=8, min_width=8, p=1.0)
+
+augmented_image = transform(image=image)['image']
+```
+
+This transform randomly removes rectangular regions from an image, similar to CutOut.
+
 ### How to perform balanced scaling?
 
-The default scaling logic in `RandomScale`, `ShiftScaleRotate`, and `Affine` transformations is biased towards upscaling.
+The default scaling logic in [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), [`ShiftScaleRotate`](https://explore.albumentations.ai/transform/ShiftScaleRotate), and [`Affine`](https://explore.albumentations.ai/transform/Affine) transformations is biased towards upscaling.
 
 For example, if `scale_limit = (0.5, 2)`, a user might expect that the image will be scaled down in half of the cases and scaled up in the other half. However, in reality, the image will be scaled up in 75% of the cases and scaled down in only 25% of the cases. This is because the default behavior samples uniformly from the interval `[0.5, 2]`, and the interval `[0.5, 1]` is three times smaller than `[1, 2]`.
 
-To achieve balanced scaling, you can use `Affine` with `balanced_scale=True`, which ensures that the probability of scaling up and scaling down is equal.
+To achieve balanced scaling, you can use [`Affine`](https://explore.albumentations.ai/transform/Affine) with `balanced_scale=True`, which ensures that the probability of scaling up and scaling down is equal.
 
 ```python
 balanced_scale_transform = A.Affine(scale=(0.5, 2), balanced_scale=True)
 ```
 
-or use `OneOf` transform as follows:
+or use [`OneOf`](https://www.albumentations.ai/docs/api-reference/core/composition/#OneOf) transform as follows:
 
 ```python
 balanced_scale_transform = A.OneOf([
@@ -187,9 +211,9 @@ This approach ensures that exactly half of the samples will be upscaled and half
 
 ### Augmentations have a parameter named `p` that sets the probability of applying that augmentation. How does `p` work in nested containers?
 
-The `p` parameter sets the probability of applying a specific augmentation. When augmentations are nested within a top-level container like `Compose`, the effective probability of each augmentation is the product of the container's probability and the augmentation's probability.
+The `p` parameter sets the probability of applying a specific augmentation. When augmentations are nested within a top-level container like [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose), the effective probability of each augmentation is the product of the container's probability and the augmentation's probability.
 
-Let's look at an example when a container `Compose` contains one augmentation `Resize`:
+Let's look at an example when a container [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) contains one augmentation [`Resize`](https://explore.albumentations.ai/transform/Resize):
 
 ```python
 transform = A.Compose([
@@ -197,17 +221,17 @@ transform = A.Compose([
 ], p=0.9)
 ```
 
-In this case, `Resize` has a 90% chance to be applied. This is because there is a 90% chance for `Compose` to be applied (p=0.9). If `Compose` is applied, then `Resize` is applied with 100% probability `(p=1.0)`.
+In this case, [`Resize`](https://explore.albumentations.ai/transform/Resize) has a 90% chance to be applied. This is because there is a 90% chance for [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) to be applied (p=0.9). If [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) is applied, then [`Resize`](https://explore.albumentations.ai/transform/Resize) is applied with 100% probability `(p=1.0)`.
 
 To visualize:
 
-- Probability of `Compose` being applied: 0.9
-- Probability of `Resize` being applied given `Compose` is applied: 1.0
-- Effective probability of `Resize` being applied: 0.9 * 1.0 = 0.9 (or 90%)
+- Probability of [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) being applied: 0.9
+- Probability of [`Resize`](https://explore.albumentations.ai/transform/Resize) being applied given [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) is applied: 1.0
+- Effective probability of [`Resize`](https://explore.albumentations.ai/transform/Resize) being applied: 0.9 * 1.0 = 0.9 (or 90%)
 
-This means that the effective probability of `Resize` being applied is the product of the probabilities of `Compose` and `Resize`, which is `0.9 * 1.0 = 0.9` or 90%. This principle applies to other transformations as well, where the overall probability is the product of the individual probabilities within the transformation pipeline.
+This means that the effective probability of [`Resize`](https://explore.albumentations.ai/transform/Resize) being applied is the product of the probabilities of [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) and [`Resize`](https://explore.albumentations.ai/transform/Resize), which is `0.9 * 1.0 = 0.9` or 90%. This principle applies to other transformations as well, where the overall probability is the product of the individual probabilities within the transformation pipeline.
 
-Here’s another example:
+Here's another example:
 
 ```python
 transform = A.Compose([
@@ -215,7 +239,7 @@ transform = A.Compose([
 ], p=0.9)
 ```
 
-In this example, Resize has an effective probability of being applied as `0.9 * 0.5` = 0.45 or 45%. This is because `Compose` is applied 90% of the time, and within that 90%, `Resize` is applied 50% of the time.
+In this example, [`Resize`](https://explore.albumentations.ai/transform/Resize) has an effective probability of being applied as `0.9 * 0.5` = 0.45 or 45%. This is because [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) is applied 90% of the time, and within that 90%, [`Resize`](https://explore.albumentations.ai/transform/Resize) is applied 50% of the time.
 
 ### I created annotations for bounding boxes using labeling service or labeling software. How can I use those annotations in Albumentations?
 
@@ -259,7 +283,7 @@ loaded_transform = A.Compose.from_pretrained("qubvel-hf/albu", key="train")
 # repository "qubvel-hf/albu"
 ```
 
-See [this example](../examples/example-hfhub/) for more info.
+See [this example](https://www.albumentations.ai/docs/examples/example-hfhub/) for more info.
 
 ### How do I migrate from other augmentation libraries to Albumentations?
 
@@ -274,5 +298,5 @@ For a quick visual comparison of different augmentations, you can also use our i
 
 For specific migration examples, see:
 
-- [Migrating from torchvision](examples/migrating-from-torchvision-to-albumentations/)
+- [Migrating from torchvision](https://www.albumentations.ai/docs/examples/migrating-from-torchvision-to-albumentations/)
 - [Performance comparison with other libraries](./benchmarks)
