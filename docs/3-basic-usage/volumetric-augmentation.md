@@ -190,5 +190,5 @@ After learning the basics of volumetric augmentation:
 -   **Explore Related Task Guides:**
     -   [Video Augmentation](./video-augmentation.md) (For sequences of 2D frames)
     -   [Semantic Segmentation](./semantic-segmentation.md) (For 2D segmentation concepts)
--   **[Dive into Advanced Guides](../4-advanced-guides):** Learn about creating custom transforms (potentially 3D) or serialization.
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Learn about creating custom transforms (potentially 3D) or serialization.
 -   **[Visually Explore 2D Transforms](https://explore.albumentations.ai):** Experiment with the 2D transforms that can be applied slice-wise to your volumes.

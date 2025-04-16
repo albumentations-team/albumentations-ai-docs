@@ -6,13 +6,13 @@ This documentation will guide you through installing the library, understanding 
 
 ## Getting Started
 
-*   **[Introduction](./1-introduction):** Learn what data augmentation is and why it's important.
+*   **[Introduction](./1-introduction/index.md):** Learn what data augmentation is and why it's important.
 *   **[Installation](./1-introduction/installation.md):** Set up Albumentations in your environment.
 
 ## Learning the Basics
 
-*   **[Core Concepts](./2-core-concepts):** Understand the fundamental building blocks: Transforms, Pipelines (Compose), Targets (image, mask, bboxes, keypoints), and Probabilities.
-*   **[Basic Usage Guides](./3-basic-usage):** Find practical examples for common computer vision tasks:
+*   **[Core Concepts](./2-core-concepts/index.md):** Understand the fundamental building blocks: Transforms, Pipelines (Compose), Targets (image, mask, bboxes, keypoints), and Probabilities.
+*   **[Basic Usage Guides](./3-basic-usage/index.md):** Find practical examples for common computer vision tasks:
     *   [Image Classification](./3-basic-usage/image-classification.md)
     *   [Semantic Segmentation](./3-basic-usage/semantic-segmentation.md)
     *   [Object Detection (Bounding Boxes)](./3-basic-usage/bounding-boxes-augmentations.md)
@@ -24,7 +24,7 @@ This documentation will guide you through installing the library, understanding 
 
 ## Advanced Topics
 
-*   **[Advanced Guides](./4-advanced-guides):** Explore more complex features:
+*   **[Advanced Guides](./4-advanced-guides/index.md):** Explore more complex features:
     *   [Using Additional Targets](./4-advanced-guides/additional-targets.md)
     *   [Creating Custom Transforms](./4-advanced-guides/creating-custom-transforms.md)
     *   [Serialization](./4-advanced-guides/serialization.md)

@@ -22,7 +22,7 @@ By grasping these concepts, you'll be well-equipped to design augmentation strat
 
 After familiarizing yourself with the core concepts, you can:
 
--   **[See Basic Usage Examples](../3-basic-usage):** Put the concepts into practice with code examples for common tasks like classification, segmentation, and object detection.
+-   **[See Basic Usage Examples](../3-basic-usage/index.md):** Put the concepts into practice with code examples for common tasks like classification, segmentation, and object detection.
 -   **[Learn How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get guidance on selecting the right transforms for your specific problem.
--   **[Explore Advanced Guides](../4-advanced-guides):** Dive deeper into topics like creating custom transforms or serializing pipelines.
+-   **[Explore Advanced Guides](../4-advanced-guides/index.md):** Dive deeper into topics like creating custom transforms or serializing pipelines.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with individual transforms and their parameters interactively.

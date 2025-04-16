@@ -216,5 +216,5 @@ Here are some further resources to explore:
     -   [Object Detection](./bounding-boxes-augmentations.md)
     -   [Keypoint Augmentation](./keypoint-augmentations.md)
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Browse the full range of available augmentations and their effects.
--   **[Review Core Concepts](../2-core-concepts):** Reinforce your understanding of the library's fundamentals.
--   **[Check Advanced Guides](../4-advanced-guides):** Look into topics like custom transforms or serialization.
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Reinforce your understanding of the library's fundamentals.
+-   **[Check Advanced Guides](../4-advanced-guides/index.md):** Look into topics like custom transforms or serialization.

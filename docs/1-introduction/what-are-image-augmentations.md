@@ -131,9 +131,9 @@ While the concept is simple, effective implementation requires understanding you
 
 Now that you understand the concepts behind image augmentation, you might want to:
 
--   **[Get Started with Albumentations](..):** An overview of the library itself.
+-   **[Get Started with Albumentations](../index.md):** An overview of the library itself.
 -   **[Install Albumentations](./installation.md):** Set up the library in your environment.
--   **[Learn the Core Concepts](../2-core-concepts):** Understand how Albumentations implements transforms, pipelines, and target handling.
--   **[See Basic Usage Examples](../3-basic-usage):** Explore practical code for common tasks.
+-   **[Learn the Core Concepts](../2-core-concepts/index.md):** Understand how Albumentations implements transforms, pipelines, and target handling.
+-   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore practical code for common tasks.
 -   **[Read How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get practical advice on selecting transforms for your specific problem.
 -   **[Explore Transforms Visually](https://explore.albumentations.ai):** Experiment with different augmentations and their effects.

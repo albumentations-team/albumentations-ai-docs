@@ -306,6 +306,6 @@ With the basics of semantic segmentation augmentation covered, you might want to
 -   **Explore Related Tasks:**
     -   [Object Detection (Bounding Boxes)](./bounding-boxes-augmentations.md)
     -   [Keypoint Augmentation](./keypoint-augmentations.md)
--   **[Review Core Concepts](../2-core-concepts):** Revisit the fundamentals of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
--   **[Dive into Advanced Guides](../4-advanced-guides):** Explore custom transforms, serialization, or additional targets.
+-   **[Review Core Concepts](../2-core-concepts/index.md):** Revisit the fundamentals of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
+-   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Explore custom transforms, serialization, or additional targets.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with spatial transforms (like `ElasticTransform`, `GridDistortion`) and pixel-level transforms.

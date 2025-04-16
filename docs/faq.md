@@ -97,13 +97,13 @@ transform = A.Compose([
 transformed = transform(image=video)['image']
 ```
 
-See [Working with Video Data](getting-started/video-augmentation.md) for more info.
+See [Working with Video Data](./3-basic-usage/video-augmentation.md) for more info.
 
 ### How to process volumetric data with Albumentations?
 
 Albumentations can process volumetric data by treating it as a sequence of 2D slices. When you pass a volumetric data as a numpy array, Albumentations will apply the same transform with identical parameters to each slice, ensuring temporal consistency.
 
-See [Working with Volumetric Data (3D)](getting-started/volumetric-augmentation.md) for more info.
+See [Working with Volumetric Data (3D)](./3-basic-usage/volumetric-augmentation.md) for more info.
 
 
 ### My computer vision pipeline works with a sequence of images. I want to apply the same augmentations with the same parameters to each image in the sequence. Can Albumentations do it?
@@ -219,7 +219,7 @@ In this example, Resize has an effective probability of being applied as `0.9 * 
 
 ### I created annotations for bounding boxes using labeling service or labeling software. How can I use those annotations in Albumentations?
 
-You need to convert those annotations to one of the formats, supported by Albumentations. For the list of formats, please refer to [this article](getting-started/bounding-boxes-augmentation.md). Consult the documentation of the labeling service to see how you can export annotations in those formats.
+You need to convert those annotations to one of the formats, supported by Albumentations. For the list of formats, please refer to [this article](./3-basic-usage/bounding-boxes-augmentations.md). Consult the documentation of the labeling service to see how you can export annotations in those formats.
 
 ## Integration and Migration
 
@@ -263,7 +263,7 @@ See [this example](../examples/example-hfhub/) for more info.
 
 ### How do I migrate from other augmentation libraries to Albumentations?
 
-If you're migrating from other libraries like torchvision or Kornia, you can refer to our [Library Comparison & Benchmarks](getting-started/library-comparison.md) guide. This guide provides:
+If you're migrating from other libraries like torchvision or Kornia, you can refer to our [Library Comparison](./torchvision-kornia2albumentations.md) guide. This guide provides:
 
 1. Mapping tables showing equivalent transforms between libraries
 2. Performance benchmarks demonstrating Albumentations' speed advantages
@@ -275,4 +275,4 @@ For a quick visual comparison of different augmentations, you can also use our i
 For specific migration examples, see:
 
 - [Migrating from torchvision](examples/migrating-from-torchvision-to-albumentations/)
-- [Performance comparison with other libraries](getting-started/library-comparison.md#performance-comparison)
+- [Performance comparison with other libraries](./benchmarks)
