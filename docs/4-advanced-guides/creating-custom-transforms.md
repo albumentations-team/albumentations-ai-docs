@@ -18,6 +18,24 @@ Why create a custom transform?
 
 To integrate with Albumentations, custom transforms inherit from base classes like `A.ImageOnlyTransform`, `A.DualTransform`, or `A.Transform3D`. These base classes provide the structure for handling different data targets (`image`, `mask`, `bboxes`, etc.) and probabilities.
 
+## Important: Default Probability
+
+The `BasicTransform` class, which all transform classes inherit from, has a default value of `p=0.5`. This means if you don't explicitly specify the probability parameter in your custom transform's constructor, it will only be applied 50% of the time.
+
+If you want your transform to be always applied, make sure to pass `p=1.0` to the parent class constructor:
+
+```python
+class MyTransform(A.ImageOnlyTransform):
+    def __init__(self):
+        # This transform will only be applied 50% of the time
+        super().__init__()  # p defaults to 0.5
+
+class MyAlwaysAppliedTransform(A.ImageOnlyTransform):
+    def __init__(self):
+        # This transform will always be applied
+        super().__init__(p=1.0)
+```
+
 ## Step 1: Minimal Image-Only Transform
 
 Let's start with the simplest case: a transform that only modifies the image pixels and involves some randomness. We'll inherit from `A.ImageOnlyTransform`.
