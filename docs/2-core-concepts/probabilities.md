@@ -1,97 +1,207 @@
-# Setting probabilities for transforms in an augmentation pipeline
+# Setting Probabilities for Transforms in Augmentation Pipelines
 
-Each augmentation in Albumentations has a parameter named `p` that sets the probability of applying that augmentation to input data. Setting `p=1` means the transform will always be considered for application, while `p=0` means it will never be considered. A value between 0 and 1 represents the chance it will be considered.
+Each augmentation in Albumentations has a parameter named `p` that controls the probability of applying that augmentation to input data. Understanding how probabilities work is essential for creating effective and predictable augmentation pipelines.
+
+## Quick Reference
+
+**Key Concepts:**
+- **`p=1.0`**: Transform is always considered for application
+- **`p=0.0`**: Transform is never considered for application
+- **`p=0.5`**: Transform has a 50% chance of being considered
+- **Pipeline probability**: Overall chance the entire pipeline runs
+- **Nested probabilities**: How probabilities combine in composition blocks like `OneOf`
+
+## Basic Probability Mechanics
+
+### Individual Transform Probability
+
+Setting `p=1` means the transform will always be considered for application, while `p=0` means it will never be considered. A value between 0 and 1 represents the chance it will be considered.
 
 Some transforms default to `p=1`, while others default to `p=0.5`. Since default values can vary, it is recommended to explicitly set the `p` value for each transform in your pipeline to ensure clarity and avoid unexpected behavior.
 
-Let's take a look at an example:
+### Probability in Practice
 
 ```python
 import albumentations as A
-import cv2
-import numpy as np # Assuming image is a numpy array
+import numpy as np
 
-# Define probabilities
+# Create a simple example
+transform = A.Compose([
+    A.HorizontalFlip(p=0.5),        # 50% chance to flip
+    A.RandomBrightnessContrast(p=0.8),  # 80% chance to adjust brightness/contrast
+    A.GaussianBlur(p=0.3),         # 30% chance to blur
+])
+
+# Each transform runs independently based on its p value
+image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+transformed = transform(image=image)
+```
+
+## Complex Probability Example
+
+Let's examine a more complex pipeline to understand how probabilities interact:
+
+```python
+import albumentations as A
+import numpy as np
+
+# Define probabilities for clarity
 prob_pipeline = 0.95
 prob_rotate = 0.85
 prob_oneof_noise = 0.75
 
 # Define the augmentation pipeline
 transform = A.Compose([
-    A.RandomRotate90(p=prob_rotate), # Has an 85% chance to be considered
+    A.RandomRotate90(p=prob_rotate),     # 85% chance to be considered
     A.OneOf([
-        A.GaussNoise(p=0.9),         # If OneOf is chosen, GaussNoise has a 90% chance within the OneOf block
-        A.ISONoise(p=0.7),           # If OneOf is chosen, ISONoise has a 70% chance within the OneOf block
-    ], p=prob_oneof_noise)            # The OneOf block has a 75% chance to be considered
-], p=prob_pipeline,                  # The entire pipeline has a 95% chance to be applied
-  seed=137)                         # Added seed for reproducibility
+        A.GaussNoise(p=0.9),             # 90% weight within OneOf block
+        A.ISONoise(p=0.7),               # 70% weight within OneOf block
+    ], p=prob_oneof_noise)               # 75% chance for OneOf block to run
+], p=prob_pipeline,                      # 95% chance for entire pipeline to run
+  seed=137)                             # Seed for reproducibility
 
-# Load an example image (replace with your image path)
-# image = cv2.imread('some/image.jpg')
-# image = cv2.cvtColor(cv2.COLOR_BGR2RGB)
-# For demonstration, let's create a dummy image
+# Apply the transform
 image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
-
-
 transformed = transform(image=image)
 transformed_image = transformed['image']
 
 print("Transformation applied:", not np.array_equal(image, transformed_image))
 ```
 
-We declare an augmentation pipeline using `Compose`. The probability `p` for `Compose` itself (`prob_pipeline`) determines if *any* augmentations within it are applied.
+## How Different Probability Levels Work
 
-## Pipeline Probability (`prob_pipeline`)
+### Pipeline Probability (`prob_pipeline`)
 
-`prob_pipeline` (set to 0.95 here) is the overall probability that the `Compose` block executes.
-- If `prob_pipeline` is 0, the pipeline never runs, and the input is always returned unchanged.
-- If `prob_pipeline` is 1, the pipeline always runs, and the augmentations *inside* it get a chance to be applied based on their own probabilities.
-- If `0 < prob_pipeline < 1`, the pipeline runs with that specific probability.
+The `p` parameter in `A.Compose` determines if *any* augmentations within it are applied:
 
-Assuming the pipeline runs (which happens 95% of the time in our example), the probabilities of the inner transforms (`prob_rotate`, `prob_oneof_noise`) come into play.
+- **`p=0.0`**: Pipeline never runs, input is always returned unchanged
+- **`p=1.0`**: Pipeline always runs, inner transforms get a chance based on their own probabilities
+- **`0 < p < 1`**: Pipeline runs with that specific probability
 
-## Individual Transform Probability (`prob_rotate`)
+In our example (`prob_pipeline = 0.95`), the pipeline runs 95% of the time.
 
-`prob_rotate` (set to 0.85) is the probability that [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) is applied, *given* the pipeline runs. So, [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) has an 85% chance of being applied each time the `Compose` block is executed.
+### Individual Transform Probability (`prob_rotate`)
 
-## `OneOf` Block Probability (`prob_oneof_noise`)
+Once the pipeline runs, each transform has its own probability:
 
-`prob_oneof_noise` (set to 0.75) sets the probability that the `OneOf` block is applied, *given* the pipeline runs.
+- `RandomRotate90` with `p=0.85` has an 85% chance of being applied
+- This is independent of other transforms in the pipeline
 
-If the `OneOf` block is selected (75% chance when the pipeline runs), it will execute *exactly one* of the transforms defined within it ([`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise) or [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise)).
+### Composition Block Probability (`prob_oneof_noise`)
 
-### Probabilities within `OneOf`
+Composition utilities like `OneOf` have their own probability layer:
 
-To decide which transform inside `OneOf` is used, Albumentations normalizes the probabilities of the inner transforms so they sum to 1.
-- [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise) has `p=0.9`
-- [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise) has `p=0.7`
-- The sum is `0.9 + 0.7 = 1.6`.
-- Normalized probability for [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise): `0.9 / 1.6 = 0.5625` (or 56.25%)
-- Normalized probability for [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise): `0.7 / 1.6 = 0.4375` (or 43.75%)
+- `OneOf` block with `p=0.75` has a 75% chance to run
+- If it runs, it executes *exactly one* of its contained transforms
 
-So, if the `OneOf` block runs, [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise) will be applied 56.25% of the time, and [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise) will be applied 43.75% of the time.
+## Probability Calculations in `OneOf`
 
-## Overall Probabilities
+### How Selection Works
 
-The actual probability of each specific transform being applied to the original image is:
-- [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90): `prob_pipeline * prob_rotate` = `0.95 * 0.85` = `0.8075` (80.75%)
-- [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise): `prob_pipeline * prob_oneof_noise * (0.9 / (0.9 + 0.7))` = `0.95 * 0.75 * 0.5625` = `0.40078125` (approx 40.08%)
-- [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise): `prob_pipeline * prob_oneof_noise * (0.7 / (0.9 + 0.7))` = `0.95 * 0.75 * 0.4375` = `0.3115234375` (approx 31.15%)
+When a `OneOf` block runs, it normalizes the probabilities of inner transforms to determine selection weights:
 
-## When `p=1` Might Not Change the Image
+**Example transforms in `OneOf`:**
+- `GaussNoise(p=0.9)`
+- `ISONoise(p=0.7)`
 
-Generally, if a transform is applied (i.e., `p=1` or the random chance based on `p` succeeds), you can expect the output image to be different from the input. However, there are some specific corner cases where a transform runs but might not alter the image:
+**Normalization process:**
+1. Sum of probabilities: `0.9 + 0.7 = 1.6`
+2. Normalized probability for `GaussNoise`: `0.9 ÷ 1.6 = 0.5625` (56.25%)
+3. Normalized probability for `ISONoise`: `0.7 ÷ 1.6 = 0.4375` (43.75%)
 
-1.  **Transforms Sampling from a Group Including Identity:** Some transforms randomly select an operation from a predefined set, and one of those operations might be the "identity" (do nothing) operation.
-    *   Example: [`RandomRotate90(p=1)`](https://explore.albumentations.ai/transform/RandomRotate90) randomly chooses a rotation of 0, 90, 180, or 270 degrees. There's a 1 in 4 chance it selects 0 degrees, leaving the image unchanged.
-    *   Other examples include [`D4`](https://explore.albumentations.ai/transform/D4) (symmetries of a square) and [`RandomGridShuffle`](https://explore.albumentations.ai/transform/RandomGridShuffle) (which might randomly shuffle grid cells back to their original positions).
+### Selection Results
 
-2.  **Geometric Transforms with Identity Parameters:** Many geometric transforms sample parameters (like rotation angle, scaling factor, translation distance) randomly within a specified range. If the randomly chosen parameters happen to correspond to the identity transformation (e.g., rotate by 0 degrees, scale by 1, translate by 0 pixels), the image won't change, even if `p=1`.
-    *   Example: [`Affine(rotate=0, scale=1, translate_px=0, p=1)`](https://explore.albumentations.ai/transform/Affine) will always apply the identity transform.
-    *   Example: [`Affine(rotate=(-10, 10), p=1)`](https://explore.albumentations.ai/transform/Affine) might randomly sample a rotation angle of exactly 0, resulting in no change from rotation (though scaling or translation might still occur if enabled).
-    *   Example: [`ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=10, p=1)`](https://explore.albumentations.ai/transform/ShiftScaleRotate) could randomly sample shift=0, scale=1, and rotate=0 simultaneously.
+If the `OneOf` block runs:
+- `GaussNoise` is selected 56.25% of the time
+- `ISONoise` is selected 43.75% of the time
 
-So, while `p` controls the probability of a transform *being executed*, the specific internal logic and random parameter sampling of the transform determine if that execution *results* in a visually modified image.
+## Overall Probability Calculations
+
+The actual probability of each transform being applied to the original image is the product of all probability layers:
+
+### Mathematical Breakdown
+
+| Transform | Calculation | Result |
+|-----------|-------------|--------|
+| `RandomRotate90` | `0.95 × 0.85` | **80.75%** |
+| `GaussNoise` | `0.95 × 0.75 × 0.5625` | **40.08%** |
+| `ISONoise` | `0.95 × 0.75 × 0.4375` | **31.15%** |
+
+### Formula Pattern
+
+```
+Final Probability = Pipeline_p × Block_p × Normalized_Transform_p
+```
+
+## Edge Cases: When `p=1` Doesn't Change the Image
+
+Even when a transform is applied (`p=1` or probability check succeeds), the image might not visually change in certain cases:
+
+### Identity Operations
+
+**Transforms with identity operations in their selection:**
+- [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90): Can select 0° rotation (no change)
+- [`D4`](https://explore.albumentations.ai/transform/D4): Can select identity transformation
+- [`RandomGridShuffle`](https://explore.albumentations.ai/transform/RandomGridShuffle): Might shuffle back to original positions
+
+### Identity Parameter Sampling
+
+**Geometric transforms can sample identity parameters:**
+- [`Affine(rotate=(-10, 10))`](https://explore.albumentations.ai/transform/Affine): Might sample rotation = 0°
+- [`ShiftScaleRotate`](https://explore.albumentations.ai/transform/ShiftScaleRotate): Could sample shift=0, scale=1, rotate=0
+
+**Example:**
+```python
+# This always applies identity transformation
+A.Affine(rotate=0, scale=1, translate_px=0, p=1)
+
+# This might randomly sample identity parameters
+A.Affine(rotate=(-10, 10), scale=(0.9, 1.1), p=1)
+```
+
+> **Key Point:** The `p` parameter controls whether a transform *runs*, but the transform's internal
+> logic determines whether that execution *visually changes* the image.
+
+## Best Practices
+
+### Probability Setting Guidelines
+
+1. **Be Explicit**: Always set `p` values explicitly rather than relying on defaults
+2. **Consider Independence**: Remember that transform probabilities are independent within `Compose`
+3. **Calculate Overall Effects**: Use the multiplication rule to understand final probabilities
+4. **Test Your Pipeline**: Verify that your probability settings achieve the desired augmentation frequency
+
+### Common Patterns
+
+```python
+# Light augmentation (conservative)
+light_transform = A.Compose([
+    A.HorizontalFlip(p=0.3),
+    A.RandomBrightnessContrast(p=0.2),
+    A.GaussianBlur(p=0.1),
+])
+
+# Moderate augmentation (balanced)
+moderate_transform = A.Compose([
+    A.HorizontalFlip(p=0.5),
+    A.OneOf([
+        A.RandomBrightnessContrast(p=1.0),
+        A.HueSaturationValue(p=1.0),
+    ], p=0.3),
+    A.GaussianBlur(p=0.2),
+])
+
+# Heavy augmentation (aggressive)
+heavy_transform = A.Compose([
+    A.HorizontalFlip(p=0.7),
+    A.RandomBrightnessContrast(p=0.6),
+    A.OneOf([
+        A.GaussianBlur(p=1.0),
+        A.MedianBlur(p=1.0),
+        A.MotionBlur(p=1.0),
+    ], p=0.4),
+])
+```
 
 ## Where to Go Next?
 
