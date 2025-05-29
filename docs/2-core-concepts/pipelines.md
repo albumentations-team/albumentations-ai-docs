@@ -4,9 +4,18 @@ While individual [Transforms](./transforms.md) are useful, data augmentation oft
 
 A pipeline, defined using [`albumentations.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose), chains multiple transforms together. When the pipeline is called, it applies the contained transforms sequentially to the input data.
 
+## Quick Reference
+
+For experienced users, here are the key concepts covered in this guide:
+
+- **[Basic Pipeline Creation](#defining-a-simple-pipeline):** `A.Compose([transform1, transform2, ...])`
+- **[Dynamic Modification](#dynamic-pipeline-modification):** `pipeline + transform`, `transform + pipeline`, `pipeline - transform`
+- **[Composition Utilities](#advanced-composition-utilities):** `OneOf`, `SomeOf`, `Sequential`, `RandomOrder`, etc.
+- **[Parameter Configuration](#compose-parameters):** `bbox_params`, `keypoint_params`, `additional_targets`, `seed`, etc.
+
 ## Defining a Simple Pipeline
 
-You define a pipeline by passing a list of instantiated transforms to `A.Compose`.
+You define a pipeline by passing a list of instantiated transforms to [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose).
 
 ```python
 import albumentations as A
@@ -33,7 +42,7 @@ print(f"Original shape: {image.shape}, Transformed shape: {transformed_image.sha
 
 ## Compose Parameters
 
-While the `transforms` list is the only mandatory argument, `A.Compose` accepts several other parameters to configure its behavior, especially when dealing with multiple data targets or needing fine-grained control:
+While the `transforms` list is the only mandatory argument, [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) accepts several other parameters to configure its behavior, especially when dealing with multiple data targets or needing fine-grained control:
 
 ```python
 compose = A.Compose(
@@ -50,24 +59,217 @@ compose = A.Compose(
 )
 ```
 
+### Core Parameters
+
 *   **`transforms` (list):** (Required) The list of augmentation instances to apply sequentially.
-*   **`bbox_params` (`A.BboxParams` | dict | None):** Configuration for handling bounding boxes. If provided, the pipeline can accept a `bboxes` argument during the call. See the [Object Detection Guide](../3-basic-usage/bounding-boxes-augmentations.md) for details. Default: `None`.
-*   **`keypoint_params` (`A.KeypointParams` | dict | None):** Configuration for handling keypoints. If provided, the pipeline can accept a `keypoints` argument during the call. See the [Keypoint Augmentation Guide](../3-basic-usage/keypoint-augmentations.md) for details. Default: `None`.
-*   **`additional_targets` (dict[str, str] | None):** Defines how to handle additional input arrays beyond the standard `image`, `mask`, etc. Maps a custom input name (e.g., `'image2'`) to a standard target type (`'image'` or `'mask'`). See the [Using Additional Targets Guide](../4-advanced-guides/additional-targets.md) for details. Default: `None`.
-*   **`p` (float):** The probability that the *entire* composition of transforms is applied. If a random check (`< p`) fails, the input data is returned unchanged. Note this differs from the individual `p` of transforms *inside* the list. Default: `1.0` (always apply the sequence).
-*   **`is_check_shapes` (bool):** If `True`, Albumentations performs checks to ensure the spatial dimensions (H, W, potentially D) of all input arrays (`image`, `mask`, `masks`, `volume`, `mask3d`, etc.) are consistent before applying transforms. Disable (`False`) only if you are certain about data consistency and need maximum speed, as it can catch potential errors early. Default: `True`.
+
+*   **`p` (float):** The probability that the *entire* composition of transforms is applied.
+    If a random check (`< p`) fails, the input data is returned unchanged. Note this differs
+    from the individual `p` of transforms *inside* the list. Default: `1.0` (always apply the sequence).
+
+### Target-Specific Parameters
+
+*   **`bbox_params` (`A.BboxParams` | dict | None):** Configuration for handling bounding boxes.
+    If provided, the pipeline can accept a `bboxes` argument during the call.
+    See the [Object Detection Guide](../3-basic-usage/bounding-boxes-augmentations.md) for details. Default: `None`.
+
+*   **`keypoint_params` (`A.KeypointParams` | dict | None):** Configuration for handling keypoints.
+    If provided, the pipeline can accept a `keypoints` argument during the call.
+    See the [Keypoint Augmentation Guide](../3-basic-usage/keypoint-augmentations.md) for details. Default: `None`.
+
+*   **`additional_targets` (dict[str, str] | None):** Defines how to handle additional input arrays
+    beyond the standard `image`, `mask`, etc. Maps a custom input name (e.g., `'image2'`) to a
+    standard target type (`'image'` or `'mask'`).
+    See the [Using Additional Targets Guide](../4-advanced-guides/additional-targets.md) for details. Default: `None`.
+
+### Validation and Quality Control
+
+*   **`is_check_shapes` (bool):** If `True`, performs shape consistency checks for all input arrays
+    (`image`, `mask`, `masks`, `volume`, `mask3d`, etc.) before applying transforms.
+
+    Disable (`False`) only if you're certain about data consistency and need maximum speed,
+    as it can catch potential errors early. Default: `True`.
+
 *   **`strict` (bool):** If `True`, enables strict validation mode during the transform call:
     1.  Checks that all keyword arguments passed (e.g., `image=...`, `mask=...`, `my_target=...`) are recognized (either standard targets or defined in `additional_targets`).
     2.  Validates that transforms are not called with unsupported arguments (though this is less common with the standard structure).
     3.  Raises a `ValueError` if any validation fails.
+
     If `False`, unknown arguments are ignored. Useful for debugging pipeline configuration. Default: `False`.
-*   **`mask_interpolation` (int | None):** If set to an OpenCV interpolation flag (e.g., `cv2.INTER_LINEAR`), this value *overrides* the interpolation method used for masks in all applicable geometric transforms within the pipeline. If `None`, each transform uses its default mask interpolation (usually `cv2.INTER_NEAREST`). Default: `None`.
+
+### Advanced Configuration
+
+*   **`mask_interpolation` (int | None):** If set to an OpenCV interpolation flag (e.g., `cv2.INTER_LINEAR`),
+    this value *overrides* the interpolation method used for masks in all applicable geometric transforms
+    within the pipeline. If `None`, each transform uses its default mask interpolation (usually `cv2.INTER_NEAREST`).
+    Default: `None`.
+
 *   **`seed` (int | None):** Controls the reproducibility of random augmentations *within this specific `Compose` instance*.
-    *   Albumentations uses its own internal random state generators (`self.py_random`, `self.random_generator`), completely independent from global seeds (`random.seed()`, `np.random.seed()`).
-    *   Setting `seed` to an integer initializes these internal generators deterministically. Two [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) instances created with the same transforms and the same `seed` will produce the exact same sequence of random outcomes when called repeatedly on the same input.
-    *   If `seed=None` (default), the internal state is initialized randomly, leading to different results each time a new `Compose` instance is created or run.
-    *   See the [Creating Custom Transforms Guide](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation) for how to use the seeded generators in custom transforms. Default: `None`.
-*   **`save_applied_params` (bool):** If `True`, the dictionary returned by the [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) call will include an extra key `'applied_transforms'`. The value will be a list of dictionaries, where each dictionary contains the name of an applied transform and the exact parameters it used for that specific call. Useful for debugging, replay, or analysis. Default: `False`.
+
+    **When seed is set (int):**
+    *   Creates a fixed internal random state
+    *   Two `Compose` instances with the same seed and transforms will produce identical sequences of augmentations
+    *   Each call to the same `Compose` instance still produces random augmentations, but these sequences are reproducible
+
+    **When seed is None (default):**
+    *   Generates a new internal random state on each `Compose` creation
+    *   Different `Compose` instances will produce different sequences of augmentations
+
+    **Important:** Albumentations uses its own internal random state generators (`self.py_random`, `self.random_generator`),
+    completely independent from global seeds (`random.seed()`, `np.random.seed()`). Setting global seeds has no effect
+    on augmentations. See the [Creating Custom Transforms Guide](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation)
+    for how to use the seeded generators in custom transforms. Default: `None`.
+
+*   **`save_applied_params` (bool):** If `True`, the dictionary returned by the `Compose` call will include
+    an extra key `'applied_transforms'`. The value will be a list of dictionaries, where each dictionary
+    contains the name of an applied transform and the exact parameters it used for that specific call.
+
+    Useful for debugging, replay, or analysis. Default: `False`.
+
+## Dynamic Pipeline Modification
+
+Albumentations supports dynamic pipeline modification after initialization using mathematical operators. This allows you to add or remove transforms from existing pipelines without recreating them from scratch. All operations preserve the original pipeline's parameters (such as `bbox_params`, `keypoint_params`, `additional_targets`, etc.) and return new instances without modifying the original pipeline.
+
+### Adding Transforms to Pipelines
+
+Use the `+` operator to add transforms to the end of a pipeline, or use a transform before `+` to add to the beginning:
+
+```python
+import albumentations as A
+
+# Create a base pipeline
+base_pipeline = A.Compose([
+    A.RandomCrop(height=256, width=256),
+    A.HorizontalFlip(p=0.5),
+], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels']))
+
+# Add a single transform to the end
+extended_pipeline = base_pipeline + A.RandomBrightnessContrast(p=0.3)
+# Result: [RandomCrop, HorizontalFlip, RandomBrightnessContrast]
+
+# Add multiple transforms to the end
+extended_pipeline = base_pipeline + [A.GaussianBlur(p=0.2), A.Rotate(limit=15)]
+# Result: [RandomCrop, HorizontalFlip, GaussianBlur, Rotate]
+
+# Add transforms to the beginning
+extended_pipeline = A.Resize(height=512, width=512) + base_pipeline
+# Result: [Resize, RandomCrop, HorizontalFlip]
+
+# Add multiple transforms to the beginning
+extended_pipeline = [A.Resize(height=512, width=512), A.Normalize()] + base_pipeline
+# Result: [Resize, Normalize, RandomCrop, HorizontalFlip]
+
+# All bbox_params and other settings are preserved in the new pipeline
+print(f"bbox_params preserved: {extended_pipeline.processors.get('bboxes') is not None}")
+```
+
+### Removing Transforms from Pipelines
+
+Use the `-` operator to remove specific transform instances from a pipeline:
+
+```python
+import albumentations as A
+
+# Create transform instances
+flip_transform = A.HorizontalFlip(p=0.5)
+brightness_transform = A.RandomBrightnessContrast(p=0.3)
+blur_transform = A.GaussianBlur(p=0.2)
+
+# Create pipeline with these specific instances
+pipeline = A.Compose([
+    A.RandomCrop(height=256, width=256),
+    flip_transform,
+    brightness_transform,
+    blur_transform,
+])
+
+# Remove a specific transform instance
+reduced_pipeline = pipeline - flip_transform
+# Result: [RandomCrop, RandomBrightnessContrast, GaussianBlur]
+
+# Note: Only the exact instance is removed
+different_flip = A.HorizontalFlip(p=0.5)  # Different instance, same parameters
+# pipeline - different_flip  # Would raise ValueError: transform not found
+
+# Chain removal operations
+further_reduced = reduced_pipeline - brightness_transform - blur_transform
+# Result: [RandomCrop]
+```
+
+### Important Notes about Pipeline Modification
+
+*   **Instance-Based Removal:** The `-` operator removes transforms based on object identity, not parameter equality. Only the exact transform instance passed to the original pipeline can be removed.
+
+*   **Parameter Preservation:** All pipeline modification operations preserve the original configuration including `bbox_params`, `keypoint_params`, `additional_targets`, `seed`, and other settings.
+
+*   **New Instance Creation:** All operators (`+`, `-`) return new `Compose` instances without modifying the original pipeline. This ensures thread safety and prevents unintended side effects.
+
+*   **Type Restrictions:** You can only add or remove `BasicTransform` instances (individual transforms), not `BaseCompose` instances (composition classes like `OneOf`, `SomeOf`, etc.).
+
+*   **Random State Inheritance:** New pipeline instances inherit the random state from the original pipeline, ensuring consistent behavior.
+
+### Practical Examples
+
+**Building Pipelines Incrementally:**
+
+```python
+import albumentations as A
+
+# Start with basic geometric transforms
+geometric_pipeline = A.Compose([
+    A.RandomCrop(height=256, width=256),
+    A.HorizontalFlip(p=0.5),
+])
+
+# Add color augmentations for training
+training_pipeline = geometric_pipeline + [
+    A.RandomBrightnessContrast(p=0.3),
+    A.HueSaturationValue(p=0.3),
+]
+
+# Add noise and blur for robustness testing
+robust_pipeline = training_pipeline + [
+    A.GaussNoise(p=0.2),
+    A.GaussianBlur(p=0.2),
+]
+```
+
+**Conditional Pipeline Construction:**
+
+```python
+import albumentations as A
+
+# Base pipeline
+pipeline = A.Compose([A.RandomCrop(height=256, width=256)])
+
+# Add transforms based on conditions
+if use_geometric_augmentations:
+    pipeline = pipeline + [A.HorizontalFlip(p=0.5), A.Rotate(limit=15)]
+
+if use_color_augmentations:
+    pipeline = pipeline + A.RandomBrightnessContrast(p=0.3)
+
+if add_noise:
+    pipeline = pipeline + A.GaussNoise(p=0.1)
+```
+
+**Transform Replacement:**
+
+```python
+import albumentations as A
+
+# Original pipeline with specific transform instance
+old_blur = A.GaussianBlur(blur_limit=3, p=0.2)
+pipeline = A.Compose([
+    A.RandomCrop(height=256, width=256),
+    A.HorizontalFlip(p=0.5),
+    old_blur,
+])
+
+# Replace the blur transform with a different configuration
+new_blur = A.GaussianBlur(blur_limit=7, p=0.4)
+updated_pipeline = pipeline - old_blur + new_blur
+```
 
 ## How Probabilities Work in Pipelines
 
@@ -80,9 +282,13 @@ When a pipeline created with `A.Compose` is called:
 
 This means that on any given call to the pipeline, a different subset of the defined transforms might actually be applied, controlled by their individual probabilities.
 
-**Important Note:** [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) itself does *not* have a top-level `p` parameter to control whether the *entire* pipeline runs or not. It always executes and iterates through its contained transforms, letting their individual `p` values determine if they activate.
-
-*(More content to follow on applying to targets, advanced pipelines, etc.)*
+> **Important:** [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose)
+> itself does *not* have a top-level `p` parameter to control whether the *entire* pipeline runs or not.
+> It always executes and iterates through its contained transforms, letting their individual `p` values
+> determine if they activate.
+>
+> For grouping transforms under a single probability, use [`Sequential`](#sequential-group-transforms-with-a-single-probability)
+> instead.
 
 ## Advanced Composition Utilities
 
@@ -313,7 +519,15 @@ This demonstrates how you can chain and nest different composition logic blocks 
 
 ## Where to Go Next?
 
-Now that you understand how to build pipelines, consider these next steps:
+After learning about pipelines, you now understand how to:
+
+- Create basic and complex augmentation pipelines using `A.Compose`
+- Dynamically modify pipelines using `+` and `-` operators
+- Control probability and execution flow with composition utilities
+- Configure pipelines for different data types (images, masks, bboxes, keypoints)
+- Handle advanced scenarios like nested compositions
+
+**Next steps to explore:**
 
 -   **[Transforms](./transforms.md):** Explore the individual augmentation operations you can include in your pipelines.
 -   **[Setting Probabilities](./probabilities.md):** Get a deeper understanding of how the `p` parameter works for both individual transforms and composition blocks.
