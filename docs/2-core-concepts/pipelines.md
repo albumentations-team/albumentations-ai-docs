@@ -521,7 +521,7 @@ This demonstrates how you can chain and nest different composition logic blocks 
 
 After learning about pipelines, you now understand how to:
 
-- Create basic and complex augmentation pipelines using `A.Compose`
+- Create basic and complex augmentation pipelines using [`A.Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose)
 - Dynamically modify pipelines using `+` and `-` operators
 - Control probability and execution flow with composition utilities
 - Configure pipelines for different data types (images, masks, bboxes, keypoints)
