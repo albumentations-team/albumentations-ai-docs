@@ -537,7 +537,7 @@ Now that you understand the fundamentals of transforms and how to approach build
 -   **[Serialization](../4-advanced-guides/serialization.md)**: Save and load transform configurations for reproducible experiments
 
 **Interactive Learning:**
--   **[Explore Transforms Visually](https://explore.albumentations.ai)**: Experiment with transforms and see their effects in real-time
+-   **[Explore Transforms Visually](https://explore.albumentations.ai)**: **Upload your own images** and experiment with transforms to see their effects in real-time on your specific data
 -   **[Transform Compatibility Reference](../reference/supported-targets-by-transform.md)**: Quick lookup for which transforms work with which data types
 
 **Recommended Learning Path:**
