@@ -106,14 +106,14 @@ When a `OneOf` block runs, it normalizes the probabilities of inner transforms t
 
 **Normalization process:**
 1. Sum of probabilities: `0.9 + 0.7 = 1.6`
-2. Normalized probability for `GaussNoise`: `0.9 ÷ 1.6 = 0.5625` (56.25%)
-3. Normalized probability for `ISONoise`: `0.7 ÷ 1.6 = 0.4375` (43.75%)
+2. Normalized probability for [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise): `0.9 ÷ 1.6 = 0.5625` (56.25%)
+3. Normalized probability for [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise): `0.7 ÷ 1.6 = 0.4375` (43.75%)
 
 ### Selection Results
 
 If the `OneOf` block runs:
-- `GaussNoise` is selected 56.25% of the time
-- `ISONoise` is selected 43.75% of the time
+- [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise) is selected 56.25% of the time
+- [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise) is selected 43.75% of the time
 
 ## Overall Probability Calculations
 
@@ -121,11 +121,11 @@ The actual probability of each transform being applied to the original image is 
 
 ### Mathematical Breakdown
 
-| Transform | Calculation | Result |
-|-----------|-------------|--------|
-| `RandomRotate90` | `0.95 × 0.85` | **80.75%** |
-| `GaussNoise` | `0.95 × 0.75 × 0.5625` | **40.08%** |
-| `ISONoise` | `0.95 × 0.75 × 0.4375` | **31.15%** |
+| Transform | Calculation | **Final Probability** |
+|-----------|-------------|----------------------|
+| [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) | `0.95 × 0.85` | **80.75%** |
+| [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise) | `0.95 × 0.75 × 0.5625` | **40.08%** |
+| [`ISONoise`](https://explore.albumentations.ai/transform/ISONoise) | `0.95 × 0.75 × 0.4375` | **31.15%** |
 
 ### Formula Pattern
 
