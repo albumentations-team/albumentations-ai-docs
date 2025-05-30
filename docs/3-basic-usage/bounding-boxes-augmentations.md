@@ -61,6 +61,8 @@ train_transform = A.Compose([
 ], bbox_params=A.BboxParams(format='coco', # Specify input format
                            label_fields=['class_labels'] # Specify label argument name(s)
                            ))
+
+**Important: Transform Compatibility**: Not all transforms support bounding boxes. Before building your pipeline, check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to ensure all your chosen transforms are compatible with bboxes. For example, [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) only affects image pixels, while [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) affects both images and bboxes.
 ```
 
 **Cropping Strategies for Object Detection:**
@@ -168,6 +170,8 @@ The output dictionary contains the augmented image and the corresponding augment
 Visualizing the augmented image with its boxes is crucial for debugging. Always check the output of your *training* pipeline on sample images *before* starting a full training run.
 
 **Important:** Visualize the output *before* applying `A.Normalize` and `A.ToTensorV2`, as these change the data type and value range, making direct display difficult.
+
+**Debugging Tip**: If bounding boxes appear corrupted, disappear unexpectedly, or cause errors, first verify that all transforms in your pipeline support bboxes using the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference.
 
 ```python
 import matplotlib.pyplot as plt
@@ -309,6 +313,7 @@ def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
 After mastering bounding box augmentation, you might want to:
 
 -   **[Review Core Concepts](../2-core-concepts/index.md):** Solidify your understanding of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** Essential reference for planning detection pipelines - see which transforms support bboxes and other target combinations.
 -   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Get specific advice on selecting effective transforms for object detection.
 -   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your detection augmentation pipeline.
 -   **Explore Related Tasks:**

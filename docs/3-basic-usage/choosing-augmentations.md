@@ -523,6 +523,10 @@ heavy_train_pipeline = A.Compose(
     ],
     # Add bbox_params or keypoint_params if dealing with bounding boxes or keypoints
     # bbox_params=A.BboxParams(format='pascal_voc', label_fields=[])
+    #
+    # IMPORTANT: Multi-target compatibility - not all transforms support all targets!
+    # Check the Supported Targets by Transform reference to verify compatibility:
+    # https://albumentations.ai/docs/reference/supported-targets-by-transform/
 )
 
 # ✅ BETTER: Start with this simple pipeline instead
@@ -541,6 +545,7 @@ recommended_starter = A.Compose([
 Armed with strategies for choosing augmentations, you can now:
 
 -   **[Apply to Your Specific Task](./):** Integrate your chosen transforms into the pipeline for your task (e.g., Classification, Segmentation, Detection).
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** Essential when working with multiple targets - verify which transforms support your specific combination of images, masks, bboxes, or keypoints.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** **Upload your own images** and experiment interactively with the specific transforms and parameters you are considering. See real-time results on your actual data.
 -   **[Optimize Pipeline Speed](./performance-tuning.md):** Ensure your selected augmentation pipeline is efficient and doesn't bottleneck training.
 -   **[Review Core Concepts](../2-core-concepts/index.md):** Reinforce your understanding of how pipelines, probabilities, and targets work with your chosen transforms.

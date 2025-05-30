@@ -1,220 +1,296 @@
 # Image Classification with Albumentations
 
-This guide demonstrates the practical steps for setting up and applying image augmentations for classification tasks using Albumentations. It focuses on the *how-to* aspects of defining and integrating augmentation pipelines.
+This guide shows how to set up practical augmentation pipelines for image classification training. We'll cover the essential patterns: MNIST-style (grayscale) and ImageNet-style (RGB) pipelines with actual training integration.
 
-For background on *why* data augmentation is crucial and *which* specific augmentations are effective for improving model generalization, please refer to these guides:
+For background on *why* data augmentation is crucial and *which* specific augmentations are effective, please refer to:
 
 *   **[What is Data Augmentation?](../1-introduction/what-are-image-augmentations.md):** Explains the motivation and benefits.
-*   **[Choosing Augmentations](./choosing-augmentations.md):** Provides detailed strategies for selecting and tuning various augmentations.
+*   **[Choosing Augmentations](./choosing-augmentations.md):** Detailed strategies for selecting and tuning transforms.
+
+## Quick Reference
+
+**Classification Pipeline Essentials:**
+- **Image-only transforms**: No need to worry about masks, bboxes, or keypoints
+- **Training pipeline**: Random augmentations for variety
+- **Validation pipeline**: Deterministic preprocessing only
+- **Common pattern**: Resize → Crop → Augment → Normalize → Tensor
+
+**Minimal Training Pipeline:**
+```python
+import albumentations as A
+
+train_transforms = A.Compose([
+    A.RandomResizedCrop(224, 224),
+    A.HorizontalFlip(p=0.5),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    A.ToTensorV2(),
+])
+```
 
 ## Core Workflow
 
-Applying augmentations typically involves these steps:
-
-### 1. Setup: Import Libraries
-
-Import Albumentations, an image reading library (like OpenCV), and any necessary framework components.
+### 1. Import Libraries
 
 ```python
 import albumentations as A
 import cv2
 import numpy as np
-```
-
-### 2. Define Augmentation Pipelines
-
-We use `A.Compose` to create a sequence of transformations. Separate pipelines are usually defined for training (with random augmentations) and validation/testing (with deterministic preprocessing).
-
-**Example Training Pipeline:**
-
-A common strategy involves resizing, cropping, basic geometric transforms, and normalization.
-
-```python
-TARGET_SIZE = 224 # Example input size
-
-train_transform = A.Compose([
-    # Resize shortest side to TARGET_SIZE, maintaining aspect ratio
-    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
-    # Take a random TARGET_SIZE x TARGET_SIZE crop
-    A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
-    # Apply horizontal flip with 50% probability
-    A.HorizontalFlip(p=0.5),
-    # Normalize using ImageNet presets
-    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    # Convert to PyTorch tensor format
-    A.ToTensorV2(),
-])
-```
-
-**Example Validation Pipeline:**
-
-Typically includes resizing, center cropping, and normalization, without random elements.
-
-```python
-val_transform = A.Compose([
-    A.SmallestMaxSize(max_size=TARGET_SIZE, p=1.0),
-    # Take a crop from the center
-    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
-    # Normalize using ImageNet presets
-    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    # Convert to PyTorch tensor format
-    A.ToTensorV2(),
-])
-```
-
-*Alternative:* [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop) is another popular transform for training, combining resizing and cropping with scale/aspect ratio changes in one step.
-
-### 3. Load Image Data
-
-Load images into NumPy arrays. Remember that OpenCV reads images in BGR format by default, so convert to RGB if necessary.
-
-```python
-image_path = "/path/to/your/image.jpg"
-
-# Read image and convert to RGB
-image = cv2.imread(image_path)
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-print(f"Loaded image shape: {image.shape}, dtype: {image.dtype}")
-# Expected output e.g.: Loaded image shape: (512, 512, 3), dtype: uint8
-```
-
-### 4. Apply the Transform
-
-The `Compose` object acts as a callable function. Pass the image as a keyword argument `image`. The output is a dictionary, with the transformed image under the `'image'` key.
-
-```python
-# Apply the training transform to a single image
-augmented_data = train_transform(image=image)
-augmented_image = augmented_data['image']
-
-print(f"Augmented image shape: {augmented_image.shape}, dtype: {augmented_image.dtype}")
-# Expected output e.g.: Augmented image shape: torch.Size([3, 224, 224]), dtype: torch.float32
-```
-
-### 5. Integrate into Framework Data Loader
-
-In practice, you apply the transform within your deep learning framework's data loading pipeline (e.g., `torch.utils.data.Dataset` for PyTorch).
-
-**Conceptual PyTorch `Dataset`:**
-
-```python
+import torch
+import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+```
 
-class ClassificationDataset(Dataset):
+### 2. Define Transform Pipelines
+
+#### MNIST-Style Pipeline (Grayscale, 28x28)
+
+Simple pipeline for grayscale images like MNIST, Fashion-MNIST, or custom grayscale datasets:
+
+```python
+# Training transforms - minimal augmentation for small images
+train_transforms = A.Compose([
+    A.Resize(32, 32),  # Slightly larger than target
+    A.RandomCrop(28, 28),
+    A.Rotate(limit=10, p=0.5),  # Small rotation
+    A.Normalize(mean=[0.1307], std=[0.3081]),  # MNIST stats
+    A.ToTensorV2(),
+])
+
+# Validation transforms - deterministic
+val_transforms = A.Compose([
+    A.Resize(28, 28),
+    A.Normalize(mean=[0.1307], std=[0.3081]),
+    A.ToTensorV2(),
+])
+```
+
+#### ImageNet-Style Pipeline (RGB, 224x224)
+
+Standard pipeline for RGB images, following ImageNet preprocessing:
+
+```python
+# Training transforms - comprehensive augmentation
+train_transforms = A.Compose([
+    A.RandomResizedCrop(224, 224, scale=(0.8, 1.0)),
+    A.HorizontalFlip(p=0.5),
+    A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1, p=0.8),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    A.ToTensorV2(),
+])
+
+# Validation transforms - deterministic
+val_transforms = A.Compose([
+    A.Resize(256, 256),
+    A.CenterCrop(224, 224),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    A.ToTensorV2(),
+])
+```
+
+### 3. Create Dataset Class
+
+Simple PyTorch dataset that integrates Albumentations:
+
+```python
+class ImageClassificationDataset(Dataset):
     def __init__(self, image_paths, labels, transform=None):
         self.image_paths = image_paths
         self.labels = labels
-        self.transform = transform # Assign the A.Compose object here
+        self.transform = transform
 
     def __len__(self):
         return len(self.image_paths)
 
     def __getitem__(self, idx):
-        image_path = self.image_paths[idx]
-        label = self.labels[idx]
-
-        # Read image
-        image = cv2.imread(image_path)
+        # Load image
+        image = cv2.imread(self.image_paths[idx])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Apply Albumentations transforms
+        # Apply transforms
         if self.transform:
-            # Pass image, get dictionary back
             augmented = self.transform(image=image)
-            # Extract the transformed image tensor
             image = augmented['image']
 
-        return image, label
-
-# --- Usage Example ---
-# Assuming train_paths, train_labels, val_paths, val_labels are defined
-# train_dataset = ClassificationDataset(train_paths, train_labels, transform=train_transform)
-# val_dataset = ClassificationDataset(val_paths, val_labels, transform=val_transform)
-
-# train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-# val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-
-# # Training loop would iterate through train_loader
-# for batch_images, batch_labels in train_loader:
-#     # Model training steps...
-#     pass
+        return image, self.labels[idx]
 ```
 
-### 6. Visualize Augmentations (Crucial Debugging Step)
+### 4. Training Integration Examples
 
-Always visualize the output of your *training* pipeline on sample images *before* starting a full training run. This helps verify that the transformations look reasonable and haven't corrupted the data.
-
-**Important:** Visualize the output *before* applying `A.Normalize` and `A.ToTensorV2`, as these change the data type and value range, making direct display difficult.
+#### MNIST-Style Training
 
 ```python
-import matplotlib.pyplot as plt
-import torch # For checking tensor type
+# Create datasets
+train_dataset = ImageClassificationDataset(train_paths, train_labels, train_transforms)
+val_dataset = ImageClassificationDataset(val_paths, val_labels, val_transforms)
 
-def visualize_augmentations(dataset, idx=0, samples=5):
-    # Make a copy of the transform list to modify for visualization
-    if isinstance(dataset.transform, A.Compose):
-        vis_transform_list = [
-            t for t in dataset.transform
-            if not isinstance(t, (A.Normalize, A.ToTensorV2))
-        ]
-        vis_transform = A.Compose(vis_transform_list)
-    else:
-        # Handle cases where transform might not be Compose (optional)
-        print("Warning: Could not automatically strip Normalize/ToTensor for visualization.")
-        vis_transform = dataset.transform
+# Create data loaders
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
-    figure, ax = plt.subplots(1, samples + 1, figsize=(12, 5))
+# Simple training loop
+model = nn.Sequential(
+    nn.Flatten(),
+    nn.Linear(28*28, 128),
+    nn.ReLU(),
+    nn.Linear(128, 10)
+)
 
-    # --- Get the original image --- #
-    # Temporarily disable transform to get raw image
-    original_transform = dataset.transform
-    dataset.transform = None
-    image, label = dataset[idx]
-    dataset.transform = original_transform # Restore original transform
+optimizer = torch.optim.Adam(model.parameters())
+criterion = nn.CrossEntropyLoss()
 
-    # Display original
-    ax[0].imshow(image)
-    ax[0].set_title("Original")
-    ax[0].axis("off")
-
-    # --- Apply and display augmented versions --- #
-    for i in range(samples):
-        # Apply the visualization transform
-        if vis_transform:
-            augmented = vis_transform(image=image)
-            aug_image = augmented['image']
-        else:
-             # Should not happen if dataset had a transform
-            aug_image = image
-
-        ax[i+1].imshow(aug_image)
-        ax[i+1].set_title(f"Augmented {i+1}")
-        ax[i+1].axis("off")
-
-    plt.tight_layout()
-    plt.show()
-
-# Assuming train_dataset is created with train_transform:
-# visualize_augmentations(train_dataset, samples=4)
-
-# Apply the Test Pipeline
-transformed_test = test_transform(image=image)
-test_image_tensor = transformed_test["image"]
+# Training
+model.train()
+for epoch in range(10):
+    for images, labels in train_loader:
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
 ```
+
+#### ImageNet-Style Training
+
+```python
+import torchvision.models as models
+
+# Create datasets with ImageNet-style transforms
+train_dataset = ImageClassificationDataset(train_paths, train_labels, train_transforms)
+val_dataset = ImageClassificationDataset(val_paths, val_labels, val_transforms)
+
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+
+# Use pre-trained model
+model = models.resnet18(pretrained=True)
+model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+criterion = nn.CrossEntropyLoss()
+
+# Training loop
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+
+for epoch in range(20):
+    model.train()
+    for images, labels in train_loader:
+        images, labels = images.to(device), labels.to(device)
+
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+    # Validation
+    model.eval()
+    val_loss, correct = 0, 0
+    with torch.no_grad():
+        for images, labels in val_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            val_loss += criterion(outputs, labels).item()
+            correct += (outputs.argmax(1) == labels).sum().item()
+
+    print(f'Epoch {epoch}: Val Loss: {val_loss/len(val_loader):.4f}, '
+          f'Val Acc: {correct/len(val_dataset):.4f}')
+```
+
+### 5. Quick Validation Check
+
+Always verify your transforms work correctly before training:
+
+```python
+# Quick check - load one image and see the output
+sample_image = cv2.imread(train_paths[0])
+sample_image = cv2.cvtColor(sample_image, cv2.COLOR_BGR2RGB)
+
+augmented = train_transforms(image=sample_image)
+print(f"Input shape: {sample_image.shape}")
+print(f"Output shape: {augmented['image'].shape}")
+print(f"Output type: {type(augmented['image'])}")
+# Expected: torch.Size([3, 224, 224]) for ImageNet-style
+```
+
+## Advanced Pipeline Examples
+
+### Stronger Augmentation Pipeline
+
+For when you need more regularization:
+
+```python
+strong_train_transforms = A.Compose([
+    A.RandomResizedCrop(224, 224, scale=(0.6, 1.0)),
+    A.HorizontalFlip(p=0.5),
+    A.OneOf([
+        A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.2),
+        A.ToGray(p=1.0),
+    ], p=0.8),
+    A.OneOf([
+        A.GaussianBlur(blur_limit=(1, 3)),
+        A.GaussNoise(var_limit=(10, 50)),
+    ], p=0.5),
+    A.CoarseDropout(max_holes=8, max_height=32, max_width=32, p=0.5),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    A.ToTensorV2(),
+])
+```
+
+### Domain-Specific Pipeline
+
+For medical images or other specialized domains:
+
+```python
+medical_transforms = A.Compose([
+    A.Resize(256, 256),
+    A.RandomCrop(224, 224),
+    A.SquareSymmetry(p=0.5),  # All 8 rotations/flips - proper for medical data
+    A.ElasticTransform(alpha=50, sigma=5, p=0.3),  # Tissue-like distortion
+    A.Normalize(mean=[0.5], std=[0.5]),  # Center around 0
+    A.ToTensorV2(),
+])
+```
+
+## Performance Tips
+
+1. **Use `num_workers`** in DataLoader for faster loading
+2. **Pin memory** with `pin_memory=True` if using GPU
+3. **Cache transforms** - don't recreate Compose objects in loops
+4. **Profile your pipeline** - augmentation shouldn't be the bottleneck
+
+```python
+# Optimized data loader
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=32,
+    shuffle=True,
+    num_workers=4,  # Parallel loading
+    pin_memory=True,  # Faster GPU transfer
+    persistent_workers=True  # Keep workers alive
+)
+```
+
+## Transform Selection Guide
+
+Classification is the simplest case since we only deal with images (no masks, bboxes, or keypoints). All transforms support image-only operation. For a comprehensive list of available transforms and their effects, see the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference.
+
+**Essential transforms for classification:**
+- **Scale/crop**: [`RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop), [`Resize`](https://explore.albumentations.ai/transform/Resize)
+- **Flip**: [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) (be careful with [`VerticalFlip`](https://explore.albumentations.ai/transform/VerticalFlip) - not suitable for natural images)
+- **Color**: [`ColorJitter`](https://explore.albumentations.ai/transform/ColorJitter), [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast)
+- **Regularization**: [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout), [`ToGray`](https://explore.albumentations.ai/transform/ToGray)
 
 ## Where to Go Next?
 
-This guide covered the basic mechanics of applying augmentations for classification. To build more effective pipelines, explore the wide variety of transforms available in Albumentations and refer back to the **[Choosing Augmentations](./choosing-augmentations.md)** guide for detailed advice on selecting, combining, and tuning transforms to maximize your model's performance.
+Now that you have working classification pipelines:
 
-Here are some further resources to explore:
-
--   **[Learn How to Pick Augmentations](./choosing-augmentations.md):** Deepen your understanding of selecting effective transforms.
--   **[Optimize Performance](./performance-tuning.md):** Learn strategies to speed up your augmentation pipeline.
--   Explore Other Tasks: See how augmentations are handled with targets:
-    -   [Semantic Segmentation](./semantic-segmentation.md)
-    -   [Object Detection](./bounding-boxes-augmentations.md)
-    -   [Keypoint Augmentation](./keypoint-augmentations.md)
--   **[Visually Explore Transforms](https://explore.albumentations.ai):** Browse the full range of available augmentations and their effects.
--   **[Review Core Concepts](../2-core-concepts/index.md):** Reinforce your understanding of the library's fundamentals.
--   **[Check Advanced Guides](../4-advanced-guides/index.md):** Look into topics like custom transforms or serialization.
+-   **[Optimize Your Augmentation Strategy](./choosing-augmentations.md):** Learn systematic approaches to selecting and tuning transforms for maximum performance.
+-   **[Performance Tuning](./performance-tuning.md):** Speed up your training pipeline and reduce data loading bottlenecks.
+-   **[Explore More Complex Tasks](../3-basic-usage/):** See how augmentations work with multiple targets:
+    -   [Object Detection](./bounding-boxes-augmentations.md) - handling bounding boxes
+    -   [Semantic Segmentation](./semantic-segmentation.md) - working with masks
+    -   [Keypoint Detection](./keypoint-augmentations.md) - preserving point annotations
+-   **[Advanced Techniques](../4-advanced-guides/):** Custom transforms, serialization, and specialized augmentation strategies.
+-   **[Interactive Exploration](https://explore.albumentations.ai):** Visually experiment with transforms on your own images.
+-   **[Core Concepts](../2-core-concepts/):** Deepen your understanding of [transforms](../2-core-concepts/transforms.md) and [pipelines](../2-core-concepts/pipelines.md).

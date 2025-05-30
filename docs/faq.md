@@ -105,6 +105,15 @@ Albumentations can process volumetric data by treating it as a sequence of 2D sl
 
 See [Working with Volumetric Data (3D)](./3-basic-usage/volumetric-augmentation.md) for more info.
 
+### Which transforms work with my data type?
+
+Different transforms support different combinations of targets (images, masks, bboxes, keypoints, volumes). Before building your pipeline, check the [Supported Targets by Transform](./reference/supported-targets-by-transform.md) reference to ensure your chosen transforms are compatible with your data types.
+
+This reference is particularly useful when:
+- Working with multiple targets simultaneously (e.g., images + masks + bboxes)
+- Planning volumetric (3D) augmentation pipelines
+- Debugging "unsupported target" errors
+- Choosing transforms for specific computer vision tasks
 
 ### My computer vision pipeline works with a sequence of images. I want to apply the same augmentations with the same parameters to each image in the sequence. Can Albumentations do it?
 
@@ -233,6 +242,18 @@ balanced_scale_transform = A.OneOf([
 
 This approach ensures that exactly half of the samples will be upscaled and half will be downscaled.
 
+### How do I know which transforms support my combination of targets?
+
+When working with multiple targets (images + masks + bboxes + keypoints), you need to ensure all transforms in your pipeline support your specific combination. The [Supported Targets by Transform](./reference/supported-targets-by-transform.md) reference shows exactly which transforms work with which target types.
+
+This is especially important when:
+- Building pipelines with bounding boxes or keypoints
+- Working with volumetric (3D) data
+- Debugging "unsupported target" errors
+- Migrating from other libraries
+
+For example, if you're working with images and bounding boxes, you'll need to use spatial-level (dual) transforms rather than pixel-level transforms, as pixel-level transforms don't modify bounding box coordinates.
+
 ### Augmentations have a parameter named `p` that sets the probability of applying that augmentation. How does `p` work in nested containers?
 
 The `p` parameter sets the probability of applying a specific augmentation. When augmentations are nested within a top-level container like [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose), the effective probability of each augmentation is the product of the container's probability and the augmentation's probability.
@@ -267,7 +288,11 @@ In this example, [`Resize`](https://explore.albumentations.ai/transform/Resize) 
 
 ### I created annotations for bounding boxes using labeling service or labeling software. How can I use those annotations in Albumentations?
 
-You need to convert those annotations to one of the formats, supported by Albumentations. For the list of formats, please refer to [this article](./3-basic-usage/bounding-boxes-augmentations.md). Consult the documentation of the labeling service to see how you can export annotations in those formats.
+You need to convert those annotations to one of the formats, supported by Albumentations. For the list of formats, please refer to [this article](./3-basic-usage/bounding-boxes-augmentations.md).
+
+**Note**: Not all transforms support bounding boxes. Check the [Supported Targets by Transform](./reference/supported-targets-by-transform.md) reference to see which transforms work with your specific combination of data types.
+
+Consult the documentation of the labeling service to see how you can export annotations in those formats.
 
 ## Integration and Migration
 

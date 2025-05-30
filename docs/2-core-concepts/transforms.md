@@ -339,6 +339,8 @@ result = spatial_pipeline(image=image, mask=mask)
 print(f"Image shape: {result['image'].shape}")
 print(f"Mask shape: {result['mask'].shape}")
 print("Spatial alignment maintained between image and mask")
+
+**Important**: When planning multi-target pipelines, always verify that your chosen transforms support all your target types. Check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to ensure compatibility before building complex pipelines.
 ```
 
 ### Validation Strategy

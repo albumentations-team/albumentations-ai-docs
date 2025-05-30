@@ -119,6 +119,8 @@ Here's how targets are typically handled for common tasks:
 *   **Keypoint Detection:** Keypoint coordinates (e.g., locations of facial features) must be transformed geometrically just like the image pixels. (Albumentations targets: `image`, `keypoints`)
 *   **Instance Segmentation:** This task often combines masks and bounding boxes, requiring transformations to be consistent across all of them. (Albumentations targets: `image`, `mask`, `bboxes`)
 
+**Important Note on Transform Compatibility:** Not all transforms support all target types. For example, pixel-level transforms like [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) only modify images and don't affect bounding boxes or keypoints, while spatial transforms like [`Rotate`](https://explore.albumentations.ai/transform/Rotate) modify both images and their associated targets. Before building your pipeline, check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to ensure your chosen transforms work with your specific combination of targets.
+
 Handling this synchronization manually can be complex and error-prone. A major advantage of libraries like Albumentations is that they are designed to handle this automatically. When you define a pipeline and pass your image along with its corresponding masks, bounding boxes, or keypoints using the correct arguments (e.g., `transform(image=img, mask=mask, bboxes=bboxes, keypoints=keypoints)`), the library ensures that all specified targets are transformed consistently with the image according to the rules of each augmentation.
 
 ## Conclusion
@@ -136,4 +138,5 @@ Now that you understand the concepts behind image augmentation, you might want t
 -   **[Learn the Core Concepts](../2-core-concepts/index.md):** Understand how Albumentations implements transforms, pipelines, and target handling.
 -   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore practical code for common tasks.
 -   **[Read How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get practical advice on selecting transforms for your specific problem.
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** See which transforms work with your specific combination of targets (images, masks, bboxes, keypoints, volumes).
 -   **[Explore Transforms Visually](https://explore.albumentations.ai):** Experiment with different augmentations and their effects.

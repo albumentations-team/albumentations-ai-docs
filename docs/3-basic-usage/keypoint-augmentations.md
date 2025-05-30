@@ -52,7 +52,7 @@ The process of augmenting keypoints looks very similar to the bounding boxes aug
 4. You pass an image and keypoints to the augmentation pipeline and receive augmented images and keypoints.
 
 !!! note "Note"
-    Some transforms in Albumentation don't support keypoints. If you try to use them you will get an exception. Please refer to [this article](transforms-and-targets.md) to check whether a transform can augment keypoints.
+    Some transforms in Albumentation don't support keypoints. If you try to use them you will get an exception. Please refer to the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to check whether a transform can augment keypoints.
 
 ## Step 1. Import the required libraries.
 
@@ -223,6 +223,7 @@ Some augmentations may affect class labels and make them incorrect. For example,
 
 Now that you know how to augment keypoints, you might want to:
 
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** Essential reference for keypoint tasks - verify which transforms support keypoints before building your pipeline.
 -   **[Review Core Concepts](../2-core-concepts/index.md):** Understand the fundamentals of [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md).
 -   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Get advice on selecting transforms suitable for keypoint-based tasks (and be mindful of transforms like `HorizontalFlip` potentially affecting labels).
 -   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your augmentation pipeline.

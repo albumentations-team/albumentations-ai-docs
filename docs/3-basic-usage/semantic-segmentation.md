@@ -70,6 +70,8 @@ val_transform = A.Compose([
 ])
 ```
 
+**Important: Transform Compatibility**: When building segmentation pipelines, ensure all your chosen transforms support mask targets. Spatial transforms (like [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip), [`Rotate`](https://explore.albumentations.ai/transform/Rotate)) affect both image and mask, while pixel transforms (like [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast)) only affect the image. Check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to verify compatibility before adding transforms to your pipeline.
+
 **Important Note on Mask Interpolation and Target Handling:**
 
 When applying geometric transformations like resizing, rotation, or warping, the method used to calculate new pixel values (interpolation) is critical, especially for masks.
@@ -301,6 +303,7 @@ This guide provides the foundation for applying augmentations in semantic segmen
 
 With the basics of semantic segmentation augmentation covered, you might want to:
 
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** Essential for segmentation - verify which transforms support mask targets to avoid pipeline errors.
 -   **[Deepen Your Augmentation Strategy](./choosing-augmentations.md):** Focus on selecting and tuning transforms specifically for segmentation performance.
 -   **[Optimize Pipeline Speed](./performance-tuning.md):** Learn techniques to make your image and mask augmentations faster.
 -   **Explore Related Tasks:**

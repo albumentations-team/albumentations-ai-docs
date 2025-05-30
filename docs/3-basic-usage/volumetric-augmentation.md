@@ -93,6 +93,8 @@ Here are some examples of available 3D transforms:
 - [`CoarseDropout3D`](https://explore.albumentations.ai/transform/CoarseDropout3D) - Random dropout of 3D cubic regions
 - [`CubicSymmetry`](https://explore.albumentations.ai/transform/CubicSymmetry) - Apply random cubic symmetry transformations
 
+**Important: 3D Transform Compatibility**: Only specific transforms support volumetric data (`volume`, `mask3d`). Regular 2D transforms work slice-wise on volumes, while dedicated 3D transforms operate on the entire volume. Check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to see which transforms support 3D targets and which are 2D-only.
+
 For a complete and up-to-date list of all available 3D transforms, please see our [API Reference](api-reference/augmentations/3d-transforms.md).
 
 ## Combining 2D and 3D Transforms
@@ -183,6 +185,7 @@ transformed = transform(volume=volume, mask3d=mask)
 
 After learning the basics of volumetric augmentation:
 
+-   **[Check 3D Transform Compatibility](../reference/supported-targets-by-transform.md):** Essential for volumetric pipelines - verify which transforms support `volume` and `mask3d` targets vs. 2D slice-wise processing.
 -   **[Explore 3D Transforms API](../reference/augmentations/3d-transforms.md):** See the full list of available 3D-specific augmentations and their parameters.
 -   **[Review Core Concepts](../2-core-concepts):** Understand how [Targets](../2-core-concepts/targets.md) (`volume`, `mask3d`) and [Pipelines](../2-core-concepts/pipelines.md) handle 3D data and mixed 2D/3D transforms.
 -   **[Refine Augmentation Choices](./choosing-augmentations.md):** Consider which 2D (slice-wise) and 3D transforms best suit your specific volumetric data and task.
