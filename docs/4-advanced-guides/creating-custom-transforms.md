@@ -14,11 +14,45 @@ Why create a custom transform?
 *   Wrap functions from external image processing libraries.
 *   Encapsulate complex or conditional logic.
 
+## Quick Reference: Transform Creation Essentials
+
+### **Learning Path**
+1. **🟢 Essential**: Steps 1-2 (Image-only transforms)
+2. **🟡 Intermediate**: Step 3 (Multiple images)
+3. **🟠 Advanced**: Step 4 (Multi-target), 🟠 Validation, 🟠 Custom Data
+
+### **Key Concepts**
+```python
+# Base Classes (choose one)
+A.ImageOnlyTransform  # Modifies only image pixels
+A.DualTransform      # Modifies image + mask/bboxes/keypoints
+A.Transform3D        # For 3D/volumetric data
+
+# Essential Methods (implement these)
+def __init__(self, p=0.5):                           # Setup & parameters
+def get_params_dependent_on_data(self, params, data): # Sample random values
+def apply(self, img, **params):                      # Transform logic
+```
+
+### **Critical Rules**
+- **⚠️ Probability Default**: `p=0.5` by default - use `p=1.0` for always-applied transforms
+- **🎲 Reproducibility**: Use `self.py_random` or `self.random_generator` (never global `random`)
+- **📊 Parameter Sampling**: Do ALL random sampling in `get_params_dependent_on_data`
+
+### **Transform Types Quick Guide**
+| Use Case | Base Class | Key Methods |
+|----------|------------|-------------|
+| Change pixels only | `ImageOnlyTransform` | `apply` |
+| Change image + mask/bboxes/keypoints | `DualTransform` | `apply`, `apply_to_mask`, `apply_to_bboxes`, `apply_to_keypoints` |
+| Handle 3D volumes | `Transform3D` | `apply_to_volume` |
+
+---
+
 ## Core Concept: Inheriting from Base Classes
 
 To integrate with Albumentations, custom transforms inherit from base classes like `A.ImageOnlyTransform`, `A.DualTransform`, or `A.Transform3D`. These base classes provide the structure for handling different data targets (`image`, `mask`, `bboxes`, etc.) and probabilities.
 
-## Important: Default Probability
+## ⚠️ Important: Default Probability
 
 The `BasicTransform` class, which all transform classes inherit from, has a default value of `p=0.5`. This means if you don't explicitly specify the probability parameter in your custom transform's constructor, it will only be applied 50% of the time.
 
@@ -36,7 +70,9 @@ class MyAlwaysAppliedTransform(A.ImageOnlyTransform):
         super().__init__(p=1.0)
 ```
 
-## Step 1: Minimal Image-Only Transform
+---
+
+## 🟢 Step 1: Minimal Image-Only Transform (Essential)
 
 Let's start with the simplest case: a transform that only modifies the image pixels and involves some randomness. We'll inherit from `A.ImageOnlyTransform`.
 
@@ -84,7 +120,7 @@ pipeline = A.Compose([
 ])
 ```
 
-**Explanation:**
+**Key Points:**
 
 1.  **`__init__(self, ...)`:** The constructor receives configuration parameters (`factor_range`). It calls `super().__init__(p=p)` to handle the standard probability logic.
 2.  **`get_params_dependent_on_data(self, params, data)`:** This method is called once per transform invocation (if probability `p` is met). Its primary role is to sample any random values needed for the augmentation and perform any calculations (potentially based on the input `data` dictionary) that need to be shared across different `apply_to_...` methods (like `apply`, `apply_to_mask`, etc.). It receives the `params` dict from `get_params` (which is empty in this workflow) and the `data` dict. Returning values in a dictionary ensures they are computed only once and then passed consistently to the relevant apply methods via the `**params` argument.
@@ -92,7 +128,9 @@ pipeline = A.Compose([
 
 This minimal example demonstrates the basic structure. `get_params_dependent_on_data()` is the method used for sampling augmentation parameters and centralizing calculations.
 
-## Step 2: Data-Dependent Image-Only Transform
+---
+
+## 🟢 Step 2: Data-Dependent Image-Only Transform (Essential)
 
 Now, let's create a transform where the parameters calculated depend on the input image itself. We'll still use `ImageOnlyTransform` as we only modify the image pixels.
 
@@ -145,7 +183,9 @@ class PerImageNormalize(ImageOnlyTransform):
 
 This example shows how `get_params_dependent_on_data` allows you to compute augmentation parameters based on the specific input image being processed.
 
-## Step 3: Handling Multiple Images Efficiently (within ImageOnlyTransform)
+---
+
+## 🟡 Step 3: Handling Multiple Images Efficiently (Intermediate)
 
 While `ImageOnlyTransform` focuses on modifying only image pixels, it can still receive multiple images via the `images` keyword argument (e.g., for video frames or batches needing consistent parameters). The *default* behavior might loop through each image slice and apply the single-image `apply` method using the same parameters for all slices.
 
@@ -222,7 +262,7 @@ class PerImageNormalizeEfficient(ImageOnlyTransform): # Renamed for clarity
     # key is present in the input data.
 ```
 
-**Explanation:**
+**Key Points:**
 
 1.  **Inheritance:** We still inherit from `A.ImageOnlyTransform`.
 2.  **`get_params_dependent_on_data`:** This is updated to detect if `'image'` or `'images'` is present in the input `data` and calculate the mean/std accordingly (either a single value/vector or an array of values/vectors). It returns the calculated parameters in a dictionary.
@@ -231,7 +271,9 @@ class PerImageNormalizeEfficient(ImageOnlyTransform): # Renamed for clarity
 
 This `PerImageNormalizeEfficient` class now correctly handles both single images (via `apply`) and sequences/batches (via the overridden `apply_to_images`) while still being an `ImageOnlyTransform`, providing efficiency and correctness for the per-image normalization task.
 
-## Step 4: Geometric Transform Affecting Multiple Targets (Manual Implementation)
+---
+
+## 🟠 Step 4: Geometric Transform Affecting Multiple Targets (Advanced)
 
 This step shows how to implement a custom geometric transform inheriting from `A.DualTransform` and manually applying the transformation logic. Remember that `apply_to_bboxes` and `apply_to_keypoints` receive data in a standardized internal format.
 
@@ -337,7 +379,15 @@ class RandomShiftMultiTargetManual(DualTransform):
         return keypoints_shifted
 ```
 
-## Reproducibility and Random Number Generation
+## Using Custom Transforms in Pipelines
+
+Once defined, your custom transform class is used just like any built-in Albumentations transform. Simply instantiate it and add it to your `A.Compose` list.
+
+---
+
+## 🔴 Advanced Topics
+
+### Reproducibility and Random Number Generation
 
 To ensure your custom transforms produce reproducible results when a seed is set for the overall pipeline using `A.Compose(..., seed=...)`, you **must** use the random number generators provided by the base transform classes: `self.py_random` and `self.random_generator`.
 
@@ -357,7 +407,7 @@ The **only** way to ensure seeded reproducibility for random operations within y
 
 Always use `self.py_random` or `self.random_generator` within your `get_params_dependent_on_data` method for any random sampling.
 
-## Input Parameter Validation with `InitSchema`
+### 🟠 Input Parameter Validation with `InitSchema`
 
 When creating custom transforms, especially ones with multiple configuration parameters, it's crucial to validate the inputs provided during initialization (`__init__`). Without validation, incorrect parameter values (e.g., wrong type, out-of-range numbers) might only cause errors much later during the training loop, potentially deep into an epoch, making debugging difficult. This violates the "fail fast" principle.
 
@@ -459,7 +509,7 @@ except ValidationError as e:
 ```
 This example demonstrates how `@model_validator` enforces complex rules involving multiple `__init__` parameters, ensuring the transform is configured correctly.
 
-## Passing Arbitrary Data via `targets_as_params`
+### 🟠 Passing Arbitrary Data via `targets_as_params`
 
 Standard Albumentations targets like `image`, `mask`, `bboxes`, `keypoints` are automatically handled by the base transform classes (`ImageOnlyTransform`, `DualTransform`, etc.). However, sometimes you need to pass arbitrary data through the pipeline to your custom transform – data that isn't one of the standard types but is needed to determine the augmentation parameters.
 
@@ -633,15 +683,6 @@ averaged_image = augmented_data["image"]
 ```
 
 This powerful mechanism allows custom transforms to leverage arbitrary external data or metadata during the augmentation process, enabling highly flexible and complex augmentation scenarios.
-
-## Step 4: Geometric Transform Affecting Multiple Targets (Manual Implementation)
-
-This step shows how to implement a custom geometric transform inheriting from `A.DualTransform` and manually applying the transformation logic. Remember that `apply_to_bboxes` and `apply_to_keypoints` receive data in a standardized internal format.
-
-
-## Using Custom Transforms in Pipelines
-
-Once defined, your custom transform class is used just like any built-in Albumentations transform. Simply instantiate it and add it to your `A.Compose` list.
 
 ## Where to Go Next?
 
