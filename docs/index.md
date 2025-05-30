@@ -6,6 +6,7 @@ This documentation will guide you through installing the library, understanding 
 
 ## Getting Started
 
+*   **[Quick Start](./1-introduction/quick-start.md):** Get up and running with your first augmentation pipeline in 5 minutes.
 *   **[Introduction](./1-introduction/index.md):** Learn what data augmentation is and why it's important.
 *   **[Installation](./1-introduction/installation.md):** Set up Albumentations in your environment.
 

@@ -156,6 +156,7 @@ print("Image1, Image2, and Mask_extra all vertically flipped identically.")
 After learning how to use additional targets, consider these resources and next steps:
 
 -   **Integrate into Task Pipelines:** Apply this technique in relevant basic usage scenarios like [Video Augmentation](../3-basic-usage/video-augmentation.md) (if treating frames separately), multi-modal data, or image restoration setups.
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** Verify which transforms support your specific combination of additional targets before building complex pipelines.
 -   **Review Core Concepts:** Revisit [Targets](../2-core-concepts/targets.md) and [Pipelines](../2-core-concepts/pipelines.md) to solidify your understanding of how `A.Compose` manages different inputs.
 -   **Explore Other Advanced Guides:**
     -   [Serialization](./serialization.md): Save pipelines that use additional targets.

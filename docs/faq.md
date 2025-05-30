@@ -294,6 +294,150 @@ You need to convert those annotations to one of the formats, supported by Albume
 
 Consult the documentation of the labeling service to see how you can export annotations in those formats.
 
+## Troubleshooting and Performance
+
+### My augmentations aren't working as expected. How do I debug them?
+
+**Step 1: Visualize your pipeline output**
+Always check what your augmentations are actually doing:
+
+```python
+# Remove Normalize and ToTensorV2 for visualization
+vis_transform = A.Compose([
+    t for t in your_transform.transforms
+    if not isinstance(t, (A.Normalize, A.ToTensorV2))
+])
+
+# Apply and display
+result = vis_transform(image=image)
+plt.imshow(result['image'])
+```
+
+**Step 2: Check probabilities**
+Low probabilities might make transforms seem inactive:
+```python
+# Force application for testing
+test_transform = A.HorizontalFlip(p=1.0)  # Always apply
+```
+
+**Step 3: Verify transform compatibility**
+Check the [Supported Targets by Transform](./reference/supported-targets-by-transform.md) to ensure your transforms support your data types.
+
+**Step 4: Print transform parameters**
+```python
+# Add this to see what parameters are being sampled
+transform.transforms[0].get_params()  # For specific transform debugging
+```
+
+### Why are my augmentations slow? How can I optimize performance?
+
+**Priority fixes (biggest impact):**
+
+1. **Crop early**: Place cropping transforms first in your pipeline
+```python
+# ✅ Good - process smaller images
+A.Compose([
+    A.RandomCrop(224, 224),  # First!
+    A.HorizontalFlip(),
+    A.GaussianBlur(),
+])
+
+# ❌ Bad - process full-size images unnecessarily
+A.Compose([
+    A.GaussianBlur(),
+    A.RandomCrop(224, 224),  # Too late
+])
+```
+
+2. **Use efficient image loading**: OpenCV is usually fastest
+```python
+# ✅ Fastest
+image = cv2.imread(path)
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+# ❌ Slower
+image = Image.open(path)
+image = np.array(image)
+```
+
+3. **Optimize DataLoader**: Use multiple workers and pin memory
+```python
+DataLoader(dataset, batch_size=32, num_workers=4, pin_memory=True)
+```
+
+For comprehensive optimization strategies, see the [Performance Tuning Guide](./3-basic-usage/performance-tuning.md).
+
+### I'm getting memory errors with large images. What should I do?
+
+**For very large images (>4K resolution):**
+
+1. **Crop aggressively early**: Use small crop sizes in your pipeline
+2. **Process in patches**: Crop multiple smaller regions instead of resizing the whole image
+3. **Use lower precision**: Convert to `float16` if your model supports it
+4. **Reduce batch size**: Use gradient accumulation instead of large batches
+
+```python
+# Memory-efficient pipeline for large images
+memory_efficient = A.Compose([
+    A.RandomCrop(512, 512, p=1.0),  # Much smaller than original
+    A.HorizontalFlip(p=0.5),
+    # ... other transforms on smaller image
+])
+```
+
+### I'm getting shape mismatch errors. How do I fix them?
+
+**Common causes and solutions:**
+
+1. **Multi-target shape mismatch**: All targets must have same spatial dimensions
+```python
+# ✅ Correct - same height/width
+image = np.random.rand(256, 256, 3)  # (H, W, C)
+mask = np.random.rand(256, 256)      # (H, W)
+
+# ❌ Wrong - different spatial dimensions
+image = np.random.rand(256, 256, 3)  # (H, W, C)
+mask = np.random.rand(128, 128)      # Different (H, W)
+```
+
+2. **Volume/3D shape issues**: Check depth dimension alignment
+```python
+# ✅ Correct for 3D
+volume = np.random.rand(64, 256, 256)    # (D, H, W)
+mask3d = np.random.rand(64, 256, 256)    # Same (D, H, W)
+```
+
+3. **Bbox format confusion**: Verify your bbox format matches BboxParams
+```python
+# Make sure format matches your actual data
+bbox_params = A.BboxParams(format='pascal_voc')  # [x_min, y_min, x_max, y_max]
+# vs
+bbox_params = A.BboxParams(format='coco')        # [x_min, y_min, width, height]
+```
+
+### How do I handle images with different aspect ratios efficiently?
+
+**Strategy 1: Letterboxing (preserves all content)**
+```python
+A.Compose([
+    A.LongestMaxSize(max_size=512),
+    A.PadIfNeeded(min_height=512, min_width=512, border_mode=cv2.BORDER_CONSTANT),
+])
+```
+
+**Strategy 2: Smart cropping (may lose some content)**
+```python
+A.Compose([
+    A.SmallestMaxSize(max_size=512),
+    A.RandomCrop(512, 512),
+])
+```
+
+**Strategy 3: Aspect-ratio aware resizing**
+```python
+A.RandomResizedCrop(512, 512, scale=(0.8, 1.0), ratio=(0.75, 1.33))
+```
+
 ## Integration and Migration
 
 ### How to save and load augmentation transforms to HuggingFace Hub?

@@ -208,6 +208,7 @@ heavy_transform = A.Compose([
 Understanding probabilities is crucial for controlling your augmentation pipelines. Now you can:
 
 -   **[Review Pipelines](./pipelines.md):** See how probabilities function within different composition utilities like `Compose`, `OneOf`, `SomeOf`, and `Sequential`.
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** When planning probability-based pipelines with multiple targets, verify which transforms support your data types.
 -   **[Visually Explore Transforms](https://explore.albumentations.ai):** Experiment with different augmentations, their parameters, and consider the impact of their `p` values.
 -   **[See Basic Usage Examples](../3-basic-usage/index.md):** Look at practical code applying pipelines with specific probabilities for different tasks.
 -   **[Learn How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get insights into choosing appropriate transforms and their probabilities.

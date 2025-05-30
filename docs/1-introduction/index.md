@@ -26,6 +26,7 @@ As you explore Albumentations, you'll encounter these key ideas:
 
 Ready to dive in? Here are some recommended next steps:
 
+-   **[Quick Start](./quick-start.md):** Jump right in! Get your first augmentation pipeline working in 5 minutes.
 -   **[Installation](./installation.md):** Get Albumentations set up in your environment.
 -   **[Core Concepts](../2-core-concepts/index.md):** Understand the building blocks:
     -   [Transforms](../2-core-concepts/transforms.md): Individual augmentation operations.
