@@ -19,7 +19,7 @@ Why create a custom transform?
 ### **Learning Path**
 1. **🟢 Essential**: Steps 1-2 (Image-only transforms)
 2. **🟡 Intermediate**: Step 3 (Multiple images)
-3. **🟠 Advanced**: Step 4 (Multi-target), Validation, Custom Data
+3. **🟠 Advanced**: Step 4 (Multi-target), 🟠 Validation, 🟠 Custom Data
 
 ### **Key Concepts**
 ```python
@@ -43,7 +43,7 @@ def apply(self, img, **params):                      # Transform logic
 | Use Case | Base Class | Key Methods |
 |----------|------------|-------------|
 | Change pixels only | `ImageOnlyTransform` | `apply` |
-| Change image + mask/bboxes | `DualTransform` | `apply`, `apply_to_mask`, `apply_to_bboxes` |
+| Change image + mask/bboxes/keypoints | `DualTransform` | `apply`, `apply_to_mask`, `apply_to_bboxes`, `apply_to_keypoints` |
 | Handle 3D volumes | `Transform3D` | `apply_to_volume` |
 
 ---
@@ -407,7 +407,7 @@ The **only** way to ensure seeded reproducibility for random operations within y
 
 Always use `self.py_random` or `self.random_generator` within your `get_params_dependent_on_data` method for any random sampling.
 
-### Input Parameter Validation with `InitSchema`
+### 🟠 Input Parameter Validation with `InitSchema`
 
 When creating custom transforms, especially ones with multiple configuration parameters, it's crucial to validate the inputs provided during initialization (`__init__`). Without validation, incorrect parameter values (e.g., wrong type, out-of-range numbers) might only cause errors much later during the training loop, potentially deep into an epoch, making debugging difficult. This violates the "fail fast" principle.
 
@@ -509,7 +509,7 @@ except ValidationError as e:
 ```
 This example demonstrates how `@model_validator` enforces complex rules involving multiple `__init__` parameters, ensuring the transform is configured correctly.
 
-### Passing Arbitrary Data via `targets_as_params`
+### 🟠 Passing Arbitrary Data via `targets_as_params`
 
 Standard Albumentations targets like `image`, `mask`, `bboxes`, `keypoints` are automatically handled by the base transform classes (`ImageOnlyTransform`, `DualTransform`, etc.). However, sometimes you need to pass arbitrary data through the pipeline to your custom transform – data that isn't one of the standard types but is needed to determine the augmentation parameters.
 
