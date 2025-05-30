@@ -183,28 +183,65 @@ pipeline = A.Compose([
     blur_transform,
 ])
 
-# Remove a specific transform instance
-reduced_pipeline = pipeline - flip_transform
+# Remove transforms by class type
+reduced_pipeline = pipeline - A.HorizontalFlip
 # Result: [RandomCrop, RandomBrightnessContrast, GaussianBlur]
 
-# Note: Only the exact instance is removed
-different_flip = A.HorizontalFlip(p=0.5)  # Different instance, same parameters
-# pipeline - different_flip  # Would raise ValueError: transform not found
+# Note: Removal works by class type, parameters don't matter
+another_flip = A.HorizontalFlip(p=0.8)  # Different parameters
+pipeline_with_another = A.Compose([A.RandomCrop(224, 224), another_flip])
+reduced_again = pipeline_with_another - A.HorizontalFlip  # Works! Class type matches
 
 # Chain removal operations
-further_reduced = reduced_pipeline - brightness_transform - blur_transform
-# Result: [RandomCrop]
+further_reduced = reduced_pipeline - A.RandomBrightnessContrast - A.GaussianBlur
 ```
+
+> **⚠️ Important: Class-Based Removal**
+>
+> The `-` operator removes transforms by **class type**, not by instance object. This means:
+> - ✅ Pass the **transform class** (e.g., `A.HorizontalFlip`) to remove any instance of that class
+> - ✅ No need to store transform instances - just use the class name
+> - ⚠️ Only the **first occurrence** of that class type is removed if multiple exist
+>
+> ```python
+> # ✅ CORRECT: Remove by class type
+> pipeline = A.Compose([A.Resize(224, 224), A.HorizontalFlip(p=0.5)])
+> modified = pipeline - A.HorizontalFlip  # Works! Removes the HorizontalFlip transform
+>
+> # ✅ WORKS FROM COMPLEX PIPELINES: Remove from anywhere in the pipeline
+> complex_pipeline = A.Compose([
+>     A.RandomCrop(256, 256),
+>     A.HorizontalFlip(p=0.5),
+>     A.RandomBrightnessContrast(p=0.3),
+>     A.GaussianBlur(p=0.2)
+> ])
+> without_flip = complex_pipeline - A.HorizontalFlip  # Removes HorizontalFlip from middle
+> # Result: [RandomCrop, RandomBrightnessContrast, GaussianBlur]
+>
+> # ⚠️ Multiple instances: Only first occurrence removed
+> pipeline = A.Compose([
+>     A.HorizontalFlip(p=0.3),
+>     A.VerticalFlip(p=0.5),
+>     A.HorizontalFlip(p=0.8)
+> ])
+> modified = pipeline - A.HorizontalFlip  # Removes first HorizontalFlip (p=0.3)
+> # Result: [VerticalFlip(p=0.5), HorizontalFlip(p=0.8)]
+> ```
 
 ### Important Notes about Pipeline Modification
 
-*   **Instance-Based Removal:** The `-` operator removes transforms based on object identity, not parameter equality. Only the exact transform instance passed to the original pipeline can be removed.
+*   **Class-Based Removal:** The `-` operator removes transforms based on class type using `type(transform) is TargetClass`. The specific parameters or instance identity don't matter.
 
 *   **Parameter Preservation:** All pipeline modification operations preserve the original configuration including `bbox_params`, `keypoint_params`, `additional_targets`, `seed`, and other settings.
 
 *   **New Instance Creation:** All operators (`+`, `-`) return new `Compose` instances without modifying the original pipeline. This ensures thread safety and prevents unintended side effects.
 
 *   **Type Restrictions:** You can only add or remove `BasicTransform` instances (individual transforms), not `BaseCompose` instances (composition classes like `OneOf`, `SomeOf`, etc.).
+
+*   **Error Handling:**
+    - Adding non-`BasicTransform` instances raises `TypeError`
+    - Removing a transform not found in the pipeline raises `ValueError: Transform not found`
+    - Removing non-`BasicTransform` instances raises `TypeError`
 
 *   **Random State Inheritance:** New pipeline instances inherit the random state from the original pipeline, ensuring consistent behavior.
 
@@ -326,6 +363,7 @@ pipeline = A.Compose([
 
 *   **Number of transforms (`n`):** This can be a fixed integer or a tuple `(min_n, max_n)`. If it's a tuple, the number of transforms *selected* will be a random integer chosen uniformly from the range `[min_n, max_n]` (inclusive) on each call.
 *   **Selection Method (`replace`):** By default (`replace=False`), transforms are selected *without* replacement. If `replace=True`, transforms are selected *with* replacement.
+*   **Uniform Selection:** Transforms are selected **uniformly at random** from the list - each transform has an equal chance of being chosen, regardless of their individual `p` values.
 *   **Main Probability (`p`):** Controls the probability that the [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) block executes at all. If this check fails, none of the transforms inside are considered.
 *   **Individual Probabilities:** Crucially, after [`SomeOf`](https://albumentations.ai/docs/api-reference/core/composition/#SomeOf) selects the transforms, it attempts to apply each one. **Each selected transform is only applied if its own individual `p` value passes.** The `p` values inside the list are *not* ignored after selection.
 
