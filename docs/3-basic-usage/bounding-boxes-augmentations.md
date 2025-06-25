@@ -195,7 +195,7 @@ def draw_bboxes(image_np, bboxes, labels, class_name_map=None, color=(0, 255, 0)
         if len(bboxes) != len(labels):
             print("Warning: bbox and label length mismatch, cannot draw labels.")
             labels = np.array(['?' for _ in bboxes]) # Placeholder
-        elif labels.dtype == np.object:
+        elif labels.dtype == object:
              print("Warning: labels contain object dtype, converting to string.")
              labels = labels.astype(str)
 
