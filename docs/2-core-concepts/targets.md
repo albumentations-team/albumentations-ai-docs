@@ -29,8 +29,63 @@ are optional and depend on your specific task. All data is passed as keyword arg
 
 ### Data Type Requirements
 
-All image-like data (image, images, volume, volumes) **must be `uint8` or `float32`** NumPy arrays.
-Masks can be any integer type, while bboxes and keypoints are typically `float32`.
+All data passed to Albumentations **must be NumPy arrays**:
+- **Image-like data** (image, images, volume, volumes): Must be `uint8` or `float32` NumPy arrays
+- **Masks**: Can be any integer type NumPy array
+- **Bounding boxes**: Must be NumPy arrays, typically `float32` with shape `(num_boxes, 4)`
+- **Keypoints**: Must be NumPy arrays, typically `float32` with shape `(num_keypoints, 2+)`
+- **Labels**: Must be NumPy arrays (can be string or numeric dtype)
+
+**Note:** Lists are no longer supported for any data type - all inputs must be NumPy arrays.
+
+### Grayscale Image Handling
+
+Albumentations' `Compose` automatically handles grayscale images for convenience:
+
+**Important Context:**
+- **All individual transforms require** grayscale images to have an explicit channel dimension `(H, W, 1)`
+- **Compose provides the convenience layer** by automatically handling both formats
+- This eliminates the need for boilerplate code to check and add channel dimensions
+
+**Automatic Channel Dimension Management:**
+- **Input flexibility**: You can pass grayscale images with or without an explicit channel dimension to `Compose`
+- **Internal preprocessing**: `Compose` automatically adds a channel dimension if missing:
+  - `(H, W)` → `(H, W, 1)`
+  - `(N, H, W)` → `(N, H, W, 1)` for multiple images
+  - `(D, H, W)` → `(D, H, W, 1)` for volumes
+- **Consistent processing**: All transforms then operate on consistent dimensions:
+  - Single images: `ndim=3`
+  - Multiple images/single volumes: `ndim=4`
+  - Multiple volumes: `ndim=5`
+- **Automatic cleanup**: If a channel dimension was added, `Compose` removes it in post-processing, returning the original format
+
+**Why This Matters:**
+```python
+import albumentations as A
+import numpy as np
+
+# Using Compose - handles both formats automatically
+transform = A.Compose([A.HorizontalFlip(p=1.0)])
+
+grayscale_2d = np.random.randint(0, 256, (100, 100), dtype=np.uint8)      # (H, W)
+grayscale_3d = np.random.randint(0, 256, (100, 100, 1), dtype=np.uint8)  # (H, W, 1)
+
+# Both work with Compose - no boilerplate needed
+result_2d = transform(image=grayscale_2d)  # Compose handles conversion
+result_3d = transform(image=grayscale_3d)  # Already in correct format
+
+# Direct transform usage - REQUIRES channel dimension
+flip = A.HorizontalFlip(p=1.0)
+
+# This will fail - transforms expect (H, W, 1)
+# flipped_2d = flip(image=grayscale_2d)  # ❌ Will not work
+
+# Must add channel dimension for direct usage
+grayscale_with_channel = grayscale_2d[..., np.newaxis]  # (H, W) -> (H, W, 1)
+flipped = flip(image=grayscale_with_channel)  # ✅ Works correctly
+```
+
+This design eliminates the boilerplate of checking and adding channel dimensions in every transform, while maintaining consistency across the library.
 
 ## 2D Targets
 
@@ -190,11 +245,23 @@ geospatial data, computer graphics, and other volumetric datasets.
 
 ## Target Compatibility Matrix
 
-| Transform Type | image | mask | bboxes | keypoints | volume | mask3d |
-|---------------|-------|------|--------|-----------|--------|---------|
-| **Spatial** (Flip, Rotate, Crop) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Pixel** (Brightness, Blur, Noise) | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Geometric** (Affine, Perspective) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+This simplified matrix shows the general compatibility between transform categories and different targets.
+Note that individual transforms within each category may have specific limitations.
+
+| Transform Category | Description | image | mask | bboxes | keypoints | volume | mask3d |
+|-------------------|-------------|-------|------|--------|-----------|--------|---------|
+| **Pixel-level** | Modify pixel values only (color, brightness, noise, blur) | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Spatial-level** | Modify geometry (flip, rotate, crop, resize) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **3D-specific** | Designed for volumetric data | ❌ | ❌ | ❌ | Sometimes | ✅ | ✅ |
+
+**Key Points:**
+- **Pixel-level transforms**: Only affect pixel values in images/volumes, leaving spatial information unchanged
+- **Spatial-level transforms**: Apply geometric changes consistently across all supported targets
+- **3D transforms**: Specifically designed for volumetric data (medical imaging, etc.)
+
+⚠️ **Important:** This is a simplified overview. Individual transforms may have specific requirements or limitations.
+For a complete, up-to-date reference of which transforms support which targets, see the
+[Supported Targets by Transform Reference](https://albumentations.ai/docs/reference/supported-targets-by-transform/).
 
 ## Practical Examples
 
@@ -290,6 +357,7 @@ result = transform(
 1. **Shape Matching**: Ensure all spatial targets have matching dimensions
 2. **Data Types**: Use `uint8` for images, appropriate types for other targets
 3. **Coordinate Systems**: Verify bbox/keypoint formats match your data
+4. **Array Format**: All targets must be NumPy arrays - lists are no longer supported for bboxes, keypoints, or labels
 
 ### Performance Optimization
 
@@ -316,7 +384,7 @@ Now that you understand how Albumentations handles different data targets, you c
 **Advanced Topics:**
 -   **[Additional Targets](../4-advanced-guides/additional-targets.md)** - Define custom data types beyond standard targets
 -   **[Pipelines](./pipelines.md)** - Understand how `A.Compose` orchestrates transforms across targets
--   **[Transform Compatibility](../reference/supported-targets-by-transform.md)** - See which transforms support which targets
+-   **[Supported Targets by Transform](https://albumentations.ai/docs/reference/supported-targets-by-transform/)** - Complete reference of transform-target compatibility
 
 **Interactive Learning:**
 -   **[Explore Transforms](https://explore.albumentations.ai)** - Visualize how different transforms affect various targets
