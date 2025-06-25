@@ -32,6 +32,50 @@ are optional and depend on your specific task. All data is passed as keyword arg
 All image-like data (image, images, volume, volumes) **must be `uint8` or `float32`** NumPy arrays.
 Masks can be any integer type, while bboxes and keypoints are typically `float32`.
 
+### Grayscale Image Handling
+
+Albumentations' `Compose` automatically handles grayscale images for convenience:
+
+**Automatic Channel Dimension Management:**
+- **Input flexibility**: You can pass grayscale images with or without an explicit channel dimension
+- **Internal preprocessing**: `Compose` automatically adds a channel dimension if missing:
+  - `(H, W)` → `(H, W, 1)`
+  - `(N, H, W)` → `(N, H, W, 1)` for multiple images
+  - `(D, H, W)` → `(D, H, W, 1)` for volumes
+- **Consistent processing**: All transforms then operate on consistent dimensions:
+  - Single images: `ndim=3`
+  - Multiple images/single volumes: `ndim=4`
+  - Multiple volumes: `ndim=5`
+- **Automatic cleanup**: If a channel dimension was added, `Compose` removes it in post-processing, returning the original format
+
+**Important for Direct Transform Usage:**
+When applying transforms directly (without `Compose`), you must ensure grayscale images have an explicit channel dimension:
+
+```python
+import albumentations as A
+import numpy as np
+
+# Using Compose - both formats work
+transform = A.Compose([A.HorizontalFlip(p=1.0)])
+
+grayscale_2d = np.random.randint(0, 256, (100, 100), dtype=np.uint8)      # (H, W)
+grayscale_3d = np.random.randint(0, 256, (100, 100, 1), dtype=np.uint8)  # (H, W, 1)
+
+# Both work with Compose
+result_2d = transform(image=grayscale_2d)  # Works - Compose handles it
+result_3d = transform(image=grayscale_3d)  # Also works
+
+# Direct transform usage - requires explicit channel
+flip = A.HorizontalFlip(p=1.0)
+
+# This may fail or produce unexpected results
+# flipped_2d = flip(image=grayscale_2d)  # May not work correctly
+
+# Add channel dimension for direct usage
+grayscale_with_channel = grayscale_2d[..., np.newaxis]  # (H, W) -> (H, W, 1)
+flipped = flip(image=grayscale_with_channel)  # Works correctly
+```
+
 ## 2D Targets
 
 ### Single Image Data
@@ -190,11 +234,23 @@ geospatial data, computer graphics, and other volumetric datasets.
 
 ## Target Compatibility Matrix
 
-| Transform Type | image | mask | bboxes | keypoints | volume | mask3d |
-|---------------|-------|------|--------|-----------|--------|---------|
-| **Spatial** (Flip, Rotate, Crop) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Pixel** (Brightness, Blur, Noise) | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Geometric** (Affine, Perspective) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+This simplified matrix shows the general compatibility between transform categories and different targets.
+Note that individual transforms within each category may have specific limitations.
+
+| Transform Category | Description | image | mask | bboxes | keypoints | volume | mask3d |
+|-------------------|-------------|-------|------|--------|-----------|--------|---------|
+| **Pixel-level** | Modify pixel values only (color, brightness, noise, blur) | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Spatial-level** | Modify geometry (flip, rotate, crop, resize) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **3D-specific** | Designed for volumetric data | ❌ | ❌ | ❌ | Sometimes | ✅ | ✅ |
+
+**Key Points:**
+- **Pixel-level transforms**: Only affect pixel values in images/volumes, leaving spatial information unchanged
+- **Spatial-level transforms**: Apply geometric changes consistently across all supported targets
+- **3D transforms**: Specifically designed for volumetric data (medical imaging, etc.)
+
+⚠️ **Important:** This is a simplified overview. Individual transforms may have specific requirements or limitations.
+For a complete, up-to-date reference of which transforms support which targets, see the
+[Supported Targets by Transform Reference](https://albumentations.ai/docs/reference/supported-targets-by-transform/).
 
 ## Practical Examples
 
@@ -316,7 +372,7 @@ Now that you understand how Albumentations handles different data targets, you c
 **Advanced Topics:**
 -   **[Additional Targets](../4-advanced-guides/additional-targets.md)** - Define custom data types beyond standard targets
 -   **[Pipelines](./pipelines.md)** - Understand how `A.Compose` orchestrates transforms across targets
--   **[Transform Compatibility](../reference/supported-targets-by-transform.md)** - See which transforms support which targets
+-   **[Supported Targets by Transform](https://albumentations.ai/docs/reference/supported-targets-by-transform/)** - Complete reference of transform-target compatibility
 
 **Interactive Learning:**
 -   **[Explore Transforms](https://explore.albumentations.ai)** - Visualize how different transforms affect various targets

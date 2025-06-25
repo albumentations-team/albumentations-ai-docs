@@ -154,6 +154,49 @@ transform = A.Compose([
 ], seed=42)
 ```
 
+### How does Albumentations handle grayscale images?
+
+Albumentations' `Compose` automatically manages channel dimensions for grayscale images:
+
+**With Compose (recommended):**
+- You can pass grayscale images as either `(H, W)` or `(H, W, 1)`
+- Compose automatically adds a channel dimension if missing during preprocessing
+- After applying transforms, it removes any added channel dimension, returning the original format
+
+```python
+import albumentations as A
+import numpy as np
+
+transform = A.Compose([
+    A.RandomCrop(224, 224),
+    A.HorizontalFlip(p=0.5),
+])
+
+# Both formats work
+grayscale_2d = np.random.randint(0, 256, (256, 256), dtype=np.uint8)     # (H, W)
+grayscale_3d = np.random.randint(0, 256, (256, 256, 1), dtype=np.uint8)  # (H, W, 1)
+
+result_2d = transform(image=grayscale_2d)['image']  # Output shape: (224, 224)
+result_3d = transform(image=grayscale_3d)['image']  # Output shape: (224, 224, 1)
+```
+
+**Without Compose (direct transform usage):**
+- You must ensure grayscale images have an explicit channel dimension `(H, W, 1)`
+- Transforms may fail or produce unexpected results with `(H, W)` format
+
+```python
+# Direct transform usage
+flip = A.HorizontalFlip(p=1.0)
+
+# Add channel dimension for direct usage
+grayscale_with_channel = grayscale_2d[..., np.newaxis]  # (H, W) -> (H, W, 1)
+flipped = flip(image=grayscale_with_channel)['image']   # Works correctly
+```
+
+This also applies to batch processing:
+- `(N, H, W)` → `(N, H, W, 1)` for multiple images
+- `(D, H, W)` → `(D, H, W, 1)` for volumes
+
 ## Working with Different Data Types
 
 ### How to process video data with Albumentations?

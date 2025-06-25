@@ -105,6 +105,9 @@ compose = A.Compose(
     Default: `None`.
 
 *   **`seed` (int | None):** Controls the reproducibility of random augmentations *within this specific `Compose` instance*.
+    When provided, this sets the random seed for all transforms in the pipeline, ensuring that the same sequence
+    of random parameters is generated each time the pipeline is called with identical inputs.
+    Default: `None` (no fixed seed).
 
     **When seed is set (int):**
     *   Creates a fixed internal random state
@@ -120,11 +123,26 @@ compose = A.Compose(
     on augmentations. See the [Creating Custom Transforms Guide](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation)
     for how to use the seeded generators in custom transforms. Default: `None`.
 
-*   **`save_applied_params` (bool):** If `True`, the dictionary returned by the `Compose` call will include
-    an extra key `'applied_transforms'`. The value will be a list of dictionaries, where each dictionary
-    contains the name of an applied transform and the exact parameters it used for that specific call.
+*   **`save_applied_params` (bool):** If `True`, after processing each transform, Compose saves the actual parameters used
+    by that transform in the result dictionary under the key `applied_params`.
+    This includes both static parameters and any random values that were sampled.
+    Useful for debugging or when you need to know exactly what augmentations were applied.
+    Default: `False`.
 
-    Useful for debugging, replay, or analysis. Default: `False`.
+### Grayscale Image Preprocessing
+
+`Compose` includes automatic preprocessing for grayscale images to ensure compatibility with all transforms:
+
+- **Channel dimension handling**: If you pass a grayscale image without a channel dimension (e.g., shape `(H, W)`),
+  `Compose` automatically adds one during preprocessing, making it `(H, W, 1)`
+- **Postprocessing cleanup**: If a channel dimension was added, it's automatically removed in the output,
+  maintaining the original format
+- **Transparent to users**: This happens automatically - you can pass grayscale images in either format
+
+This preprocessing ensures that all transforms work consistently regardless of whether you provide grayscale
+images with or without an explicit channel dimension. However, if you use transforms directly without `Compose`,
+you must ensure grayscale images have the channel dimension. See the [Grayscale Image Handling](../2-core-concepts/targets.md#grayscale-image-handling)
+section for more details.
 
 ## Dynamic Pipeline Modification
 
