@@ -1,5 +1,21 @@
 # Welcome to Albumentations Documentation!
 
+> 🚀 **Important: AlbumentationsX - The Next Generation**
+>
+> **[AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX)** is now available as the actively maintained successor to Albumentations:
+>
+> - ✅ **100% drop-in replacement** - no code changes required
+> - ⚡ **Better performance** with bug fixes and new features
+> - 🔧 **Active maintenance** and professional support
+> - 📄 **Dual licensed** (AGPL/Commercial) - see our [License Guide](./license.md)
+>
+> ```bash
+> pip uninstall albumentations  # If you have it installed
+> pip install albumentationsx   # Install the new version
+> ```
+>
+> Your existing code continues to work exactly as before! Learn more in our [Installation Guide](./1-introduction/installation.md).
+
 Albumentations is a fast and flexible library for image augmentation. Whether you're working on classification, segmentation, object detection, or other computer vision tasks, Albumentations provides a comprehensive set of transforms and a powerful pipeline framework.
 
 This documentation will guide you through installing the library, understanding its core concepts, applying it to various tasks, and exploring advanced features.
@@ -36,7 +52,9 @@ This documentation will guide you through installing the library, understanding 
 *   **[Benchmarks](./benchmarks):** Performance comparison results.
 *   **[Supported Targets by Transform](./reference/supported-targets-by-transform.md):** Check which transforms work with images, masks, bounding boxes, keypoints, etc.
 *   **[API Reference](./api-reference)**
-*   **[GitHub Repository](https://github.com/albumentations-team/albumentations):** Source code, issue tracking, and contributions.
-*   **[Examples Folder (on GitHub)](https://github.com/albumentations-team/albumentations_examples):** Many practical examples in the main repository.
+*   **GitHub Repositories:**
+    *   [AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX) - Active development (dual licensed)
+    *   [Original Albumentations](https://github.com/albumentations-team/albumentations) - MIT licensed (maintenance mode)
+*   **[Examples Repository](https://github.com/albumentations-team/albumentations_examples):** Many practical examples.
 
 We hope this documentation helps you leverage the full power of Albumentations!

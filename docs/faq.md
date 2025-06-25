@@ -7,7 +7,7 @@ This FAQ covers common questions about Albumentations, from basic setup to advan
 - Advanced usage patterns and best practices
 - Integration with other tools and migration from other libraries
 
-If you don't find an answer to your question, please check our [GitHub Issues](https://github.com/albumentations-team/albumentations/issues) or join our [Discord community](https://discord.gg/AmMnDBdzYs).
+If you don't find an answer to your question, please check the GitHub Issues for [AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX/issues) or [original Albumentations](https://github.com/albumentations-team/albumentations/issues), or join our [Discord community](https://discord.gg/AmMnDBdzYs).
 
 ## Installation
 
@@ -40,6 +40,8 @@ cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
 ```
 
+This should be done at the beginning of your script or before creating the DataLoader. Note that this solution may not be necessary for all users, and you should only apply it if you're experiencing performance problems with your specific setup.
+
 ### Experiencing slow performance with PyTorch DataLoader multi-processing?
 
 Some users have reported performance issues when using Albumentations with PyTorch's DataLoader in a multi-processing setup. This can occur on certain hardware/software configurations because OpenCV (cv2), which Albumentations uses under the hood, may spawn multiple threads within each DataLoader worker process. These threads can potentially interfere with each other, leading to CPU blocking and slower data loading.
@@ -54,8 +56,84 @@ cv2.ocl.setUseOpenCL(False)
 
 This should be done at the beginning of your script or before creating the DataLoader. Note that this solution may not be necessary for all users, and you should only apply it if you're experiencing performance problems with your specific setup.
 
+## AlbumentationsX and Licensing
+
+### What is AlbumentationsX?
+
+AlbumentationsX is the next-generation successor to Albumentations. It's a 100% drop-in replacement that offers:
+- Active maintenance and bug fixes
+- Performance improvements
+- New features and transforms
+- Professional support options
+- Dual licensing (AGPL/Commercial)
+
+The original Albumentations remains MIT licensed but is no longer actively maintained.
+
+### Do I need to change my code when switching to AlbumentationsX?
+
+No! AlbumentationsX is designed as a complete drop-in replacement. Simply uninstall `albumentations` and install `albumentationsx`. Your existing code will work without any modifications.
+
+### What is dual licensing and why was it introduced?
+
+AlbumentationsX uses dual licensing:
+- **AGPL-3.0**: Free for open source projects that are also AGPL-licensed
+- **Commercial License**: Required for proprietary/commercial use or projects with non-AGPL licenses
+
+This model ensures sustainable development of the library. After 7 years of MIT licensing with minimal financial support, dual licensing provides resources for full-time maintenance and development. See our [License Guide](./license.md) for details.
+
+### Do I need to pay to use AlbumentationsX?
+
+You need a commercial license if:
+- You're using it in proprietary/commercial software
+- Your open source project uses a non-AGPL license (MIT, Apache, BSD, etc.)
+- You want to keep your code private
+
+You can use it for free only if your entire project is licensed under AGPL-3.0.
+
+### Can I continue using the original MIT-licensed Albumentations?
+
+Yes! The original Albumentations remains available and MIT licensed. However, it's no longer actively maintained, so you won't receive bug fixes or new features.
+
+### What is AGPL and how does it differ from MIT?
+
+AGPL (Affero General Public License) is a copyleft license that requires:
+- If you use AGPL software, your entire project must also be AGPL
+- You cannot mix AGPL code with MIT/Apache/BSD licensed code without converting everything to AGPL
+- If you distribute the software or run it as a network service, you must provide source code
+
+MIT license has no such requirements - you can use MIT code in any project with any license.
+
+### How do I disable telemetry in AlbumentationsX?
+
+AlbumentationsX includes anonymous usage telemetry to improve the library. To disable it:
+
+Globally:
+```bash
+export ALBUMENTATIONS_NO_TELEMETRY=1
+```
+
+Or per-pipeline:
+```python
+transform = A.Compose([...], telemetry=False)
+```
+
+The telemetry only collects anonymous usage statistics (transform names, parameters) and never collects images or personal data.
+
+### How to disable automatic version checks in AlbumentationsX?
+
+Similar to the original Albumentations, you can disable automatic checks for new versions:
+
+```bash
+export NO_ALBUMENTATIONS_UPDATE=1
+```
+
+Or disable both telemetry and update checks:
+```bash
+export ALBUMENTATIONS_OFFLINE=1
+```
 
 ## Data Formats and Basic Usage
+
 ### Supported Image Types
 
 Albumentations works with images of type uint8 and float32. uint8 images should be in the `[0, 255]` range, and float32 images should be in the `[0, 1]` range. If float32 images lie outside of the `[0, 1]` range, they will be automatically clipped to the `[0, 1]` range.
