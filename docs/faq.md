@@ -158,6 +158,11 @@ transform = A.Compose([
 
 Albumentations' `Compose` automatically manages channel dimensions for grayscale images:
 
+**The Key Point:**
+- All individual transforms in Albumentations **require** grayscale images to have a channel dimension `(H, W, 1)`
+- `Compose` provides convenience by automatically handling both `(H, W)` and `(H, W, 1)` formats
+- This design eliminates boilerplate code for checking and adding channel dimensions
+
 **With Compose (recommended):**
 - You can pass grayscale images as either `(H, W)` or `(H, W, 1)`
 - Compose automatically adds a channel dimension if missing during preprocessing
@@ -172,7 +177,7 @@ transform = A.Compose([
     A.HorizontalFlip(p=0.5),
 ])
 
-# Both formats work
+# Both formats work with Compose
 grayscale_2d = np.random.randint(0, 256, (256, 256), dtype=np.uint8)     # (H, W)
 grayscale_3d = np.random.randint(0, 256, (256, 256, 1), dtype=np.uint8)  # (H, W, 1)
 
@@ -181,14 +186,17 @@ result_3d = transform(image=grayscale_3d)['image']  # Output shape: (224, 224, 1
 ```
 
 **Without Compose (direct transform usage):**
-- You must ensure grayscale images have an explicit channel dimension `(H, W, 1)`
-- Transforms may fail or produce unexpected results with `(H, W)` format
+- You **must** ensure grayscale images have an explicit channel dimension `(H, W, 1)`
+- Transforms will fail with `(H, W)` format
 
 ```python
 # Direct transform usage
 flip = A.HorizontalFlip(p=1.0)
 
-# Add channel dimension for direct usage
+# ❌ This will fail - individual transforms require (H, W, 1)
+# flipped_wrong = flip(image=grayscale_2d)['image']
+
+# ✅ Add channel dimension for direct usage
 grayscale_with_channel = grayscale_2d[..., np.newaxis]  # (H, W) -> (H, W, 1)
 flipped = flip(image=grayscale_with_channel)['image']   # Works correctly
 ```
@@ -196,6 +204,32 @@ flipped = flip(image=grayscale_with_channel)['image']   # Works correctly
 This also applies to batch processing:
 - `(N, H, W)` → `(N, H, W, 1)` for multiple images
 - `(D, H, W)` → `(D, H, W, 1)` for volumes
+
+### What data formats does Albumentations accept?
+
+**All inputs to Albumentations must be NumPy arrays.** Lists are no longer supported for any data type.
+
+**Required formats:**
+- **Images**: NumPy arrays with shape `(H, W)` or `(H, W, C)`
+- **Masks**: NumPy arrays with shape `(H, W)` or `(H, W, num_classes)`
+- **Bounding boxes**: NumPy arrays with shape `(num_boxes, 4)`
+- **Keypoints**: NumPy arrays with shape `(num_keypoints, 2+)`
+- **Labels**: NumPy arrays (can be string or numeric dtype)
+
+```python
+import numpy as np
+import albumentations as A
+
+# ✅ Correct - using NumPy arrays
+bboxes = np.array([[10, 10, 50, 50], [60, 60, 90, 90]], dtype=np.float32)
+labels = np.array(['cat', 'dog'])
+keypoints = np.array([[25, 25], [75, 75]], dtype=np.float32)
+
+# ❌ Incorrect - lists are not supported
+# bboxes = [[10, 10, 50, 50], [60, 60, 90, 90]]  # Will fail
+# labels = ['cat', 'dog']  # Will fail
+# keypoints = [[25, 25], [75, 75]]  # Will fail
+```
 
 ## Working with Different Data Types
 

@@ -133,6 +133,8 @@ compose = A.Compose(
 
 `Compose` includes automatic preprocessing for grayscale images to ensure compatibility with all transforms:
 
+- **Transform requirement**: All individual transforms in Albumentations require grayscale images to have a channel dimension `(H, W, 1)`
+- **Compose convenience**: Automatically handles both `(H, W)` and `(H, W, 1)` formats
 - **Channel dimension handling**: If you pass a grayscale image without a channel dimension (e.g., shape `(H, W)`),
   `Compose` automatically adds one during preprocessing, making it `(H, W, 1)`
 - **Postprocessing cleanup**: If a channel dimension was added, it's automatically removed in the output,

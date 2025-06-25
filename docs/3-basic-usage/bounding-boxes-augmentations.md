@@ -128,20 +128,20 @@ image = cv2.imread(image_path)
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 # Prepare Bounding Boxes (example using 'coco' format)
-# Each inner list is [x_min, y_min, bbox_width, bbox_height]
+# Each row is [x_min, y_min, bbox_width, bbox_height]
 bboxes = np.array([
     [23, 74, 295, 388],
     [377, 294, 252, 161],
     [333, 421, 49, 49],
-])
+], dtype=np.float32)
 
 # Prepare Labels (using the name specified in label_fields)
-class_labels = ['dog', 'cat', 'sports ball']
+class_labels = np.array(['dog', 'cat', 'sports ball'])
 # Example with multiple label fields if defined in BboxParams:
-# class_categories = ['animal', 'animal', 'item']
+# class_categories = np.array(['animal', 'animal', 'item'])
 ```
 
-Albumentations expects `bboxes` as a NumPy array `(num_boxes, 4)`. Each inner list/row must contain the 4 coordinate values according to the specified `format`.
+Albumentations expects `bboxes` as a NumPy array with shape `(num_boxes, 4)`. Each row must contain the 4 coordinate values according to the specified `format`.
 
 ### Step 4: Apply the Pipeline
 
@@ -186,18 +186,18 @@ def draw_bboxes(image_np, bboxes, labels, class_name_map=None, color=(0, 255, 0)
     font_scale = 0.5
     font_thickness = 1
 
-    if not isinstance(bboxes, (list, np.ndarray)):
-        print(f"Warning: bboxes is not a list or ndarray: {type(bboxes)}")
+    if not isinstance(bboxes, np.ndarray):
+        print(f"Warning: bboxes is not an ndarray: {type(bboxes)}")
         return img_res
-    if not isinstance(labels, (list, np.ndarray)):
-        print(f"Warning: labels is not a list or ndarray: {type(labels)}")
+    if not isinstance(labels, np.ndarray):
+        print(f"Warning: labels is not an ndarray: {type(labels)}")
         # Attempt to proceed if labels seem usable, otherwise return
         if len(bboxes) != len(labels):
             print("Warning: bbox and label length mismatch, cannot draw labels.")
-            labels = ['?' for _ in bboxes] # Placeholder
-        elif not all(isinstance(l, (str, int, float)) for l in labels):
-             print("Warning: labels contain non-primitive types, cannot draw reliably.")
-             labels = ['?' for _ in bboxes]
+            labels = np.array(['?' for _ in bboxes]) # Placeholder
+        elif labels.dtype == np.object:
+             print("Warning: labels contain object dtype, converting to string.")
+             labels = labels.astype(str)
 
     for bbox, label in zip(bboxes, labels):
         # Assuming bbox format allows direct conversion to int x_min, y_min, x_max, y_max

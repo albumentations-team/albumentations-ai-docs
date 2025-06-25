@@ -109,22 +109,22 @@ Keypoints can be stored on the disk in different serialization formats: JSON, XM
 
 After you read the data from the disk, you need to prepare keypoints for Albumentations.
 
-Albumentations expects that keypoint will be represented as a list of lists. Each list contains information about a single keypoint. A definition of keypoint should have two to four elements depending on the selected format of keypoints. The first two elements are x and y coordinates of a keypoint in pixels (or y and x coordinates in the `yx` format). The third and fourth elements may be the angle and the scale of keypoint if you select a format that uses those values.
+Albumentations expects keypoints to be represented as a NumPy array with shape `(num_keypoints, 2+)`. Each row contains information about a single keypoint. A keypoint definition should have two to four elements depending on the selected format. The first two elements are x and y coordinates of a keypoint in pixels (or y and x coordinates in the `yx` format). The third and fourth elements may be the angle and the scale of keypoint if you select a format that uses those values.
 
-## Step 4. Pass an image and keypoints to the augmentation pipeline and receive augmented images and boxes.
+## Step 4. Pass an image and keypoints to the augmentation pipeline and receive augmented images and keypoints.
 
 Let's say you have an example image with five keypoints.
 
-A list with those five keypoints' coordinates in the `xy` format will look the following:
+A NumPy array with those five keypoints' coordinates in the `xy` format will look like the following:
 
 ```python
 keypoints = np.array([
-    (264, 203),
-    (86, 88),
-    (254, 160),
-    (193, 103),
-    (65, 341),
-])
+    [264, 203],
+    [86, 88],
+    [254, 160],
+    [193, 103],
+    [65, 341],
+], dtype=np.float32)
 ```
 
 Then you pass those keypoints to the `transform` function along with the image and receive the augmented versions of image and keypoints.
@@ -144,16 +144,16 @@ If you set `remove_invisible` to `False` in `keypoint_params`, then Albumentatio
 **When `remove_invisible` is set to `False` Albumentations will return all keypoints, even those located outside the image**
 
 
-If keypoints have associated class labels, you need to create a list that contains those labels:
+If keypoints have associated class labels, you need to create a NumPy array that contains those labels:
 
 ```python
-class_labels = [
+class_labels = np.array([
     'left_elbow',
     'right_elbow',
     'left_wrist',
     'right_wrist',
     'right_hip',
-]
+])
 ```
 
 Also, you need to declare the name of the argument to `transform` that will contain those labels. For declaration, you need to use the `label_fields` parameters of `A.KeypointParams`.
@@ -177,7 +177,7 @@ transformed_keypoints = transformed['keypoints']
 transformed_class_labels = transformed['class_labels']
 ```
 
-Note that `label_fields` expects a list, so you can set multiple fields that contain labels for your keypoints. So if you declare Compose like
+Note that `label_fields` expects a list of field names, so you can set multiple fields that contain labels for your keypoints. So if you declare Compose like
 
 ```python
 transform = A.Compose([
@@ -189,15 +189,15 @@ transform = A.Compose([
 you can use those multiple arguments to pass info about class labels, like
 
 ```python
-class_labels = [
+class_labels = np.array([
     'left_elbow',
     'right_elbow',
     'left_wrist',
     'right_wrist',
     'right_hip',
-]
+])
 
-class_sides = ['left', 'right', 'left', 'right', 'right']
+class_sides = np.array(['left', 'right', 'left', 'right', 'right'])
 
 transformed = transform(image=image, keypoints=keypoints, class_labels=class_labels, class_sides=class_sides)
 transformed_class_sides = transformed['class_sides']

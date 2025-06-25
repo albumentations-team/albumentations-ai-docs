@@ -112,9 +112,9 @@ Here are potential approaches:
 This approach flattens all bounding boxes (or keypoints) from all frames into a single list and uses `label_fields` to track the original frame index for each target.
 
 1.  **Prepare Data:**
-    *   Create a single flat list `all_bboxes` containing all boxes from all frames.
-    *   Create a corresponding list `frame_indices` indicating the frame index (0 to N-1) for each box in `all_bboxes`.
-    *   Create a list `class_labels` for the actual class of each box in `all_bboxes`.
+    *   Create a single flat array `all_bboxes` containing all boxes from all frames.
+*   Create a corresponding array `frame_indices` indicating the frame index (0 to N-1) for each box in `all_bboxes`.
+*   Create an array `class_labels` for the actual class of each box in `all_bboxes`.
 
     ```python
     # Conceptual Example Data Preparation (BBoxes)
@@ -123,8 +123,8 @@ This approach flattens all bounding boxes (or keypoints) from all frames into a 
     # Frame 1 boxes: [[20, 20, 60, 60]] Label: ['cat']
 
     all_bboxes = np.array([[10, 10, 50, 50], [70, 70, 90, 90], [20, 20, 60, 60]])
-    frame_indices = [0, 0, 1] # Frame ID for each box
-    class_labels = ['cat', 'dog', 'cat'] # Actual class label for each box
+    frame_indices = np.array([0, 0, 1]) # Frame ID for each box
+    class_labels = np.array(['cat', 'dog', 'cat']) # Actual class label for each box
 
     # Conceptual Example Data Preparation (Keypoints)
     # Assume video has 2 frames (N=2)
@@ -137,8 +137,8 @@ This approach flattens all bounding boxes (or keypoints) from all frames into a 
         [25, 25],
         [35, 35]
     ], dtype=np.float32)
-    kp_frame_indices = [0, 0, 1]
-    kp_class_labels = ['eye', 'nose', 'eye']
+    kp_frame_indices = np.array([0, 0, 1])
+    kp_class_labels = np.array(['eye', 'nose', 'eye'])
     ```
 
 2.  **Define Pipeline:** Include `frame_indices` (or similar) in `label_fields` for `bbox_params` or `keypoint_params`.
@@ -226,7 +226,7 @@ For keypoints only, one can encode the frame index as the `z` coordinate using t
         [25, 25, 0],
         [35, 35, 1]
     ], dtype=np.float32)
-    kp_class_labels = ['eye', 'nose', 'eye']
+    kp_class_labels = np.array(['eye', 'nose', 'eye'])
     ```
 
 2.  **Define Pipeline:** Use `format='xyz'`.

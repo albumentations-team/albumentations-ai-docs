@@ -29,15 +29,26 @@ are optional and depend on your specific task. All data is passed as keyword arg
 
 ### Data Type Requirements
 
-All image-like data (image, images, volume, volumes) **must be `uint8` or `float32`** NumPy arrays.
-Masks can be any integer type, while bboxes and keypoints are typically `float32`.
+All data passed to Albumentations **must be NumPy arrays**:
+- **Image-like data** (image, images, volume, volumes): Must be `uint8` or `float32` NumPy arrays
+- **Masks**: Can be any integer type NumPy array
+- **Bounding boxes**: Must be NumPy arrays, typically `float32` with shape `(num_boxes, 4)`
+- **Keypoints**: Must be NumPy arrays, typically `float32` with shape `(num_keypoints, 2+)`
+- **Labels**: Must be NumPy arrays (can be string or numeric dtype)
+
+**Note:** Lists are no longer supported for any data type - all inputs must be NumPy arrays.
 
 ### Grayscale Image Handling
 
 Albumentations' `Compose` automatically handles grayscale images for convenience:
 
+**Important Context:**
+- **All individual transforms require** grayscale images to have an explicit channel dimension `(H, W, 1)`
+- **Compose provides the convenience layer** by automatically handling both formats
+- This eliminates the need for boilerplate code to check and add channel dimensions
+
 **Automatic Channel Dimension Management:**
-- **Input flexibility**: You can pass grayscale images with or without an explicit channel dimension
+- **Input flexibility**: You can pass grayscale images with or without an explicit channel dimension to `Compose`
 - **Internal preprocessing**: `Compose` automatically adds a channel dimension if missing:
   - `(H, W)` → `(H, W, 1)`
   - `(N, H, W)` → `(N, H, W, 1)` for multiple images
@@ -48,33 +59,33 @@ Albumentations' `Compose` automatically handles grayscale images for convenience
   - Multiple volumes: `ndim=5`
 - **Automatic cleanup**: If a channel dimension was added, `Compose` removes it in post-processing, returning the original format
 
-**Important for Direct Transform Usage:**
-When applying transforms directly (without `Compose`), you must ensure grayscale images have an explicit channel dimension:
-
+**Why This Matters:**
 ```python
 import albumentations as A
 import numpy as np
 
-# Using Compose - both formats work
+# Using Compose - handles both formats automatically
 transform = A.Compose([A.HorizontalFlip(p=1.0)])
 
 grayscale_2d = np.random.randint(0, 256, (100, 100), dtype=np.uint8)      # (H, W)
 grayscale_3d = np.random.randint(0, 256, (100, 100, 1), dtype=np.uint8)  # (H, W, 1)
 
-# Both work with Compose
-result_2d = transform(image=grayscale_2d)  # Works - Compose handles it
-result_3d = transform(image=grayscale_3d)  # Also works
+# Both work with Compose - no boilerplate needed
+result_2d = transform(image=grayscale_2d)  # Compose handles conversion
+result_3d = transform(image=grayscale_3d)  # Already in correct format
 
-# Direct transform usage - requires explicit channel
+# Direct transform usage - REQUIRES channel dimension
 flip = A.HorizontalFlip(p=1.0)
 
-# This may fail or produce unexpected results
-# flipped_2d = flip(image=grayscale_2d)  # May not work correctly
+# This will fail - transforms expect (H, W, 1)
+# flipped_2d = flip(image=grayscale_2d)  # ❌ Will not work
 
-# Add channel dimension for direct usage
+# Must add channel dimension for direct usage
 grayscale_with_channel = grayscale_2d[..., np.newaxis]  # (H, W) -> (H, W, 1)
-flipped = flip(image=grayscale_with_channel)  # Works correctly
+flipped = flip(image=grayscale_with_channel)  # ✅ Works correctly
 ```
+
+This design eliminates the boilerplate of checking and adding channel dimensions in every transform, while maintaining consistency across the library.
 
 ## 2D Targets
 
@@ -346,6 +357,7 @@ result = transform(
 1. **Shape Matching**: Ensure all spatial targets have matching dimensions
 2. **Data Types**: Use `uint8` for images, appropriate types for other targets
 3. **Coordinate Systems**: Verify bbox/keypoint formats match your data
+4. **Array Format**: All targets must be NumPy arrays - lists are no longer supported for bboxes, keypoints, or labels
 
 ### Performance Optimization
 
