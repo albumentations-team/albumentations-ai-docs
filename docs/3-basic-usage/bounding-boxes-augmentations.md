@@ -233,13 +233,15 @@ def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
             if not isinstance(t, (A.Normalize, A.ToTensorV2))
         ]
         # Recreate Compose with original bbox_params if they exist
-        bbox_params = getattr(transform, 'bbox_params', None)
+        # Access bbox_params from the processor if it exists
+        bbox_processor = transform.processors.get('bboxes')
+        bbox_params = bbox_processor.params if bbox_processor else None
         vis_transform = A.Compose(vis_transform_list, bbox_params=bbox_params)
     else:
         print("Cannot strip Normalize/ToTensor: transform is not an A.Compose instance.")
         vis_transform = transform # Use original transform
 
-    if vis_transform is None or not hasattr(vis_transform, 'bbox_params'):
+    if vis_transform is None or 'bboxes' not in vis_transform.processors:
          print("Cannot visualize: Pipeline needs A.BboxParams for visualization.")
          return
 
@@ -256,14 +258,16 @@ def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
         try:
             # Apply the visualization transform
             # Ensure labels are passed correctly based on label_fields
-            label_args = {field: labels for field in vis_transform.bbox_params.label_fields}
+            bbox_processor = vis_transform.processors.get('bboxes')
+            label_fields = bbox_processor.params.label_fields if bbox_processor else []
+            label_args = {field: labels for field in label_fields}
             augmented = vis_transform(image=image, bboxes=bboxes, **label_args)
 
             aug_image = augmented['image']
             aug_bboxes = augmented['bboxes']
             # Extract labels correctly based on label_fields
-            if vis_transform.bbox_params.label_fields:
-                aug_labels = augmented[vis_transform.bbox_params.label_fields[0]]
+            if label_fields:
+                aug_labels = augmented[label_fields[0]]
             else:
                 aug_labels = ['?' for _ in aug_bboxes] # Placeholder if no labels
 
