@@ -187,7 +187,7 @@ essential_pipeline = A.Compose([
 #### 2. High-Impact Regularization (Add Next)
 
 **Proven to improve generalization:**
-- **Dropout variants**: [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout), [`RandomErasing`](https://explore.albumentations.ai/transform/RandomErasing)
+- **Dropout variants**: [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout), [`Erasing`](https://explore.albumentations.ai/transform/Erasing)
 - **Scale/rotation**: [`Affine`](https://explore.albumentations.ai/transform/Affine) (conservative ranges first)
 
 ```python
