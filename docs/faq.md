@@ -19,9 +19,7 @@ Try to update `pip` by running the following command:
 python -m pip install --upgrade pip
 ```
 
-### How to disable automatic checks for new versions?
 
-To disable automatic checks for new versions, set the environment variable `NO_ALBUMENTATIONS_UPDATE` to `1`.
 
 ### How to make Albumentations use one CPU core?
 
@@ -117,20 +115,14 @@ Or per-pipeline:
 transform = A.Compose([...], telemetry=False)
 ```
 
-The telemetry only collects anonymous usage statistics (transform names, parameters) and never collects images or personal data.
-
-### How to disable automatic version checks in AlbumentationsX?
-
-Similar to the original Albumentations, you can disable automatic checks for new versions:
-
-```bash
-export NO_ALBUMENTATIONS_UPDATE=1
-```
-
-Or disable both telemetry and update checks:
+Or use offline mode to disable all network features:
 ```bash
 export ALBUMENTATIONS_OFFLINE=1
 ```
+
+The telemetry only collects anonymous usage statistics (transform names, parameters) and never collects images or personal data.
+
+
 
 ## Data Formats and Basic Usage
 
