@@ -1,11 +1,10 @@
 # AlbumentationsX License Guide
 
-AlbumentationsX is the next-generation successor to Albumentations, designed as a 100% drop-in replacement while introducing a sustainable dual licensing model. This guide explains the licensing changes, why they were made, and what they mean for you.
+AlbumentationsX is designed as a 100% drop-in replacement with a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
 
 ## Quick Summary
 
 - **AlbumentationsX** is dual-licensed: AGPL-3.0 (open source) / Commercial
-- **Original Albumentations** remains MIT licensed but is no longer actively maintained
 - **No code changes required** - AlbumentationsX is a drop-in replacement
 - **Open source projects** can use AlbumentationsX for free under AGPL
 - **Commercial projects** need a commercial license for proprietary use
@@ -14,7 +13,7 @@ AlbumentationsX is the next-generation successor to Albumentations, designed as 
 
 ### Background
 
-After 7 years of MIT licensing, AlbumentationsX transitions to a dual license model. This change comes from the reality of maintaining a widely-used open source project:
+AlbumentationsX uses a dual license model. This approach ensures sustainable maintenance of a widely-used open source project:
 
 - The project has grown to serve thousands of companies and researchers worldwide
 - Maintenance, bug fixes, and feature development require significant time investment
@@ -82,7 +81,7 @@ transform = A.Compose([
 
 ### For Commercial/Proprietary Projects
 
-You have three paths:
+You have two paths:
 
 1. **Purchase a Commercial License**
    - Continue using AlbumentationsX in proprietary software
@@ -96,24 +95,9 @@ You have three paths:
    - Must provide source code when distributing
    - Valid approach if AGPL aligns with your project goals
 
-3. **Stay on Original Albumentations**
-   - Continue using the MIT-licensed version
-   - No license fees required
-   - Note: No new features or bug fixes
 
-## Comparison Table
 
-| Feature | Albumentations (Original) | AlbumentationsX |
-|---------|--------------------------|-----------------|
-| **License** | MIT | Dual: AGPL-3.0 / Commercial |
-| **Active Maintenance** | ❌ No | ✅ Yes |
-| **New Features** | ❌ No | ✅ Yes |
-| **Bug Fixes** | ❌ No | ✅ Yes |
-| **Performance Improvements** | ❌ No | ✅ Yes |
-| **Code Changes Required** | - | None (drop-in replacement) |
-| **Free for Open Source** | ✅ Yes | ✅ Yes (AGPL projects only) |
-| **Free for MIT/Apache/BSD Projects** | ✅ Yes | ❌ No (requires commercial license) |
-| **Free for Commercial Use** | ✅ Yes | ❌ No (requires commercial license) |
+
 
 ## Benefits of the Dual License Model
 
@@ -157,11 +141,9 @@ Projects like [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) hav
 
 **A:** Yes! You can evaluate AlbumentationsX in development. A commercial license is only required for production deployment in proprietary systems.
 
-### Q: What about existing projects using Albumentations?
+### Q: What about existing projects?
 
-**A:** You can either:
-- Stay on the original MIT-licensed Albumentations (no changes needed)
-- Upgrade to AlbumentationsX and comply with the new licensing terms
+**A:** To use AlbumentationsX, you need to comply with the licensing terms - either use AGPL for your entire project or purchase a commercial license.
 
 ### Q: Is the API really 100% compatible?
 
