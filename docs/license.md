@@ -1,11 +1,10 @@
 # AlbumentationsX License Guide
 
-AlbumentationsX is designed as a 100% drop-in replacement with a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
+AlbumentationsX uses a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
 
 ## Quick Summary
 
 - **AlbumentationsX** is dual-licensed: AGPL-3.0 (open source) / Commercial
-- **No code changes required** - AlbumentationsX is a drop-in replacement
 - **Open source projects** can use AlbumentationsX for free under AGPL
 - **Commercial projects** need a commercial license for proprietary use
 
@@ -64,7 +63,7 @@ pip install albumentationsx
 
 Your code stays the same:
 ```python
-import albumentations as A  # Same import!
+import albumentations as A
 
 transform = A.Compose([
     A.RandomCrop(width=256, height=256),
@@ -94,10 +93,6 @@ You have two paths:
    - This means abandoning MIT, Apache, BSD, or other permissive licenses
    - Must provide source code when distributing
    - Valid approach if AGPL aligns with your project goals
-
-
-
-
 
 ## Benefits of the Dual License Model
 
@@ -144,10 +139,6 @@ Projects like [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) hav
 ### Q: What about existing projects?
 
 **A:** To use AlbumentationsX, you need to comply with the licensing terms - either use AGPL for your entire project or purchase a commercial license.
-
-### Q: Is the API really 100% compatible?
-
-**A:** Yes! AlbumentationsX is designed as a drop-in replacement. Your existing code will work without modifications.
 
 ### Q: How do I know if I need a commercial license?
 

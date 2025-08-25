@@ -19,8 +19,6 @@ Try to update `pip` by running the following command:
 python -m pip install --upgrade pip
 ```
 
-
-
 ### How to make Albumentations use one CPU core?
 
 Albumentations do not use multithreading by default, but libraries it depends on (like opencv) may use multithreading. To make Albumentations use one CPU core, you can set the following environment variables:
@@ -58,7 +56,7 @@ This should be done at the beginning of your script or before creating the DataL
 
 ### What is AlbumentationsX?
 
-AlbumentationsX is the next-generation successor to Albumentations. It's a 100% drop-in replacement that offers:
+AlbumentationsX offers:
 - Active maintenance and bug fixes
 - Performance improvements
 - New features and transforms

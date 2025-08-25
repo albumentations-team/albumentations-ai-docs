@@ -4,10 +4,9 @@ Albumentations requires Python 3.9 or higher. We recommend using the latest stab
 
 ## Installation Methods
 
-### AlbumentationsX (Recommended - Drop-in Replacement)
+### AlbumentationsX (Recommended)
 
-**AlbumentationsX** is the next-generation successor to Albumentations, offering:
-- 🚀 100% API compatibility - no code changes required
+**AlbumentationsX** offers:
 - ⚡ Improved performance and bug fixes
 - 🔧 Active maintenance and new features
 - 📊 Better support for production environments
@@ -18,9 +17,8 @@ AlbumentationsX is dual-licensed (AGPL/Commercial). For more information about l
 pip install -U albumentationsx
 ```
 
-Your existing code continues to work without any changes:
+Here's a basic example:
 ```python
-# Same import - no changes needed!
 import albumentations as A
 
 transform = A.Compose([
