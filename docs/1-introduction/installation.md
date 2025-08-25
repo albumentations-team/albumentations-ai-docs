@@ -4,10 +4,9 @@ Albumentations requires Python 3.9 or higher. We recommend using the latest stab
 
 ## Installation Methods
 
-### AlbumentationsX (Recommended - Drop-in Replacement)
+### AlbumentationsX (Recommended)
 
-**AlbumentationsX** is the next-generation successor to Albumentations, offering:
-- 🚀 100% API compatibility - no code changes required
+**AlbumentationsX** offers:
 - ⚡ Improved performance and bug fixes
 - 🔧 Active maintenance and new features
 - 📊 Better support for production environments
@@ -15,16 +14,11 @@ Albumentations requires Python 3.9 or higher. We recommend using the latest stab
 AlbumentationsX is dual-licensed (AGPL/Commercial). For more information about licensing, see our [License Guide](../license.md).
 
 ```bash
-# Uninstall original Albumentations if installed
-pip uninstall albumentations
-
-# Install AlbumentationsX
 pip install -U albumentationsx
 ```
 
-Your existing code continues to work without any changes:
+Here's a basic example:
 ```python
-# Same import - no changes needed!
 import albumentations as A
 
 transform = A.Compose([
@@ -34,32 +28,15 @@ transform = A.Compose([
 ])
 ```
 
-### Original Albumentations (MIT Licensed)
 
-If you prefer to use the original MIT-licensed version (no longer actively maintained):
 
-```bash
-pip install -U albumentations
-```
 
-### From Conda Forge
-
-If you are using Anaconda or Miniconda:
-
-```bash
-conda install -c conda-forge albumentations
-```
 
 ### From GitHub (Latest Development Version)
 
 For AlbumentationsX:
 ```bash
 pip install -U git+https://github.com/albumentations-team/AlbumentationsX
-```
-
-For original Albumentations:
-```bash
-pip install -U git+https://github.com/albumentations-team/albumentations
 ```
 
 **Note:** Installing from the `main` branch might give you newer features but could potentially be less stable than official releases.
@@ -74,9 +51,6 @@ Both Albumentations and AlbumentationsX rely heavily on OpenCV.
     ```bash
     # For AlbumentationsX
     pip install -U albumentationsx --no-binary albumentationsx
-
-    # For original Albumentations
-    pip install -U albumentations --no-binary albumentations
     ```
     In most standard cases, this flag is **not** required.
 

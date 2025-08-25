@@ -1,12 +1,10 @@
 # AlbumentationsX License Guide
 
-AlbumentationsX is the next-generation successor to Albumentations, designed as a 100% drop-in replacement while introducing a sustainable dual licensing model. This guide explains the licensing changes, why they were made, and what they mean for you.
+AlbumentationsX uses a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
 
 ## Quick Summary
 
 - **AlbumentationsX** is dual-licensed: AGPL-3.0 (open source) / Commercial
-- **Original Albumentations** remains MIT licensed but is no longer actively maintained
-- **No code changes required** - AlbumentationsX is a drop-in replacement
 - **Open source projects** can use AlbumentationsX for free under AGPL
 - **Commercial projects** need a commercial license for proprietary use
 
@@ -14,7 +12,7 @@ AlbumentationsX is the next-generation successor to Albumentations, designed as 
 
 ### Background
 
-After 7 years of MIT licensing, AlbumentationsX transitions to a dual license model. This change comes from the reality of maintaining a widely-used open source project:
+AlbumentationsX uses a dual license model. This approach ensures sustainable maintenance of a widely-used open source project:
 
 - The project has grown to serve thousands of companies and researchers worldwide
 - Maintenance, bug fixes, and feature development require significant time investment
@@ -65,7 +63,7 @@ pip install albumentationsx
 
 Your code stays the same:
 ```python
-import albumentations as A  # Same import!
+import albumentations as A
 
 transform = A.Compose([
     A.RandomCrop(width=256, height=256),
@@ -82,7 +80,7 @@ transform = A.Compose([
 
 ### For Commercial/Proprietary Projects
 
-You have three paths:
+You have two paths:
 
 1. **Purchase a Commercial License**
    - Continue using AlbumentationsX in proprietary software
@@ -95,25 +93,6 @@ You have three paths:
    - This means abandoning MIT, Apache, BSD, or other permissive licenses
    - Must provide source code when distributing
    - Valid approach if AGPL aligns with your project goals
-
-3. **Stay on Original Albumentations**
-   - Continue using the MIT-licensed version
-   - No license fees required
-   - Note: No new features or bug fixes
-
-## Comparison Table
-
-| Feature | Albumentations (Original) | AlbumentationsX |
-|---------|--------------------------|-----------------|
-| **License** | MIT | Dual: AGPL-3.0 / Commercial |
-| **Active Maintenance** | ❌ No | ✅ Yes |
-| **New Features** | ❌ No | ✅ Yes |
-| **Bug Fixes** | ❌ No | ✅ Yes |
-| **Performance Improvements** | ❌ No | ✅ Yes |
-| **Code Changes Required** | - | None (drop-in replacement) |
-| **Free for Open Source** | ✅ Yes | ✅ Yes (AGPL projects only) |
-| **Free for MIT/Apache/BSD Projects** | ✅ Yes | ❌ No (requires commercial license) |
-| **Free for Commercial Use** | ✅ Yes | ❌ No (requires commercial license) |
 
 ## Benefits of the Dual License Model
 
@@ -157,15 +136,9 @@ Projects like [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) hav
 
 **A:** Yes! You can evaluate AlbumentationsX in development. A commercial license is only required for production deployment in proprietary systems.
 
-### Q: What about existing projects using Albumentations?
+### Q: What about existing projects?
 
-**A:** You can either:
-- Stay on the original MIT-licensed Albumentations (no changes needed)
-- Upgrade to AlbumentationsX and comply with the new licensing terms
-
-### Q: Is the API really 100% compatible?
-
-**A:** Yes! AlbumentationsX is designed as a drop-in replacement. Your existing code will work without modifications.
+**A:** To use AlbumentationsX, you need to comply with the licensing terms - either use AGPL for your entire project or purchase a commercial license.
 
 ### Q: How do I know if I need a commercial license?
 
@@ -182,26 +155,6 @@ The only case where you DON'T need a commercial license is if your entire projec
 
 **A:** Contributors grant rights to use their contributions under both AGPL and commercial licenses, enabling the dual licensing model.
 
-## Migration Guide
-
-### From Albumentations to AlbumentationsX
-
-```bash
-# Step 1: Uninstall original
-pip uninstall albumentations
-
-# Step 2: Install AlbumentationsX
-pip install albumentationsx
-
-# Step 3: There is no step 3 - your code works as-is!
-```
-
-### Verification
-
-```python
-import albumentations as A
-print(A.__version__)  # Should show AlbumentationsX version
-```
 
 ## Support
 
