@@ -15,10 +15,6 @@ Albumentations requires Python 3.9 or higher. We recommend using the latest stab
 AlbumentationsX is dual-licensed (AGPL/Commercial). For more information about licensing, see our [License Guide](../license.md).
 
 ```bash
-# Uninstall any existing installation if needed
-pip uninstall albumentations
-
-# Install AlbumentationsX
 pip install -U albumentationsx
 ```
 

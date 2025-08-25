@@ -5,7 +5,7 @@ This FAQ covers common questions about Albumentations, from basic setup to advan
 - Installation troubleshooting and configuration
 - Working with different data formats (images, video, volumetric data)
 - Advanced usage patterns and best practices
-- Integration with other tools and migration from other libraries
+- Integration with other tools and switching from other libraries
 
 If you don't find an answer to your question, please check the [GitHub Issues for AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX/issues), or join our [Discord community](https://discord.gg/AmMnDBdzYs).
 
@@ -65,11 +65,6 @@ AlbumentationsX is the next-generation successor to Albumentations. It's a 100% 
 - Professional support options
 - Dual licensing (AGPL/Commercial)
 
-
-
-### Do I need to change my code when switching to AlbumentationsX?
-
-No! AlbumentationsX is designed as a complete drop-in replacement. Simply uninstall `albumentations` and install `albumentationsx`. Your existing code will work without any modifications.
 
 ### What is dual licensing and why was it introduced?
 
@@ -437,7 +432,7 @@ You need to convert those annotations to one of the formats, supported by Albume
 
 Consult the documentation of the labeling service to see how you can export annotations in those formats.
 
-## Integration and Migration
+## Integration
 
 ### How to save and load augmentation transforms to HuggingFace Hub?
 
@@ -477,18 +472,18 @@ loaded_transform = A.Compose.from_pretrained("qubvel-hf/albu", key="train")
 
 See [this example](https://www.albumentations.ai/docs/examples/example-hfhub/) for more info.
 
-### How do I migrate from other augmentation libraries to Albumentations?
+### How do I switch from other augmentation libraries to AlbumentationsX?
 
-If you're migrating from other libraries like torchvision or Kornia, you can refer to our [Library Comparison](./torchvision-kornia2albumentations.md) guide. This guide provides:
+If you're switching from other libraries like torchvision or Kornia, you can refer to our [Library Comparison](./torchvision-kornia2albumentations.md) guide. This guide provides:
 
 1. Mapping tables showing equivalent transforms between libraries
-2. Performance benchmarks demonstrating Albumentations' speed advantages
-3. Code examples for common migration scenarios
+2. Performance benchmarks demonstrating AlbumentationsX's speed advantages
+3. Code examples for common switching scenarios
 4. Key differences in implementation and parameter handling
 
 For a quick visual comparison of different augmentations, you can also use our interactive tool at [explore.albumentations.ai](https://explore.albumentations.ai) to see how transforms affect images before implementing them.
 
-For specific migration examples, see:
+For specific examples, see:
 
 - [Migrating from torchvision](https://www.albumentations.ai/docs/examples/migrating-from-torchvision-to-albumentations/)
 - [Performance comparison with other libraries](./benchmarks)

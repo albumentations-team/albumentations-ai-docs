@@ -164,26 +164,6 @@ The only case where you DON'T need a commercial license is if your entire projec
 
 **A:** Contributors grant rights to use their contributions under both AGPL and commercial licenses, enabling the dual licensing model.
 
-## Migration Guide
-
-### From Albumentations to AlbumentationsX
-
-```bash
-# Step 1: Uninstall original
-pip uninstall albumentations
-
-# Step 2: Install AlbumentationsX
-pip install albumentationsx
-
-# Step 3: There is no step 3 - your code works as-is!
-```
-
-### Verification
-
-```python
-import albumentations as A
-print(A.__version__)  # Should show AlbumentationsX version
-```
 
 ## Support
 
