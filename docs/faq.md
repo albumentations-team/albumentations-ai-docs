@@ -125,15 +125,17 @@ Albumentations works with images of type uint8 and float32. uint8 images should 
 
 ### How to have reproducible augmentations?
 
-To have reproducible augmentations, set the `seed` parameter in your transform pipeline. This will ensure that the same random parameters are used for each augmentation, resulting in the same output for the same input.
+To have reproducible augmentations, set the `seed` parameter in your transform pipeline. This ensures consistent random parameters across runs.
 
 ```python
 transform = A.Compose([
     A.RandomCrop(height=256, width=256),
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.2),
-], seed=42)
+], seed=137)
 ```
+
+For a comprehensive guide on reproducibility, including advanced use cases and best practices, see the [Reproducibility Guide](../4-advanced-guides/reproducibility.md).
 
 ### How does Albumentations handle grayscale images?
 
@@ -262,33 +264,23 @@ But if you want only to the sequence of images, you may just use `images` target
 
 ### How to have reproducible augmentations?
 
-To have reproducible augmentations, set the `seed` parameter in your transform pipeline. This will ensure that the same random parameters are used for each augmentation, resulting in the same output for the same input.
+To have reproducible augmentations, set the `seed` parameter in your transform pipeline. This ensures consistent random parameters across runs.
 
-Note that Albumentations uses its own internal random state that is completely independent from global random seeds. This means:
+**Key points:**
+- Albumentations uses its own internal random state (independent from `np.random.seed()` or `random.seed()`)
+- Two `Compose` instances with the same seed produce identical augmentation sequences
+- Each call to the same instance still produces random (but reproducible) augmentations
 
-1. Setting `np.random.seed()` or `random.seed()` will NOT affect Albumentations' randomization
-2. Two [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) instances with the same seed will produce identical augmentation sequences
-3. Each call to the same [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose) instance still produces random augmentations, but these sequences are reproducible between different instances
-
-Example of reproducible augmentations:
 ```python
 # These two transforms will produce identical sequences
-transform1 = A.Compose([
-    A.RandomCrop(height=256, width=256),
-    A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.2),
-], seed=137)
+transform1 = A.Compose([...], seed=137)
+transform2 = A.Compose([...], seed=137)
 
-transform2 = A.Compose([
-    A.RandomCrop(height=256, width=256),
-    A.HorizontalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.2),
-], seed=137)
-
-# This will NOT affect Albumentations randomization
-np.random.seed(137)
-random.seed(137)
+# This will NOT affect Albumentations
+np.random.seed(137)  # Has no effect on Albumentations
 ```
+
+For detailed information on reproducibility, debugging tips, and best practices, see the [Reproducibility Guide](../4-advanced-guides/reproducibility.md).
 
 ### How can I find which augmentations were applied to the input data and which parameters they used?
 
@@ -301,7 +293,7 @@ transform = A.Compose([
     A.RandomBrightnessContrast(p=0.5),
     A.RandomGamma(p=0.5),
     A.Normalize(),
-], save_applied_params=True, seed=42)
+], save_applied_params=True, seed=137)
 
 transformed = transform(image=image)['image']
 

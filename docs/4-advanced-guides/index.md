@@ -8,6 +8,9 @@ This section covers more advanced features and customization options within Albu
 *   **[Serialization of Augmentation Pipelines](./serialization.md)**
     Discover how to save your defined augmentation pipelines to JSON or YAML files for reproducibility, sharing, or deployment, and understand the limitations.
 
+*   **[Reproducibility in Albumentations](./reproducibility.md)**
+    Master reproducible augmentations with comprehensive coverage of seed management, debugging techniques, best practices for experiments, and common pitfalls to avoid.
+
 *   **[Creating Custom Albumentations Transforms](./creating-custom-transforms.md)**
     Dive into extending Albumentations by creating your own custom transforms, inheriting from base classes, handling different data targets, managing randomness, and validating inputs.
 

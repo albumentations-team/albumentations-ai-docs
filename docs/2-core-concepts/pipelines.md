@@ -120,8 +120,8 @@ compose = A.Compose(
 
     **Important:** Albumentations uses its own internal random state generators (`self.py_random`, `self.random_generator`),
     completely independent from global seeds (`random.seed()`, `np.random.seed()`). Setting global seeds has no effect
-    on augmentations. See the [Creating Custom Transforms Guide](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation)
-    for how to use the seeded generators in custom transforms. Default: `None`.
+    on augmentations. For comprehensive information on reproducibility, see the [Reproducibility Guide](../4-advanced-guides/reproducibility.md).
+    For custom transforms, also see [Creating Custom Transforms Guide](../4-advanced-guides/creating-custom-transforms.md#reproducibility-and-random-number-generation). Default: `None`.
 
 *   **`save_applied_params` (bool):** If `True`, after processing each transform, Compose saves the actual parameters used
     by that transform in the result dictionary under the key `applied_params`.

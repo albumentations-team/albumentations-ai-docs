@@ -36,7 +36,7 @@ def apply(self, img, **params):                      # Transform logic
 
 ### **Critical Rules**
 - **⚠️ Probability Default**: `p=0.5` by default - use `p=1.0` for always-applied transforms
-- **🎲 Reproducibility**: Use `self.py_random` or `self.random_generator` (never global `random`)
+- **🎲 Reproducibility**: Use `self.py_random` or `self.random_generator` (never global `random`) - see [Reproducibility Guide](./reproducibility.md)
 - **📊 Parameter Sampling**: Do ALL random sampling in `get_params_dependent_on_data`
 
 ### **Transform Types Quick Guide**
@@ -392,6 +392,8 @@ Once defined, your custom transform class is used just like any built-in Albumen
 To ensure your custom transforms produce reproducible results when a seed is set for the overall pipeline using `A.Compose(..., seed=...)`, you **must** use the random number generators provided by the base transform classes: `self.py_random` and `self.random_generator`.
 
 Using Python's global `random` module or NumPy's global `np.random` directly within your transform methods will bypass the seeding mechanism managed by Albumentations, leading to non-reproducible results even if a seed is provided to `Compose`. Fixing global seeds outside the pipeline also does not guarantee reproducibility within the pipeline's transformations.
+
+For a comprehensive guide on reproducibility in Albumentations, including best practices and common pitfalls, see the [Reproducibility Guide](./reproducibility.md).
 
 The **only** way to ensure seeded reproducibility for random operations within your custom transform is to use the generators provided on `self`:
 
