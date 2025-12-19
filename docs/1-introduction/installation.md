@@ -1,6 +1,6 @@
 # Installation
 
-Albumentations requires Python 3.9 or higher. We recommend using the latest stable Python version.
+Albumentations requires Python 3.10 or higher. We recommend using the latest stable Python version.
 
 ## Installation Methods
 
