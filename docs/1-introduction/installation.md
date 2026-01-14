@@ -1,10 +1,8 @@
 # Installation
 
-Albumentations requires Python 3.10 or higher. We recommend using the latest stable Python version.
+AlbumentationsX requires Python 3.10 or higher. We recommend using the latest stable Python version.
 
 ## Installation Methods
-
-### AlbumentationsX (Recommended)
 
 **AlbumentationsX** offers:
 - ⚡ Improved performance and bug fixes
@@ -13,7 +11,28 @@ Albumentations requires Python 3.10 or higher. We recommend using the latest sta
 
 AlbumentationsX is dual-licensed (AGPL/Commercial). For more information about licensing, see our [License Guide](../license.md).
 
+#### Basic Installation
+
+**Important:** Starting with AlbumentationsX 2.0.14, OpenCV is **not installed automatically**. You need to explicitly choose your OpenCV variant:
+
+**For GUI support** (desktop environments, visualization):
 ```bash
+pip install -U albumentationsx[gui]
+```
+
+**For headless environments** (servers, Docker, CI/CD):
+```bash
+pip install -U albumentationsx[headless]
+```
+
+**For OpenCV contrib modules**:
+```bash
+pip install -U albumentationsx[contrib]
+```
+
+**Manual OpenCV installation** (if you already have OpenCV or want full control):
+```bash
+pip install opencv-python  # or opencv-python-headless, opencv-contrib-python, etc.
 pip install -U albumentationsx
 ```
 
@@ -41,18 +60,57 @@ pip install -U git+https://github.com/albumentations-team/AlbumentationsX
 
 **Note:** Installing from the `main` branch might give you newer features but could potentially be less stable than official releases.
 
-## Handling OpenCV Dependencies
+## Understanding OpenCV Dependencies
 
-Both Albumentations and AlbumentationsX rely heavily on OpenCV.
+AlbumentationsX relies heavily on OpenCV for image processing operations.
 
-*   **Default:** By default, they depend on `opencv-python-headless`. This version is chosen because it avoids installing GUI-related dependencies, making it suitable for server environments and containers where graphical interfaces are not needed.
-*   **Using Your Existing OpenCV:** If you already have a different OpenCV distribution installed (like `opencv-python`, `opencv-contrib-python`, or `opencv-contrib-python-headless`), pip should automatically detect and use it.
-*   **Forcing Source Build (Advanced):** If you need to force pip to build from source and use a *specific*, pre-existing OpenCV installation (perhaps compiled manually), you can use the `--no-binary` flag:
-    ```bash
-    # For AlbumentationsX
-    pip install -U albumentationsx --no-binary albumentationsx
-    ```
-    In most standard cases, this flag is **not** required.
+### Why OpenCV is now optional (AlbumentationsX 2.0.14+)
+
+Previously, AlbumentationsX tried to automatically manage OpenCV installation, which caused persistent issues:
+- Conflicting OpenCV packages (`opencv-python` and `opencv-python-headless`) could be installed simultaneously
+- GUI features like `cv2.imshow()` would break unexpectedly
+- Import order became unpredictable
+
+**The root cause:** Python's build system evaluates dependencies in isolated environments, making it impossible to reliably detect what's already installed in your environment.
+
+### The new approach
+
+Starting with version 2.0.14, AlbumentationsX:
+- ✅ Does **not** install OpenCV automatically
+- ✅ Does **not** try to guess which variant you need
+- ✅ Will **never** install conflicting OpenCV packages
+- ✅ Gives you explicit control over your environment
+
+### Choosing the right OpenCV variant
+
+**`albumentationsx[gui]`** - Installs `opencv-python`:
+- Use for desktop applications
+- Includes GUI support (`cv2.imshow()`, `cv2.waitKey()`, etc.)
+- Larger installation size
+
+**`albumentationsx[headless]`** - Installs `opencv-python-headless`:
+- Use for servers, Docker containers, CI/CD pipelines
+- No GUI dependencies
+- Smaller installation size
+
+**`albumentationsx[contrib]`** - Installs `opencv-contrib-python`:
+- Includes additional OpenCV modules
+- Use when you need extended functionality
+
+**Manual installation** - Install OpenCV separately:
+- Maximum control over the exact version and variant
+- Useful if you have custom OpenCV builds
+- Install your preferred OpenCV package first, then AlbumentationsX
+
+### Why this is better
+
+This change trades a bit of automation for:
+- 🔒 Stable, predictable environments
+- 🎯 Clear, explicit behavior
+- 🚫 No silent breakage or conflicts
+- 💡 Fewer "why did this suddenly stop working?" moments
+
+**Less magic, more reliability.**
 
 ## Verify Installation
 
