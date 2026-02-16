@@ -18,7 +18,7 @@ maintainers = [ { name = "Vladimir Iglovikov" } ]
 authors = [
   { name = "Vladimir Iglovikov", email = "iglovikov@gmail.com" },
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
@@ -26,7 +26,6 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -45,10 +44,10 @@ urls.homepage = "https://github.com/albumentations-team/albumentations-ai-docs"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
-target-version = "py312"
+target-version = "py313"
 line-length = 120
 indent-width = 4
-# Assume Python 3.9
+# Assume Python 3.13
 exclude = [
   ".bzr",
   ".direnv",
@@ -100,7 +99,7 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 lint.pydocstyle.convention = "google"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 ignore_missing_imports = true
 follow_imports = "silent"
 warn_redundant_casts = true
