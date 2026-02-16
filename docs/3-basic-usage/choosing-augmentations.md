@@ -522,7 +522,7 @@ heavy_train_pipeline = A.Compose(
         # ToTensorV2(p=1.0),
     ],
     # Add bbox_params or keypoint_params if dealing with bounding boxes or keypoints
-    # bbox_params=A.BboxParams(format='pascal_voc', label_fields=[])
+    # bbox_params=A.BboxParams(coord_format='pascal_voc', label_fields=[])
     #
     # IMPORTANT: Multi-target compatibility - not all transforms support all targets!
     # Check the Supported Targets by Transform reference to verify compatibility:

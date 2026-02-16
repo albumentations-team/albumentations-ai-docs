@@ -31,6 +31,7 @@ This documentation will guide you through installing the library, understanding 
     *   [Image Classification](./3-basic-usage/image-classification.md)
     *   [Semantic Segmentation](./3-basic-usage/semantic-segmentation.md)
     *   [Object Detection (Bounding Boxes)](./3-basic-usage/bounding-boxes-augmentations.md)
+    *   [Oriented Bounding Boxes (OBB)](./3-basic-usage/oriented-bounding-boxes.md)
     *   [Keypoint Augmentation](./3-basic-usage/keypoint-augmentations.md)
     *   [Video Augmentation](./3-basic-usage/video-augmentation.md)
     *   [Volumetric (3D) Augmentation](./3-basic-usage/volumetric-augmentation.md)

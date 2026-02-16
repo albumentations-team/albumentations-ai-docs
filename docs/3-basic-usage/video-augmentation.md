@@ -148,14 +148,14 @@ This approach flattens all bounding boxes (or keypoints) from all frames into a 
         A.Resize(height=256, width=256),
         A.HorizontalFlip(p=0.5),
         # ... other transforms ...
-    ], bbox_params=A.BboxParams(format='pascal_voc',
+    ], bbox_params=A.BboxParams(coord_format='pascal_voc',
                                label_fields=['class_labels', 'frame_indices']))
 
     transform_video_keypoints = A.Compose([
         A.Resize(height=256, width=256),
         A.HorizontalFlip(p=0.5),
         # ... other transforms ...
-    ], keypoint_params=A.KeypointParams(format='xy',
+    ], keypoint_params=A.KeypointParams(coord_format='xy',
                                        label_fields=['kp_class_labels', 'kp_frame_indices']))
     ```
 
@@ -237,7 +237,7 @@ For keypoints only, one can encode the frame index as the `z` coordinate using t
         A.HorizontalFlip(p=0.5),
         A.Rotate(limit=30, p=0.5),
         # ... other 2D transforms ...
-    ], keypoint_params=A.KeypointParams(format='xyz',
+    ], keypoint_params=A.KeypointParams(coord_format='xyz',
                                        label_fields=['kp_class_labels']))
     ```
 
