@@ -52,7 +52,7 @@ The process of augmenting keypoints looks very similar to the bounding boxes aug
 4. You pass an image and keypoints to the augmentation pipeline and receive augmented images and keypoints.
 
 !!! note "Note"
-    Some transforms in Albumentation don't support keypoints. If you try to use them you will get an exception. Please refer to the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to check whether a transform can augment keypoints.
+    Some transforms in Albumentations don't support keypoints. If you try to use them you will get an exception. Please refer to the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to check whether a transform can augment keypoints.
 
 ## Step 1. Import the required libraries.
 

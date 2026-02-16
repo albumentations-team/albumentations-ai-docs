@@ -7,7 +7,7 @@ This FAQ covers common questions about Albumentations, from basic setup to advan
 - Advanced usage patterns and best practices
 - Integration with other tools and switching from other libraries
 
-If you don't find an answer to your question, please check the [GitHub Issues for AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX/issues), or join our [Discord community](https://discord.gg/AmMnDBdzYs).
+If you don't find an answer to your question, please check the [GitHub Issues for Albumentations](https://github.com/albumentations-team/AlbumentationsX/issues), or join our [Discord community](https://discord.gg/AmMnDBdzYs).
 
 ## Installation
 
@@ -52,11 +52,11 @@ cv2.ocl.setUseOpenCL(False)
 
 This should be done at the beginning of your script or before creating the DataLoader. Note that this solution may not be necessary for all users, and you should only apply it if you're experiencing performance problems with your specific setup.
 
-## AlbumentationsX and Licensing
+## Albumentations and Licensing
 
-### What is AlbumentationsX?
+### What is Albumentations?
 
-AlbumentationsX offers:
+Albumentations offers:
 - Active maintenance and bug fixes
 - Performance improvements
 - New features and transforms
@@ -66,13 +66,13 @@ AlbumentationsX offers:
 
 ### What is dual licensing and why was it introduced?
 
-AlbumentationsX uses dual licensing:
+Albumentations uses dual licensing:
 - **AGPL-3.0**: Free for open source projects that are also AGPL-licensed
 - **Commercial License**: Required for proprietary/commercial use or projects with non-AGPL licenses
 
 This model ensures sustainable development of the library. Dual licensing provides resources for full-time maintenance and development. See our [License Guide](./license.md) for details.
 
-### Do I need to pay to use AlbumentationsX?
+### Do I need to pay to use Albumentations?
 
 You need a commercial license if:
 - You're using it in proprietary/commercial software
@@ -90,9 +90,9 @@ AGPL (Affero General Public License) is a copyleft license that requires:
 - You cannot mix AGPL code with MIT/Apache/BSD licensed code without converting everything to AGPL
 - If you distribute the software or run it as a network service, you must provide source code
 
-### How do I disable telemetry in AlbumentationsX?
+### How do I disable telemetry in Albumentations?
 
-AlbumentationsX includes anonymous usage telemetry to improve the library. To disable it:
+Albumentations includes anonymous usage telemetry to improve the library. To disable it:
 
 Globally:
 ```bash
@@ -125,7 +125,7 @@ Albumentations works with images of type uint8 and float32. uint8 images should 
 
 ### How to have reproducible augmentations?
 
-To have reproducible augmentations, set the `seed` parameter in your transform pipeline. This ensures consistent random parameters across runs.
+Set the `seed` parameter in your transform pipeline. Albumentations uses its own internal random state (independent from `np.random.seed()` or `random.seed()`). Two `Compose` instances with the same seed produce identical augmentation sequences.
 
 ```python
 transform = A.Compose([
@@ -257,30 +257,9 @@ This reference is particularly useful when:
 
 Yes. You can define additional images, masks, bounding boxes, or keypoints through the `additional_targets` argument to [`Compose`](https://www.albumentations.ai/docs/api-reference/core/composition/#Compose). You can then pass those additional targets to the augmentation pipeline, and Albumentations will augment them in the same way. See [this example](https://www.albumentations.ai/docs/examples/example-multi-target/) for more info.
 
-But if you want only to the sequence of images, you may just use `images` target that accepts
-`list[numpy.ndarray]` or np.ndarray with shape `(N, H, W, C) / (N, H, W)`.
+If you want to apply augmentations only to a sequence of images, use the `image` target with an `np.ndarray` of shape `(N, H, W, C)` or `(N, H, W)` for grayscale. Lists are not supported; use `np.ndarray` for all targets.
 
 ## Advanced Usage
-
-### How to have reproducible augmentations?
-
-To have reproducible augmentations, set the `seed` parameter in your transform pipeline. This ensures consistent random parameters across runs.
-
-**Key points:**
-- Albumentations uses its own internal random state (independent from `np.random.seed()` or `random.seed()`)
-- Two `Compose` instances with the same seed produce identical augmentation sequences
-- Each call to the same instance still produces random (but reproducible) augmentations
-
-```python
-# These two transforms will produce identical sequences
-transform1 = A.Compose([...], seed=137)
-transform2 = A.Compose([...], seed=137)
-
-# This will NOT affect Albumentations
-np.random.seed(137)  # Has no effect on Albumentations
-```
-
-For detailed information on reproducibility, debugging tips, and best practices, see the [Reproducibility Guide](../4-advanced-guides/reproducibility.md).
 
 ### How can I find which augmentations were applied to the input data and which parameters they used?
 
@@ -462,12 +441,12 @@ loaded_transform = A.Compose.from_pretrained("qubvel-hf/albu", key="train")
 
 See [this example](https://www.albumentations.ai/docs/examples/example-hfhub/) for more info.
 
-### How do I switch from other augmentation libraries to AlbumentationsX?
+### How do I switch from other augmentation libraries to Albumentations?
 
 If you're switching from other libraries like torchvision or Kornia, you can refer to our [Library Comparison](./torchvision-kornia2albumentations.md) guide. This guide provides:
 
 1. Mapping tables showing equivalent transforms between libraries
-2. Performance benchmarks demonstrating AlbumentationsX's speed advantages
+2. Performance benchmarks demonstrating Albumentations's speed advantages
 3. Code examples for common switching scenarios
 4. Key differences in implementation and parameter handling
 

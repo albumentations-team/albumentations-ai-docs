@@ -201,11 +201,11 @@ transform.set_random_state(rng, py_rng)
 
 ## DataLoader Workers and Reproducibility
 
-**Key Concept**: In AlbumentationsX, the augmentation sequence depends on BOTH the seed AND the number of workers. Using `seed=137` with `num_workers=4` produces different results than `seed=137` with `num_workers=8`. This is by design to maximize augmentation diversity in parallel processing.
+**Key Concept**: In Albumentations, the augmentation sequence depends on BOTH the seed AND the number of workers. Using `seed=137` with `num_workers=4` produces different results than `seed=137` with `num_workers=8`. This is by design to maximize augmentation diversity in parallel processing.
 
 ### Automatic Worker Seed Handling
 
-AlbumentationsX automatically handles seed synchronization when used with PyTorch DataLoader workers:
+Albumentations automatically handles seed synchronization when used with PyTorch DataLoader workers:
 
 ```python
 import torch
@@ -364,7 +364,7 @@ def worker_init_fn(worker_id):
 
 **Warning**: Making augmentations identical across different `num_workers` defeats the purpose of parallel data loading and reduces augmentation diversity. This is typically only useful for debugging or specific reproducibility requirements.
 
-This behavior is discussed in [AlbumentationsX Issue #81](https://github.com/albumentations-team/AlbumentationsX/issues/81).
+This behavior is discussed in [Albumentations Issue #81](https://github.com/albumentations-team/AlbumentationsX/issues/81).
 
 ## Custom Transforms and Reproducibility
 
@@ -440,7 +440,7 @@ print(transform.applied_transforms)
    - Test with both single and multi-worker configurations
 
 4. **Distributed Training:**
-   - AlbumentationsX automatically handles worker differentiation
+   - Albumentations automatically handles worker differentiation
    - Each worker gets a unique, reproducible seed based on `base_seed + torch.initial_seed()`
    - No need for manual `seed = base_seed + worker_id` logic
    - Seeds are automatically updated on worker respawn

@@ -1,7 +1,5 @@
 # Getting Started with Albumentations
 
-> **Note:** Check out **[AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX)** with improved performance, bug fixes, and new features. Learn more in our [Installation Guide](./installation.md).
-
 Welcome to Albumentations! If you're looking to boost your computer vision model's performance and robustness, you're in the right place. Albumentations is a powerful, flexible, and fast library for image augmentation.
 
 ## What is Image Augmentation?

@@ -1,21 +1,6 @@
 # Welcome to Albumentations Documentation!
 
-> 🚀 **Important: AlbumentationsX**
->
-> **[AlbumentationsX](https://github.com/albumentations-team/AlbumentationsX)** is now available:
->
-
-> - ⚡ **Better performance** with bug fixes and new features
-> - 🔧 **Active maintenance** and professional support
-> - 📄 **Licensed** under AGPL/Commercial - see our [License Guide](./license.md)
->
-> ```bash
-> pip install albumentationsx
-> ```
->
-> Learn more in our [Installation Guide](./1-introduction/installation.md).
-
-Albumentations is a fast and flexible library for image augmentation. Whether you're working on classification, segmentation, object detection, or other computer vision tasks, Albumentations provides a comprehensive set of transforms and a powerful pipeline framework.
+Albumentations is a fast and flexible library for image augmentation. Install with `pip install albumentationsx`. See the [License Guide](./license.md) for licensing (AGPL/Commercial). Whether you're working on classification, segmentation, object detection, or other computer vision tasks, Albumentations provides a comprehensive set of transforms and a powerful pipeline framework.
 
 This documentation will guide you through installing the library, understanding its core concepts, applying it to various tasks, and exploring advanced features.
 

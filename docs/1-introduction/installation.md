@@ -1,19 +1,19 @@
 # Installation
 
-AlbumentationsX requires Python 3.10 or higher. We recommend using the latest stable Python version.
+Albumentations requires Python 3.10 or higher. We recommend using the latest stable Python version.
 
 ## Installation Methods
 
-**AlbumentationsX** offers:
+**Albumentations** offers:
 - ⚡ Improved performance and bug fixes
 - 🔧 Active maintenance and new features
 - 📊 Better support for production environments
 
-AlbumentationsX is dual-licensed (AGPL/Commercial). For more information about licensing, see our [License Guide](../license.md).
+Albumentations is dual-licensed (AGPL/Commercial). For more information about licensing, see our [License Guide](../license.md).
 
 #### Basic Installation
 
-**Important:** Starting with AlbumentationsX 2.0.14, OpenCV is **not installed automatically**. You need to explicitly choose your OpenCV variant:
+**Important:** Starting with Albumentations 2.0.14, OpenCV is **not installed automatically**. You need to explicitly choose your OpenCV variant:
 
 **For GUI support** (desktop environments, visualization):
 ```bash
@@ -53,7 +53,7 @@ transform = A.Compose([
 
 ### From GitHub (Latest Development Version)
 
-For AlbumentationsX:
+For Albumentations:
 ```bash
 pip install -U git+https://github.com/albumentations-team/AlbumentationsX
 ```
@@ -62,11 +62,11 @@ pip install -U git+https://github.com/albumentations-team/AlbumentationsX
 
 ## Understanding OpenCV Dependencies
 
-AlbumentationsX relies heavily on OpenCV for image processing operations.
+Albumentations relies heavily on OpenCV for image processing operations.
 
-### Why OpenCV is now optional (AlbumentationsX 2.0.14+)
+### Why OpenCV is now optional (Albumentations 2.0.14+)
 
-Previously, AlbumentationsX tried to automatically manage OpenCV installation, which caused persistent issues:
+Previously, Albumentations tried to automatically manage OpenCV installation, which caused persistent issues:
 - Conflicting OpenCV packages (`opencv-python` and `opencv-python-headless`) could be installed simultaneously
 - GUI features like `cv2.imshow()` would break unexpectedly
 - Import order became unpredictable
@@ -75,7 +75,7 @@ Previously, AlbumentationsX tried to automatically manage OpenCV installation, w
 
 ### The new approach
 
-Starting with version 2.0.14, AlbumentationsX:
+Starting with version 2.0.14, Albumentations:
 - ✅ Does **not** install OpenCV automatically
 - ✅ Does **not** try to guess which variant you need
 - ✅ Will **never** install conflicting OpenCV packages
@@ -100,7 +100,7 @@ Starting with version 2.0.14, AlbumentationsX:
 **Manual installation** - Install OpenCV separately:
 - Maximum control over the exact version and variant
 - Useful if you have custom OpenCV builds
-- Install your preferred OpenCV package first, then AlbumentationsX
+- Install your preferred OpenCV package first, then Albumentations
 
 ### Why this is better
 
@@ -122,9 +122,9 @@ python -c "import albumentations as A; print(A.__version__)"
 
 This should print the installed version number.
 
-## Telemetry in AlbumentationsX
+## Telemetry in Albumentations
 
-AlbumentationsX includes anonymous usage telemetry to help improve the library. This can be disabled by:
+Albumentations includes anonymous usage telemetry to help improve the library. This can be disabled by:
 
 Setting an environment variable:
 ```bash
@@ -145,4 +145,4 @@ Now that you have Albumentations installed, here are some logical next steps:
 -   **[Understand Core Concepts](../2-core-concepts/index.md):** Learn about transforms, pipelines, targets, and probabilities - the fundamental building blocks of Albumentations.
 -   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore how to apply augmentations for common computer vision tasks.
 -   **[Explore Transforms](https://explore.albumentations.ai):** Visually experiment with different augmentations and their parameters.
--   **[License Guide](../license.md):** If using AlbumentationsX, understand the dual licensing model.
+-   **[License Guide](../license.md):** If using Albumentations, understand the dual licensing model.

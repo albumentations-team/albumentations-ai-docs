@@ -1,18 +1,18 @@
-# AlbumentationsX License Guide
+# Albumentations License Guide
 
-AlbumentationsX uses a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
+Albumentations uses a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
 
 ## Quick Summary
 
-- **AlbumentationsX** is dual-licensed: AGPL-3.0 (open source) / Commercial
-- **Open source projects** can use AlbumentationsX for free under AGPL
+- **Albumentations** is dual-licensed: AGPL-3.0 (open source) / Commercial
+- **Open source projects** can use Albumentations for free under AGPL
 - **Commercial projects** need a commercial license for proprietary use
 
 ## Understanding the License Change
 
 ### Background
 
-AlbumentationsX uses a dual license model. This approach ensures sustainable maintenance of a widely-used open source project:
+Albumentations uses a dual license model. This approach ensures sustainable maintenance of a widely-used open source project:
 
 - The project has grown to serve thousands of companies and researchers worldwide
 - Maintenance, bug fixes, and feature development require significant time investment
@@ -22,18 +22,18 @@ AlbumentationsX uses a dual license model. This approach ensures sustainable mai
 
 ### The Dual License Model
 
-AlbumentationsX offers two licensing options:
+Albumentations offers two licensing options:
 
 1. **AGPL-3.0 License**: For open source projects
    - Free to use in open source projects
    - **IMPORTANT**: Your entire project must be licensed under AGPL-3.0
-   - You CANNOT use AlbumentationsX in MIT, Apache, BSD, or other permissively licensed projects
+   - You CANNOT use Albumentations in MIT, Apache, BSD, or other permissively licensed projects
    - Requires sharing source code of your entire application
    - If you provide a network service, you must provide source code to users
 
 2. **Commercial License**: For proprietary/commercial use
-   - Use AlbumentationsX in closed-source applications
-   - Use AlbumentationsX in projects with any license (MIT, Apache, proprietary, etc.)
+   - Use Albumentations in closed-source applications
+   - Use Albumentations in projects with any license (MIT, Apache, proprietary, etc.)
    - No requirement to share your source code
    - Professional support options available
    - [View pricing](https://albumentations.ai/pricing)
@@ -53,9 +53,9 @@ AGPL (Affero General Public License) extends GPL to network services. Key points
 
 ### For Open Source Projects
 
-**Important**: You can only use AlbumentationsX under AGPL if your entire project is also AGPL-licensed.
+**Important**: You can only use Albumentations under AGPL if your entire project is also AGPL-licensed.
 
-Continue using AlbumentationsX under AGPL:
+Continue using Albumentations under AGPL:
 
 ```bash
 pip install albumentationsx
@@ -76,14 +76,14 @@ transform = A.Compose([
 - Your project must be licensed under AGPL-3.0
 - You must provide source code when distributing your software
 - If you run a network service, you must provide source code to users
-- You cannot use AlbumentationsX in MIT, Apache, BSD, or other permissively licensed projects
+- You cannot use Albumentations in MIT, Apache, BSD, or other permissively licensed projects
 
 ### For Commercial/Proprietary Projects
 
 You have two paths:
 
 1. **Purchase a Commercial License**
-   - Continue using AlbumentationsX in proprietary software
+   - Continue using Albumentations in proprietary software
    - No source code disclosure required
    - Support the project's continued development
    - [Get commercial license](https://albumentations.ai/pricing)
@@ -120,25 +120,25 @@ Projects like [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) hav
 
 ## FAQ
 
-### Q: Do I need to pay to use AlbumentationsX?
+### Q: Do I need to pay to use Albumentations?
 
 **A:** Only if you're using it in proprietary/commercial software OR if your open source project uses a non-AGPL license (like MIT, Apache, BSD). Open source projects licensed under AGPL can use it for free.
 
 ### Q: What if I'm a student or researcher?
 
-**A:** If you're publishing your code under AGPL, you can use AlbumentationsX for free. If you want to use a different license (like MIT) or keep your code private, you'll need a commercial license.
+**A:** If you're publishing your code under AGPL, you can use Albumentations for free. If you want to use a different license (like MIT) or keep your code private, you'll need a commercial license.
 
-### Q: Can I use AlbumentationsX in my MIT/Apache/BSD licensed project?
+### Q: Can I use Albumentations in my MIT/Apache/BSD licensed project?
 
-**A:** No, not under the AGPL license. AGPL is a copyleft license that requires your entire project to be AGPL. To use AlbumentationsX in projects with permissive licenses, you need a commercial license.
+**A:** No, not under the AGPL license. AGPL is a copyleft license that requires your entire project to be AGPL. To use Albumentations in projects with permissive licenses, you need a commercial license.
 
-### Q: Can I try AlbumentationsX before purchasing a commercial license?
+### Q: Can I try Albumentations before purchasing a commercial license?
 
-**A:** Yes! You can evaluate AlbumentationsX in development. A commercial license is only required for production deployment in proprietary systems.
+**A:** Yes! You can evaluate Albumentations in development. A commercial license is only required for production deployment in proprietary systems.
 
 ### Q: What about existing projects?
 
-**A:** To use AlbumentationsX, you need to comply with the licensing terms - either use AGPL for your entire project or purchase a commercial license.
+**A:** To use Albumentations, you need to comply with the licensing terms - either use AGPL for your entire project or purchase a commercial license.
 
 ### Q: How do I know if I need a commercial license?
 
@@ -151,7 +151,7 @@ Projects like [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) hav
 
 The only case where you DON'T need a commercial license is if your entire project is licensed under AGPL-3.0 and you comply with all AGPL requirements.
 
-### Q: What if I contribute to AlbumentationsX?
+### Q: What if I contribute to Albumentations?
 
 **A:** Contributors grant rights to use their contributions under both AGPL and commercial licenses, enabling the dual licensing model.
 
@@ -164,6 +164,6 @@ The only case where you DON'T need a commercial license is if your entire projec
 
 ## Conclusion
 
-The transition to dual licensing ensures AlbumentationsX can continue to grow and improve while serving both open source and commercial communities. This model has proven successful for many projects and provides the resources needed for professional maintenance and development.
+The transition to dual licensing ensures Albumentations can continue to grow and improve while serving both open source and commercial communities. This model has proven successful for many projects and provides the resources needed for professional maintenance and development.
 
 For commercial licensing inquiries, visit [our pricing page](https://albumentations.ai/pricing).
