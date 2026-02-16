@@ -38,7 +38,7 @@ Set `bbox_type='obb'` and choose your `coord_format`:
 ```python
 import albumentations as A
 
-# OBB in cxcywh format (center, width, height, angle in pixels)
+# OBB in cxcywh format (center, width, height, angle in degrees)
 bbox_params = A.BboxParams(
     coord_format='cxcywh',
     bbox_type='obb',
