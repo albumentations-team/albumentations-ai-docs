@@ -12,6 +12,8 @@ This section provides guides for common augmentation tasks, data types, and opti
 
 *   **[Object Detection (Bounding Boxes)](./bounding-boxes-augmentations.md):** Augmenting images and bounding boxes, including format handling.
 
+*   **[Oriented Bounding Boxes (OBB)](./oriented-bounding-boxes.md):** Augmenting rotated objects with 5-coordinate boxes.
+
 *   **[Keypoint Augmentation](./keypoint-augmentations.md):** Augmenting images and associated keypoints.
 
 *   **[Video Augmentation](./video-augmentation.md):** Applying consistent augmentations across sequences of images (video frames).

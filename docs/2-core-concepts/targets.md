@@ -175,7 +175,7 @@ stereo pairs, or multi-channel data requiring synchronized transformations.
 - Must specify `bbox_params` in `A.Compose`
 - Coordinates and labels handled separately
 
-**Supported Formats:** `pascal_voc`, `albumentations`, `coco`, `yolo`
+**Supported Formats:** `pascal_voc`, `albumentations`, `coco`, `yolo`, `cxcywh`
 
 **Example:**
 ```python
@@ -190,7 +190,7 @@ transform = A.Compose([
     A.HorizontalFlip(p=1.0),
     A.RandomBrightnessContrast(p=0.5),
 ], bbox_params=A.BboxParams(
-    format='pascal_voc',
+    coord_format='pascal_voc',
     label_fields=['class_labels']
 ))
 
@@ -304,7 +304,7 @@ transform = A.Compose([
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.3),
 ], bbox_params=A.BboxParams(
-    format='pascal_voc',
+    coord_format='pascal_voc',
     label_fields=['labels'],
     min_area=1024,
     min_visibility=0.1
@@ -335,8 +335,8 @@ transform = A.Compose([
     A.Rotate(limit=15, p=0.5),
     A.RandomBrightnessContrast(p=0.3),
 ],
-bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels']),
-keypoint_params=A.KeypointParams(format='xy', label_fields=['keypoint_labels'])
+bbox_params=A.BboxParams(coord_format='pascal_voc', label_fields=['class_labels']),
+keypoint_params=A.KeypointParams(coord_format='xy', label_fields=['keypoint_labels'])
 )
 
 # Apply to all targets

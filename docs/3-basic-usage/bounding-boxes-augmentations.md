@@ -9,12 +9,13 @@ For background on *why* data augmentation is important and *which* specific augm
 
 ## Understanding Bounding Box Formats
 
-Bounding boxes mark object locations. Albumentations needs to know the format of your bounding box coordinates. It supports four common formats:
+Bounding boxes mark object locations. Albumentations needs to know the format of your bounding box coordinates. It supports five common formats:
 
 *   **`pascal_voc`**: `[x_min, y_min, x_max, y_max]` in absolute pixel coordinates. `(x_min, y_min)` is the top-left corner, and `(x_max, y_max)` is the bottom-right corner.
 *   **`albumentations`**: Similar to `pascal_voc`, but uses normalized coordinates: `[normalized_x_min, normalized_y_min, normalized_x_max, normalized_y_max]`. These are calculated as `x_pixel / image_width` and `y_pixel / image_height`.
 *   **`coco`**: `[x_min, y_min, bbox_width, bbox_height]` in absolute pixel coordinates. `(x_min, y_min)` is the top-left corner.
 *   **`yolo`**: `[normalized_x_center, normalized_y_center, normalized_bbox_width, normalized_bbox_height]`. These are normalized coordinates.
+*   **`cxcywh`**: `[x_center, y_center, width, height]` in absolute pixel coordinates. Like YOLO but not normalized.
 
 **Example:** For a 640x480 image (image_width=640, image_height=480) with a box from (98, 345) to (420, 462):
 
@@ -26,6 +27,7 @@ The formats represent this box as:
 *   `albumentations`: `[x_min/image_width, y_min/image_height, x_max/image_width, y_max/image_height]` -> Normalized `pascal_voc`: `[98/640, 345/480, 420/640, 462/480]` ≈ `[0.153, 0.719, 0.656, 0.962]`
 *   `coco`: `[x_min, y_min, bbox_width, bbox_height]` -> Top-left corner + box dimensions: `bbox_width=420-98=322`, `bbox_height=462-345=117`. Result: `[98, 345, 322, 117]`
 *   `yolo`: `[x_center/image_width, y_center/image_height, bbox_width/image_width, bbox_height/image_height]` -> Normalized center + normalized box dimensions: `x_center=(98+420)/2=259`, `y_center=(345+462)/2=403.5`. Result: `[259/640, 403.5/480, 322/640, 117/480]` ≈ `[0.405, 0.861, 0.503, 0.244]`
+*   `cxcywh`: `[x_center, y_center, width, height]` -> Center + box dimensions in pixels: `[259, 403.5, 322, 117]`
 
 ![Comparison of bounding box formats](../../img/getting_started/augmenting_bboxes/bbox_formats.webp "Comparison of bounding box formats")
 
@@ -58,7 +60,7 @@ train_transform = A.Compose([
     A.RandomCrop(width=450, height=450, p=1.0), # Example random crop
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.2),
-], bbox_params=A.BboxParams(format='coco', # Specify input format
+], bbox_params=A.BboxParams(coord_format='coco', # Specify input format
                            label_fields=['class_labels'] # Specify label argument name(s)
                            ))
 
@@ -79,17 +81,18 @@ Consider replacing `A.RandomCrop` with one of these safer alternatives depending
 
 **Understanding `A.BboxParams`:**
 
-*   **`format` (Required):** Specifies the format of the input bounding boxes (`'pascal_voc'`, `'albumentations'`, `'coco'`, or `'yolo'`).
+*   **`coord_format` (Required):** Specifies the format of the input bounding boxes (`'pascal_voc'`, `'albumentations'`, `'coco'`, `'yolo'`, or `'cxcywh'`).
+*   **`bbox_type`:** `'hbb'` (axis-aligned, 4 coords, default) or `'obb'` (oriented, 5 coords with angle). For rotated objects (aerial imagery, boats), see [Oriented Bounding Boxes (OBB)](./oriented-bounding-boxes.md).
 *   **`label_fields` (Recommended):** List of keyword argument names that will hold the labels corresponding to the bounding boxes passed to the transform call (e.g., `['class_labels']`). Using this is the preferred way to handle labels, ensuring they stay synchronized with boxes that are kept or dropped.
 *   **`min_area`:** Minimum pixel area. Boxes smaller than this after augmentation are dropped. Default: `0.0`.
 *   **`min_visibility`:** Minimum fraction (0.0-1.0) of the original box area that must remain visible after augmentation. Boxes below this threshold are dropped. Default: `0.0`.
 *   **`min_width`:** Minimum width of a bounding box (in pixels for absolute formats, normalized units for normalized formats). Boxes with width less than this value are removed. Default: `0.0`.
 *   **`min_height`:** Minimum height of a bounding box (in pixels or normalized units). Boxes with height less than this value are removed. Default: `0.0`.
-*   **`clip`:** If `True`, bounding box coordinates are clipped to stay within image boundaries (`[0, image_width]` for x, `[0, image_height]` for y) *before* applying transformations. Default: `False`.
-*   **`filter_invalid_bboxes`:** If `True`, filters out invalid boxes (e.g., `x_max < x_min`) *before* applying augmentations. If `clip=True`, filtering happens after clipping. Default: `False`.
+*   **`clip_bboxes_on_input`:** If `True`, bounding box coordinates are clipped to stay within image boundaries (`[0, image_width]` for x, `[0, image_height]` for y) *before* applying transformations. Default: `False`.
+*   **`filter_invalid_bboxes`:** If `True`, filters out invalid boxes (e.g., `x_max < x_min`) *before* applying augmentations. If `clip_bboxes_on_input=True`, filtering happens after clipping. Default: `False`.
 *   **`max_accept_ratio`:** Maximum allowed aspect ratio (`max(width/height, height/width)`). Boxes exceeding this ratio are filtered out. `None` disables this check. Default: `None`.
 
-**Handling Imperfect Annotations:** It's common for real-world datasets to have bounding boxes that partially or fully extend outside the image boundaries due to labeling errors or previous processing. Setting `clip=True` will force these coordinates back within the image dimensions *before* augmentations are applied. Subsequently, setting `filter_invalid_bboxes=True` can help remove boxes that might have become invalid (e.g., zero width/height) *after* clipping. Using both `clip=True` and `filter_invalid_bboxes=True` together is a common strategy to clean up such annotations before augmentation.
+**Handling Imperfect Annotations:** It's common for real-world datasets to have bounding boxes that partially or fully extend outside the image boundaries due to labeling errors or previous processing. Setting `clip_bboxes_on_input=True` will force these coordinates back within the image dimensions *before* augmentations are applied. Subsequently, setting `filter_invalid_bboxes=True` can help remove boxes that might have become invalid (e.g., zero width/height) *after* clipping. Using both `clip_bboxes_on_input=True` and `filter_invalid_bboxes=True` together is a common strategy to clean up such annotations before augmentation.
 
 **`min_area` / `min_visibility` Example:**
 
@@ -141,7 +144,7 @@ class_labels = np.array(['dog', 'cat', 'sports ball'])
 # class_categories = np.array(['animal', 'animal', 'item'])
 ```
 
-Albumentations expects `bboxes` as a NumPy array with shape `(num_boxes, 4)`. Each row must contain the 4 coordinate values according to the specified `format`.
+Albumentations expects `bboxes` as a NumPy array with shape `(num_boxes, 4)`. Each row must contain the 4 coordinate values according to the specified `coord_format`.
 
 ### Step 4: Apply the Pipeline
 
@@ -300,7 +303,7 @@ def visualize_bbox_augmentations(image, bboxes, labels, transform, samples=5):
 #     A.RandomBrightnessContrast(p=0.2),
 #     # A.Normalize(...), # Include if used, will be stripped by visualize func
 #     # A.ToTensorV2(),  # Include if used, will be stripped by visualize func
-# ], bbox_params=A.BboxParams(format='coco', label_fields=['class_labels']))
+# ], bbox_params=A.BboxParams(coord_format='coco', label_fields=['class_labels']))
 
 # Visualize
 # visualize_bbox_augmentations(image, bboxes, class_labels, train_transform, samples=4)
@@ -321,6 +324,7 @@ After mastering bounding box augmentation, you might want to:
 -   **[Refine Your Augmentation Choices](./choosing-augmentations.md):** Get specific advice on selecting effective transforms for object detection.
 -   **[Optimize Performance](./performance-tuning.md):** Learn how to speed up your detection augmentation pipeline.
 -   **Explore Related Tasks:**
+    -   [Oriented Bounding Boxes (OBB)](./oriented-bounding-boxes.md) - Rotated objects (aerial, boats)
     -   [Keypoint Augmentation](./keypoint-augmentations.md)
     -   [Semantic Segmentation](./semantic-segmentation.md) (useful for instance segmentation alongside boxes)
 -   **[Dive into Advanced Guides](../4-advanced-guides/index.md):** Learn about custom transforms, serialization, or handling additional targets.

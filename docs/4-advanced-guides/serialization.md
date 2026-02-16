@@ -83,7 +83,7 @@ import albumentations as A
 # Pipeline with bbox_params and additional_targets
 transform_complex = A.Compose([
     A.HorizontalFlip(p=0.5),
-], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels']),
+], bbox_params=A.BboxParams(coord_format='pascal_voc', label_fields=['labels']),
    additional_targets={'image2': 'image'})
 
 # Save and load

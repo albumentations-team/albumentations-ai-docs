@@ -161,7 +161,7 @@ import albumentations as A
 base_pipeline = A.Compose([
     A.RandomCrop(height=256, width=256),
     A.HorizontalFlip(p=0.5),
-], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels']))
+], bbox_params=A.BboxParams(coord_format='pascal_voc', label_fields=['labels']))
 
 # Add a single transform to the end
 extended_pipeline = base_pipeline + A.RandomBrightnessContrast(p=0.3)

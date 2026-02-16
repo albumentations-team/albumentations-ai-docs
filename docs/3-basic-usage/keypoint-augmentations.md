@@ -69,12 +69,12 @@ Here an example of a minimal declaration of an augmentation pipeline that works 
 transform = A.Compose([
     A.RandomCrop(width=330, height=330),
     A.RandomBrightnessContrast(p=0.2),
-], keypoint_params=A.KeypointParams(format='xy'))
+], keypoint_params=A.KeypointParams(coord_format='xy'))
 ```
 
 Note that just like with bounding boxes, `Compose` has an additional parameter that defines the format for keypoints' coordinates. In the case of keypoints, it is called `keypoint_params`. Here we pass an instance of `A.KeypointParams` that says that `xy` coordinates format should be used.
 
-Besides `format`, `A.KeypointParams` supports a few more settings.
+Besides `coord_format`, `A.KeypointParams` supports a few more settings.
 
 Here is an example of `Compose` that shows all available settings with `A.KeypointParams`
 
@@ -82,7 +82,7 @@ Here is an example of `Compose` that shows all available settings with `A.Keypoi
 transform = A.Compose([
     A.RandomCrop(width=330, height=330),
     A.RandomBrightnessContrast(p=0.2),
-], keypoint_params=A.KeypointParams(format='xy', label_fields=['class_labels'], remove_invisible=True, angle_in_degrees=True))
+], keypoint_params=A.KeypointParams(coord_format='xy', label_fields=['class_labels'], remove_invisible=True, angle_in_degrees=True))
 ```
 
 ### `label_fields`
@@ -164,7 +164,7 @@ For example, we could use the `class_labels` name for the argument with labels.
 transform = A.Compose([
     A.RandomCrop(width=330, height=330),
     A.RandomBrightnessContrast(p=0.2),
-], keypoint_params=A.KeypointParams(format='xy', label_fields=['class_labels']))
+], keypoint_params=A.KeypointParams(coord_format='xy', label_fields=['class_labels']))
 ```
 
 Next, you pass both keypoints' coordinates and class labels to `transform`.
@@ -183,7 +183,7 @@ Note that `label_fields` expects a list of field names, so you can set multiple 
 transform = A.Compose([
     A.RandomCrop(width=330, height=330),
     A.RandomBrightnessContrast(p=0.2),
-], keypoint_params=A.KeypointParams(format='xy', label_fields=['class_labels', 'class_sides']))
+], keypoint_params=A.KeypointParams(coord_format='xy', label_fields=['class_labels', 'class_sides']))
 ```
 
 you can use those multiple arguments to pass info about class labels, like
