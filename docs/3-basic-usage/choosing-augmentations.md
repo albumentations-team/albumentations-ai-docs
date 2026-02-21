@@ -11,7 +11,7 @@ This guide focuses on strategies for selecting augmentations that are *useful* f
 **Build your pipeline incrementally in this order:**
 
 1. **[Start with Cropping](#step-1-start-with-cropping-if-applicable)** - Size normalization first (always)
-2. **[Basic Geometric Invariances](#step-2-add-basic-geometric-invariances)** - [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip), [`SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) for aerial
+2. **[Basic Geometric Invariances](#step-2-add-basic-geometric-invariances)** - [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip), [`SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) for aerial/medical
 3. **[Dropout/Occlusion](#step-3-add-dropout--occlusion-augmentations)** - [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout), [`RandomErasing`](https://explore.albumentations.ai/transform/RandomErasing) (high impact!)
 4. **[Reduce Color Dependence](#step-4-reduce-reliance-on-color-features)** - [`ToGray`](https://explore.albumentations.ai/transform/ToGray), [`ChannelDropout`](https://explore.albumentations.ai/transform/ChannelDropout) (if needed)
 5. **[Affine Transformations](#step-5-introduce-affine-transformations-scale-rotate-etc)** - [`Affine`](https://explore.albumentations.ai/transform/Affine) for scale/rotation
@@ -23,7 +23,9 @@ This guide focuses on strategies for selecting augmentations that are *useful* f
 A.Compose([
     A.RandomCrop(height=224, width=224),      # Step 1: Size
     A.HorizontalFlip(p=0.5),                  # Step 2: Basic geometric
-    A.CoarseDropout(max_holes=8, max_height=32, max_width=32, p=0.5),  # Step 3: Dropout
+    A.CoarseDropout(num_holes_range=(1, 8),    # Step 3: Dropout
+                    hole_height_range=(0.05, 0.15),
+                    hole_width_range=(0.05, 0.15), p=0.5),
     A.Normalize(),                            # Step 7: Normalization
 ])
 ```
@@ -38,6 +40,62 @@ Before building your pipeline, keep these points in mind:
 *   **Parameter Tuning is Empirical:** There's no single formula to determine the *best* parameters (e.g., rotation angle, dropout probability, brightness limit) for an augmentation. Choosing good parameters relies heavily on domain knowledge, experience, and experimentation. What works well for one dataset might not work for another.
 *   **Visualize Your Augmentations:** Always visualize the output of your augmentation pipeline on sample images from *your* dataset. This is crucial to ensure the augmented images are still realistic and don't distort the data in ways that would harm learning. Use the interactive tool at [explore.albumentations.ai](https://explore.albumentations.ai/) to **upload your own images** and quickly test different transforms and parameters to see real-time results on your specific data.
 
+> [!CAUTION]
+> **When Augmentation Can Hurt:**
+> Not every augmentation improves performance. Overly aggressive augmentations can distort the data so much that the model learns from unrealistic examples. For instance, applying large random rotations when your objects always appear upright, or using heavy color jitter when color is a critical discriminative feature (e.g., distinguishing ripe from unripe fruit). Always ensure that augmented images remain plausible for your domain.
+
+> [!IMPORTANT]
+> **Separate Pipelines for Training vs. Validation/Test:**
+> Augmentations are generally applied **only during training**. Your validation and test pipelines should typically include only deterministic transforms: resizing/cropping to the target size and normalization. Applying random augmentations to validation data would make your metrics noisy and unreliable.
+
+#### Using Augmentations to Test Model Robustness
+
+Beyond training, augmentations are a powerful tool for **evaluating how robust your model is** to specific conditions. The idea is simple: create additional validation pipelines that apply targeted augmentations on top of the standard resize + crop, then compare the metrics against your clean baseline.
+
+**Two types of robustness you can measure:**
+
+1.  **In-distribution robustness** — Apply transforms that are *within* your training distribution (e.g., horizontal flips, small rotations) and check whether predictions remain consistent. If your model's accuracy drops significantly when images are simply horizontally flipped, it may not have truly learned the invariance you expected.
+
+2.  **Out-of-distribution robustness** — Apply transforms that simulate conditions *outside* your training data to stress-test the model. For example, a crack detection model trained on well-lit factory images — how does it behave when lighting degrades? This is a real use case: a user needed to verify whether their inspection model would remain reliable when some factory lights went down. By creating a validation set with [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) and [`RandomGamma`](https://explore.albumentations.ai/transform/RandomGamma) shifted toward darker values, they could measure this *before* it happened in production.
+
+```python
+import albumentations as A
+
+TARGET_SIZE = 256
+
+# Standard clean validation pipeline (your baseline)
+val_pipeline_clean = A.Compose([
+    A.SmallestMaxSize(max_size=TARGET_SIZE),
+    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+# Robustness test: how does the model handle lighting changes?
+val_pipeline_lighting = A.Compose([
+    A.SmallestMaxSize(max_size=TARGET_SIZE),
+    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE),
+    # Simulate darker / variable lighting conditions
+    A.OneOf([
+        A.RandomBrightnessContrast(brightness_limit=(-0.3, -0.1), contrast_limit=(-0.2, 0.2), p=1.0),
+        A.RandomGamma(gamma_limit=(40, 80), p=1.0),  # Darker gamma
+    ], p=1.0),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+# Robustness test: is the model invariant to horizontal flip?
+val_pipeline_flip = A.Compose([
+    A.SmallestMaxSize(max_size=TARGET_SIZE),
+    A.CenterCrop(height=TARGET_SIZE, width=TARGET_SIZE),
+    A.HorizontalFlip(p=1.0),  # Always flip
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+```
+
+Run your validation set through each pipeline and compare the metrics. A large drop from `val_pipeline_clean` to `val_pipeline_lighting` tells you the model is fragile to lighting changes — and suggests adding brightness/gamma augmentations to your *training* pipeline. This kind of analysis helps you understand failure modes *before* deployment and guides which augmentations to add next.
+
+> [!NOTE]
+> These augmented validation pipelines are for **analysis and diagnostics only**. Model selection, early stopping, and hyperparameter tuning should always be based on your single, clean validation pipeline (`val_pipeline_clean`) to keep selection criteria stable and comparable across experiments.
+
 ## A Practical Approach to Building Your Pipeline
 
 Instead of adding transforms randomly, here's a structured approach to build an effective pipeline:
@@ -46,21 +104,21 @@ Instead of adding transforms randomly, here's a structured approach to build an 
 
 Often, the images in your dataset (e.g., 1024x1024) are larger than the input size required by your model (e.g., 256x256). Resizing or cropping to the target size should almost always be the **first** step in your pipeline. As highlighted in the performance guide, processing smaller images significantly speeds up all subsequent transforms.
 
-*   **Training Pipeline:** Use [`A.RandomCrop`](https://explore.albumentations.ai/transform/RandomCrop) or [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop). If your original images might be *smaller* than the target crop size, ensure you set `pad_if_needed=True` within the crop transform itself (instead of using a separate `A.PadIfNeeded`).
-    *   **Note on Classification:** For many image classification tasks (e.g., ImageNet training), [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop) is often preferred. It performs cropping along with potentially aggressive resizing (changing aspect ratios) and scaling, effectively combining the cropping step with some geometric augmentation. Using `RandomResizedCrop` might mean you don't need a separate `A.Affine` transform for scaling later.
+*   **Training Pipeline:** Use [`A.RandomCrop`](https://explore.albumentations.ai/transform/RandomCrop) or [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop). If your original images might be *smaller* than the target crop size, ensure you set `pad_if_needed=True` within the crop transform itself (instead of using a separate [`A.PadIfNeeded`](https://explore.albumentations.ai/transform/PadIfNeeded)).
+    *   **Note on Classification:** For many image classification tasks (e.g., ImageNet training), [`A.RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop) is often preferred. It performs cropping along with potentially aggressive resizing (changing aspect ratios) and scaling, effectively combining the cropping step with some geometric augmentation. Using [`RandomResizedCrop`](https://explore.albumentations.ai/transform/RandomResizedCrop) might mean you don't need a separate [`A.Affine`](https://explore.albumentations.ai/transform/Affine) transform for scaling later.
 *   **Validation/Inference Pipeline:** Typically use [`A.CenterCrop`](https://explore.albumentations.ai/transform/CenterCrop). Again, use `pad_if_needed=True` if necessary.
 
-### Step 1.5: Alternative Resizing Strategies (`SmallestMaxSize`, `LongestMaxSize`)
+### Step 1.5: Alternative Resizing Strategies ([`SmallestMaxSize`](https://explore.albumentations.ai/transform/SmallestMaxSize), [`LongestMaxSize`](https://explore.albumentations.ai/transform/LongestMaxSize))
 
 Instead of directly cropping to the final `TARGET_SIZE`, two common strategies involve resizing based on the shortest or longest side first, often followed by padding or cropping.
 
 *   **[`A.SmallestMaxSize`](https://explore.albumentations.ai/transform/SmallestMaxSize) (Shortest Side Resizing):**
     *   Resizes the image keeping the aspect ratio, such that the *shortest* side equals `max_size`.
-    *   **Common Use Case (ImageNet Style Preprocessing):** This is frequently used *before* cropping in classification tasks. For example, resize with `SmallestMaxSize(max_size=TARGET_SIZE)` and then apply `A.RandomCrop(TARGET_SIZE, TARGET_SIZE)` or `A.CenterCrop(TARGET_SIZE, TARGET_SIZE)`. This ensures the image is large enough in its smaller dimension for the crop to extract a `TARGET_SIZE` x `TARGET_SIZE` patch without needing internal padding, while still allowing the crop to sample different spatial locations.
+    *   **Common Use Case (ImageNet Style Preprocessing):** This is frequently used *before* cropping in classification tasks. For example, resize with [`SmallestMaxSize(max_size=TARGET_SIZE)`](https://explore.albumentations.ai/transform/SmallestMaxSize) and then apply [`A.RandomCrop(TARGET_SIZE, TARGET_SIZE)`](https://explore.albumentations.ai/transform/RandomCrop) or [`A.CenterCrop(TARGET_SIZE, TARGET_SIZE)`](https://explore.albumentations.ai/transform/CenterCrop). This ensures the image is large enough in its smaller dimension for the crop to extract a `TARGET_SIZE` x `TARGET_SIZE` patch without needing internal padding, while still allowing the crop to sample different spatial locations.
 
 *   **[`A.LongestMaxSize`](https://explore.albumentations.ai/transform/LongestMaxSize) (Longest Side Resizing):**
     *   Resizes the image keeping the aspect ratio, such that the *longest* side equals `max_size`.
-    *   **Common Use Case (Letterboxing/Pillarboxing):** This is often used when you need to fit images of varying aspect ratios into a fixed square input (e.g., `TARGET_SIZE` x `TARGET_SIZE`) *without* losing any image content via cropping. Apply `LongestMaxSize(max_size=TARGET_SIZE)` first. The resulting image will have one dimension equal to `TARGET_SIZE` and the other less than or equal to `TARGET_SIZE`. Then, apply `A.PadIfNeeded(min_height=TARGET_SIZE, min_width=TARGET_SIZE, border_mode=cv2.BORDER_CONSTANT, value=0)` to pad the shorter dimension with a constant value (e.g., black) to reach the square `TARGET_SIZE` x `TARGET_SIZE`. This process is known as letterboxing (padding top/bottom) or pillarboxing (padding left/right).
+    *   **Common Use Case (Letterboxing/Pillarboxing):** This is often used when you need to fit images of varying aspect ratios into a fixed square input (e.g., `TARGET_SIZE` x `TARGET_SIZE`) *without* losing any image content via cropping. Apply [`LongestMaxSize(max_size=TARGET_SIZE)`](https://explore.albumentations.ai/transform/LongestMaxSize) first. The resulting image will have one dimension equal to `TARGET_SIZE` and the other less than or equal to `TARGET_SIZE`. Then, apply [`A.PadIfNeeded(min_height=TARGET_SIZE, min_width=TARGET_SIZE, ...)`](https://explore.albumentations.ai/transform/PadIfNeeded) to pad the shorter dimension with a constant value (e.g., black) to reach the square `TARGET_SIZE` x `TARGET_SIZE`. This process is known as letterboxing (padding top/bottom) or pillarboxing (padding left/right).
 
 ```python
 import albumentations as A
@@ -96,8 +154,8 @@ Next, add augmentations that reflect fundamental invariances in your data withou
 
 *   **Horizontal Flip:** [`A.HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) is almost universally applicable for natural images (street scenes, animals, general objects like in ImageNet, COCO, Open Images). It reflects the fact that object identity usually doesn't change when flipped horizontally. The main exception is when directionality is critical and fixed, such as recognizing specific text characters or directional signs where flipping changes the meaning.
 *   **Vertical Flip & 90/180/270 Rotations (Square Symmetry):** If your data is invariant to basic rotations and flips, incorporating these can be highly beneficial.
-    *   For data invariant to axis-aligned flips and rotations by 90, 180, and 270 degrees (common in aerial/satellite imagery, microscopy, some medical scans), [`A.SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) is an excellent choice. It randomly applies one of the 8 symmetries of the square: identity, horizontal flip, vertical flip, diagonal flip (rotation by 180 + vertical flip), rotation 90 degrees, rotation 180 degrees, rotation 270 degrees, anti-diagonal flip (rotation by 180 + horizontal flip). A key advantage is that these are *exact* transformations, avoiding interpolation artifacts that can occur with arbitrary rotations (like those from `A.Rotate`).
-    *   This type of symmetry can sometimes be useful even in unexpected domains. For example, in a [Kaggle competition on Digital Forensics](https://ieeexplore.ieee.org/abstract/document/8622031), identifying the camera model used to take a photo, applying `SquareSymmetry` proved beneficial, likely because sensor-specific noise patterns can exhibit rotational/flip symmetries.
+    *   For data invariant to axis-aligned flips and rotations by 90, 180, and 270 degrees (common in aerial/satellite imagery, microscopy, some medical scans), [`A.SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) is an excellent choice. It randomly applies one of the 8 symmetries of the square: identity, horizontal flip, vertical flip, diagonal flip (rotation by 180 + vertical flip), rotation 90 degrees, rotation 180 degrees, rotation 270 degrees, anti-diagonal flip (rotation by 180 + horizontal flip). A key advantage is that these are *exact* transformations, avoiding interpolation artifacts that can occur with arbitrary rotations (like those from [`A.Rotate`](https://explore.albumentations.ai/transform/Rotate)).
+    *   This type of symmetry can sometimes be useful even in unexpected domains. For example, in a [Kaggle competition on Digital Forensics](https://ieeexplore.ieee.org/abstract/document/8622031), identifying the camera model used to take a photo, applying [`SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) proved beneficial, likely because sensor-specific noise patterns can exhibit rotational/flip symmetries.
     *   If *only* vertical flipping makes sense for your data, use [`A.VerticalFlip`](https://explore.albumentations.ai/transform/VerticalFlip) instead.
 
 ```python
@@ -138,7 +196,7 @@ Albumentations offers several transforms that implement this idea for images:
 #### Why Dropout Augmentation is Powerful
 
 **1. Learning Diverse Features**
-Imagine training an elephant detector. If the network only sees full images, it might heavily rely on the most distinctive feature, like the trunk. By using `CoarseDropout` or `RandomErasing`, sometimes the trunk will be masked out. Now, the network *must* learn to identify the elephant from its ears, legs, body shape, color, etc. This encourages the model to build a more comprehensive understanding of the object.
+Imagine training an elephant detector. If the network only sees full images, it might heavily rely on the most distinctive feature, like the trunk. By using [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) or [`RandomErasing`](https://explore.albumentations.ai/transform/RandomErasing), sometimes the trunk will be masked out. Now, the network *must* learn to identify the elephant from its ears, legs, body shape, color, etc. This encourages the model to build a more comprehensive understanding of the object.
 
 **2. Robustness to Occlusion**
 In real-world scenarios, objects are often partially occluded. Training with dropout simulates this, making the model better at recognizing objects even when only parts are visible.
@@ -151,7 +209,7 @@ By training on images with randomly masked regions, the network learns to make p
 
 #### Use Case Example: ConstrainedCoarseDropout
 
-Imagine detecting small objects like sports balls in game footage. These objects might already be partially occluded. Standard `CoarseDropout` might randomly hit the ball too infrequently or only cover a tiny, insignificant part. With `ConstrainedCoarseDropout`, you can ensure that the dropout patches are specifically applied *within* the bounding box (or mask) of the ball class, more reliably simulating partial occlusion of the target object itself.
+Imagine detecting small objects like sports balls in game footage. These objects might already be partially occluded. Standard [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) might randomly hit the ball too infrequently or only cover a tiny, insignificant part. With [`ConstrainedCoarseDropout`](https://explore.albumentations.ai/transform/ConstrainedCoarseDropout), you can ensure that the dropout patches are specifically applied *within* the bounding box (or mask) of the ball class, more reliably simulating partial occlusion of the target object itself.
 
 #### Recommendation
 
@@ -187,9 +245,9 @@ Sometimes, color can be a misleading feature, or you might want your model to ge
 
 **Why is this useful?**
 
-1.  **Color Invariance:** If the color of an object isn't fundamental to its identity, these transforms force the network to learn shape, texture, and context cues instead. Consider classifying fruit: you want the model to recognize an apple whether it's red or green. `ToGray` removes the color information entirely for some training samples, while `ChannelDropout` removes partial color information, forcing reliance on shape.
+1.  **Color Invariance:** If the color of an object isn't fundamental to its identity, these transforms force the network to learn shape, texture, and context cues instead. Consider classifying fruit: you want the model to recognize an apple whether it's red or green. [`ToGray`](https://explore.albumentations.ai/transform/ToGray) removes the color information entirely for some training samples, while [`ChannelDropout`](https://explore.albumentations.ai/transform/ChannelDropout) removes partial color information, forcing reliance on shape.
 
-2.  **Generalizing Across Conditions:** Real-world lighting can drastically alter perceived colors. Training with `ToGray` or `ChannelDropout` can make the model more robust to these variations.
+2.  **Generalizing Across Conditions:** Real-world lighting can drastically alter perceived colors. Training with [`ToGray`](https://explore.albumentations.ai/transform/ToGray) or [`ChannelDropout`](https://explore.albumentations.ai/transform/ChannelDropout) can make the model more robust to these variations.
 
 3.  **Focusing on Texture/Shape:** For tasks where fine-grained texture or shape is critical (e.g., medical image analysis, defect detection), reducing the influence of color channels can sometimes help the model focus on these structural patterns.
 
@@ -225,17 +283,18 @@ train_pipeline_step4 = A.Compose([
 
 After basic flips, the next common category involves geometric transformations like scaling, rotation, translation, and shear. [`A.Affine`](https://explore.albumentations.ai/transform/Affine) is a powerful transform that can perform all of these simultaneously.
 
-*   **Common Use Cases:** While `Affine` supports all four, the most frequently beneficial components are **scaling** (zooming in/out) and **small rotations**.
+*   **Common Use Cases:** While [`Affine`](https://explore.albumentations.ai/transform/Affine) supports all four, the most frequently beneficial components are **scaling** (zooming in/out) and **small rotations**.
     *   **Scaling:** Neural networks often struggle with scale variations. An object learned at one size might not be recognized well if significantly larger or smaller. Since objects appear at different scales in the real world due to distance, augmenting with scale changes helps the model become more robust. Consider a street view image: people close to the camera might occupy a large portion of the frame, while people further down the street could be orders of magnitude smaller. Training with scale augmentation helps the model handle such drastic variations.
         *   A common and relatively safe starting range for the `scale` parameter is `(0.8, 1.2)`.
         *   However, depending on the expected variations in your data, much wider ranges like `(0.5, 2.0)` are also frequently used.
-        *   **Important Note on Sampling:** When using a wide, asymmetric range like `scale=(0.5, 2.0)`, sampling uniformly from this interval means that values greater than 1.0 (zoom in) will be sampled more often than values less than 1.0 (zoom out). This is because the length of the zoom-in sub-interval `[1.0, 2.0]` (length 1.0) is twice the length of the zoom-out sub-interval `[0.5, 1.0)` (length 0.5). Consequently, the probability of sampling a zoom-in factor (2/3) is double the probability of sampling a zoom-out factor (1/3).
-        *   To ensure an equal probability of zooming in versus zooming out, regardless of the range, `A.Affine` provides the `balanced_scale=True` parameter. When set, it first randomly decides whether to zoom in or out (50/50 chance), and *then* samples uniformly from the corresponding sub-interval (e.g., either `[0.5, 1.0)` or `[1.0, 2.0]`).
-        *   Using scale augmentation complements architectural approaches like Feature Pyramid Networks (FPN) or RetinaNet that also aim to handle multi-scale features.
+
+> [!TIP]
+> **Balanced Scale Sampling:** When using a wide, asymmetric range like `scale=(0.5, 2.0)`, sampling uniformly from this interval means zoom-in values (1.0–2.0) are sampled **twice as often** as zoom-out values (0.5–1.0), because the zoom-in sub-interval is twice as long. To ensure an equal 50/50 probability of zooming in vs. zooming out, use `balanced_scale=True` in `A.Affine`. It first randomly decides the direction, then samples uniformly from the corresponding sub-interval. Scale augmentation also complements architectural approaches like Feature Pyramid Networks (FPN) or RetinaNet that aim to handle multi-scale features.
+
     *   **Rotation:** Small rotations (e.g., `rotate=(-15, 15)`) can simulate slight camera tilts or object orientations.
     *   **Translation/Shear:** Less commonly used for general robustness, but can be relevant in specific domains.
-*   **Why `Affine`?** Albumentations offers other related transforms like [`ShiftScaleRotate`](https://explore.albumentations.ai/transform/ShiftScaleRotate), [`SafeRotate`](https://explore.albumentations.ai/transform/SafeRotate), [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), and [`Rotate`](https://explore.albumentations.ai/transform/Rotate). However, `Affine` efficiently combines these operations, often making it a preferred choice for applying scale and rotation together.
-    *   Additionally, [`A.Perspective`](https://explore.albumentations.ai/transform/Perspective) is another powerful geometric transform. While `Affine` performs parallel-preserving transformations, `Perspective` introduces non-parallel distortions, effectively simulating viewing objects or scenes from different angles or camera positions. It can be used in addition to or sometimes as an alternative to `Affine`, depending on the desired type of geometric variation.
+*   **Why [`Affine`](https://explore.albumentations.ai/transform/Affine)?** Albumentations offers other related transforms like [`ShiftScaleRotate`](https://explore.albumentations.ai/transform/ShiftScaleRotate), [`SafeRotate`](https://explore.albumentations.ai/transform/SafeRotate), [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), and [`Rotate`](https://explore.albumentations.ai/transform/Rotate). However, [`Affine`](https://explore.albumentations.ai/transform/Affine) efficiently combines these operations, often making it a preferred choice for applying scale and rotation together.
+    *   Additionally, [`A.Perspective`](https://explore.albumentations.ai/transform/Perspective) is another powerful geometric transform. While [`Affine`](https://explore.albumentations.ai/transform/Affine) performs parallel-preserving transformations, `Perspective` introduces non-parallel distortions, effectively simulating viewing objects or scenes from different angles or camera positions. It can be used in addition to or sometimes as an alternative to [`Affine`](https://explore.albumentations.ai/transform/Affine), depending on the desired type of geometric variation.
 
 ```python
 import albumentations as A
@@ -325,7 +384,7 @@ Simulate effects of saving images in lossy formats or resizing:
 - [`A.RandomRain`](https://explore.albumentations.ai/transform/RandomRain): Rain effects
 - [`A.RandomSnow`](https://explore.albumentations.ai/transform/RandomSnow): Snow simulation
 
-> **Note:** While `RandomSunFlare` and `RandomShadow` were initially designed for street scenes, they have shown surprising utility in other domains like Optical Character Recognition (OCR), potentially by adding complex occlusions or lighting variations.
+> **Note:** While [`RandomSunFlare`](https://explore.albumentations.ai/transform/RandomSunFlare) and [`RandomShadow`](https://explore.albumentations.ai/transform/RandomShadow) were initially designed for street scenes, they have shown surprising utility in other domains like Optical Character Recognition (OCR), potentially by adding complex occlusions or lighting variations.
 
 #### Specialized Applications
 
@@ -341,7 +400,7 @@ These transforms combine information from multiple images for style transfer-lik
 - [`A.FDA`](https://explore.albumentations.ai/transform/FDA) (Fourier Domain Adaptation): Swaps low-frequency components between images
 - [`A.HistogramMatching`](https://explore.albumentations.ai/transform/HistogramMatching): Modifies histogram to match reference image
 
-**Use Case Example:** If you have abundant data from CT Scanner A but limited data from Scanner B, you can use images from Scanner B as the "style" reference for `FDA` or `HistogramMatching` applied to images from Scanner A.
+**Use Case Example:** If you have abundant data from CT Scanner A but limited data from Scanner B, you can use images from Scanner B as the "style" reference for [`FDA`](https://explore.albumentations.ai/transform/FDA) or [`HistogramMatching`](https://explore.albumentations.ai/transform/HistogramMatching) applied to images from Scanner A.
 
 #### Beyond Albumentations: Batch-Based Augmentations
 
@@ -377,7 +436,7 @@ The final step in nearly all pipelines is normalization, typically using [`A.Nor
                                 p=1.0)
     ```
 
-*   **Sample-Specific Normalization (Built-in):** Albumentations' `A.Normalize` also directly supports calculating the `mean` and `std` *for each individual augmented image* just before normalization, using these statistics to normalize the image. This can act as an additional regularization technique.
+*   **Sample-Specific Normalization (Built-in):** Albumentations' [`A.Normalize`](https://explore.albumentations.ai/transform/Normalize) also directly supports calculating the `mean` and `std` *for each individual augmented image* just before normalization, using these statistics to normalize the image. This can act as an additional regularization technique.
     *   *Note:* This technique is highlighted by practitioners like [Christof Henkel](https://www.kaggle.com/christofhenkel) (Kaggle Competitions Grandmaster with more than 40 gold medals from Machine Learning competitions) as a useful regularization method.
     *   **How it works:** When `normalization` is set to `"image"` or `"image_per_channel"`, the transform calculates the statistics from the current image *after* all preceding augmentations have been applied. These dynamic statistics are then used for normalization.
         *   `normalization="image"`: Calculates a single mean and std across all channels and pixels, then normalizes the entire image by these values.
@@ -385,7 +444,7 @@ The final step in nearly all pipelines is normalization, typically using [`A.Nor
     *   **Why it helps:**
         *   **Regularization:** This introduces randomness in the final normalized values based on the specific augmentations applied to the sample, acting as a form of data-dependent noise.
         *   **Robustness:** Normalizing by the *current* image's statistics makes the model less sensitive to global shifts in brightness (due to mean subtraction) and contrast/intensity scaling (due to standard deviation division). The model learns to interpret features relative to the image's own statistical properties.
-    *   **Implementation:** Simply set the `normalization` parameter accordingly. The `mean`, `std`, and `max_pixel_value` arguments are ignored when using `"image"` or `"image_per_channel"$.
+    *   **Implementation:** Simply set the `normalization` parameter accordingly. The `mean`, `std`, and `max_pixel_value` arguments are ignored when using `"image"` or `"image_per_channel"`.
 
         ```python
         # Example using sample-specific normalization (per channel)
@@ -400,7 +459,7 @@ The final step in nearly all pipelines is normalization, typically using [`A.Nor
 
 Choosing between fixed (`"standard"`) and sample-specific (`"image"`, `"image_per_channel"`) normalization depends on the task and observed performance. Fixed normalization is the standard and usually the starting point, while sample-specific normalization can be experimented with as an advanced regularization strategy.
 
-*   **Min-Max Scaling:** `A.Normalize` also supports `"min_max"` and `"min_max_per_channel"` scaling, which rescale pixel values to the [0, 1] range based on the image's (or channel's) minimum and maximum values. This is another form of sample-dependent normalization.
+*   **Min-Max Scaling:** [`A.Normalize`](https://explore.albumentations.ai/transform/Normalize) also supports `"min_max"` and `"min_max_per_channel"` scaling, which rescale pixel values to the [0, 1] range based on the image's (or channel's) minimum and maximum values. This is another form of sample-dependent normalization.
 
 ### Advanced Uses of `OneOf`
 
@@ -459,18 +518,9 @@ heavy_train_pipeline = A.Compose(
 
         # 2. Basic Geometric (ALWAYS include these first)
         A.HorizontalFlip(p=0.5),
-        # A.SquareSymmetry(p=0.5) # Use if appropriate (e.g., aerial)
+        # A.SquareSymmetry(p=0.5) # Use if appropriate (e.g., aerial/medical)
 
-        # 3. Affine and Perspective (Choose one)
-        A.OneOf([
-            A.Affine(
-                scale=(0.8, 1.2), rotate=(-15, 15),
-                translate_percent=(-0.1, 0.1), shear=(-10, 10), p=0.8
-            ),
-            A.Perspective(scale=(0.05, 0.1), p=0.8)
-        ], p=0.7),
-
-        # 4. Dropout / Occlusion (HIGHLY RECOMMENDED)
+        # 3. Dropout / Occlusion (HIGHLY RECOMMENDED)
         A.OneOf([
             A.CoarseDropout(num_holes_range=(1, 8), hole_height_range=(0.1, 0.25),
                         hole_width_range=(0.1, 0.25), fill_value=0, p=1.0),
@@ -478,11 +528,20 @@ heavy_train_pipeline = A.Compose(
             A.RandomErasing(p=0.5, scale=(0.02, 0.1), ratio=(0.3, 3.3))
         ], p=0.5),
 
-        # 5. Color Space Reduction (Use sparingly)
+        # 4. Color Space Reduction (Use sparingly)
         A.OneOf([
             A.ToGray(p=0.3),
             A.ChannelDropout(channel_drop_range=(1, 1), fill_value=0, p=0.3),
         ], p=0.2),
+
+        # 5. Affine and Perspective (Choose one)
+        A.OneOf([
+            A.Affine(
+                scale=(0.8, 1.2), rotate=(-15, 15),
+                translate_percent=(-0.1, 0.1), shear=(-10, 10), p=0.8
+            ),
+            A.Perspective(scale=(0.05, 0.1), p=0.8)
+        ], p=0.7),
 
         # 6. Color Augmentations (Choose based on domain)
         A.OneOf([
@@ -533,7 +592,9 @@ heavy_train_pipeline = A.Compose(
 recommended_starter = A.Compose([
     A.RandomCrop(height=TARGET_SIZE, width=TARGET_SIZE, p=1.0),
     A.HorizontalFlip(p=0.5),
-    A.CoarseDropout(max_holes=8, max_height=32, max_width=32, p=0.5),
+    A.CoarseDropout(num_holes_range=(1, 8),
+                    hole_height_range=(0.05, 0.15),
+                    hole_width_range=(0.05, 0.15), p=0.5),
     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], p=1.0),
 ])
 ```
