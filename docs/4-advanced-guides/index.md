@@ -14,6 +14,9 @@ This section covers more advanced features and customization options within Albu
 *   **[Creating Custom Albumentations Transforms](./creating-custom-transforms.md)**
     Dive into extending Albumentations by creating your own custom transforms, inheriting from base classes, handling different data targets, managing randomness, and validating inputs.
 
+*   **[Test Time Augmentation (TTA)](./test-time-augmentation.md)**
+    Learn how to apply augmentations at inference time and average predictions to improve accuracy without retraining. Covers classification, segmentation, and detection TTA, symmetry groups, resource tradeoffs, and practical benchmarks.
+
 ## Where to Go Next?
 
 After identifying the advanced topic you need:
