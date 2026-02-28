@@ -1,142 +1,189 @@
-# What is Data Augmentation (and Why Your Computer Vision Model Needs It)
+# What is Data Augmentation and Why Your Computer Vision Model Needs It
 
-Training modern machine learning models, especially for computer vision, often requires vast amounts of data. These models learn intricate patterns from the examples they see. Generally, the more diverse and numerous these examples are, the better the models perform on new, unseen data.
+A model trained on 1,000 images of dogs photographed in daylight will struggle when it encounters dogs at night. A detector that only sees cars from behind won't recognize them from the side. And a tumor classifier trained on scans from one hospital's MRI machine may fail completely on images from another.
 
-However, collecting and labeling huge datasets can be a major bottleneck. It's often expensive, time-consuming, and sometimes (like for rare events) gathering enough data is simply impossible.
+The problem isn't architecture or training — it's **data diversity**. Your model can only handle what it has seen.
 
-This is where **Data Augmentation** comes in. It's a set of techniques to artificially increase the amount and diversity of your training data by generating modified copies of existing data points. Think of it like teaching a model more robustly by showing it the same things, just in slightly different ways.
+**Data Augmentation** is a set of techniques that artificially increases the diversity of your training data by generating modified copies of existing samples. Instead of collecting more data — which is slow, expensive, and sometimes impossible — you show your model the same images in slightly different ways: flipped, rotated, brightened, cropped, blurred.
 
-## Why Augment Data? The Motivation
+![An original cat image undergoing augmentation — rotated, and the label is still "Cat"](../../img/introduction/what-are-image-augmentations/cat.webp "Data augmentation preserves the label: a cat is still a cat after rotation, flip, or color change")
 
-Modern deep learning models thrive on data. We observe empirically that models trained on larger, more diverse datasets tend to generalize better. This means they perform more accurately and reliably on new data they haven't encountered during training.
+The augmented image is still a cat. The label is preserved. But your model now learns that "cat" isn't tied to one specific orientation, lighting, or framing.
 
-Ideally, the first step to improve a model is often acquiring more high-quality labeled data. This new data should increase both the size and diversity of your dataset. Pay special attention to getting data for scenarios where the model currently struggles, like rare classes or tricky examples. Also, data acquisition must respect legal and ethical rules. Scraping data from the internet is common but operates in a legal gray area depending on the source and use. If you *can* get more varied, high-quality, legally sound data that targets your model's weak spots, that's usually the best path to improvement.
+## Why Augment Data?
 
-However, acquiring such ideal data is often impractical for several reasons:
+Deep learning models improve with more diverse training data — this is an empirical fact observed across virtually every computer vision task. Models trained on larger, more varied datasets generalize better to new, unseen examples.
 
-1.  **Cost and Time:** Data collection and labeling, particularly at scale, can be prohibitively expensive and time-consuming.
-2.  **Inherent Data Scarcity:** Some phenomena are naturally rare. For example, certain rare diseases will, by definition, have limited available medical images, making it impossible to gather a large dataset regardless of resources.
-3.  **Expert Labeling Requirement:** Many tasks require domain expertise for accurate labeling. For instance, radiological scans must be annotated by trained radiologists, which adds significant cost and potential delays.
+The ideal path to better performance is always **more high-quality, labeled data**, especially data that targets your model's weak spots (rare classes, edge cases, different environments). But this is often impractical:
 
-Beyond these limitations, **distribution shift** is another common challenge. A model might be trained on data from one source (like images from one country or scans from a specific hospital's machine) but needs to perform well in a different context (a new geography or a hospital with different equipment). Evaluating performance across datasets from varying distributions is standard practice in research to gauge real-world robustness.
+1. **Cost and time:** Labeling at scale is expensive.
+2. **Inherent scarcity:** Some phenomena are rare by nature — certain diseases will always have limited medical images, no matter how much money you spend.
+3. **Expert bottleneck:** Radiological scans need radiologists. Satellite imagery needs geospatial analysts. The labeling pipeline is only as fast as the domain experts.
 
-This is where **Data Augmentation** becomes an invaluable technique. It allows us to artificially expand the *diversity* of our existing training data by applying transformations that create plausible variations of our samples. For the distribution shift problem, augmentations can help by effectively *widening* the distribution of the training data, increasing the chance that it overlaps with the distribution the model will encounter during deployment.
+Beyond data quantity, **distribution shift** is a common failure mode. A model trained on images from one hospital, one country, or one camera will underperform when deployed in a different context. Augmentation helps by *widening* the training distribution, increasing the chance it overlaps with whatever the model will encounter in production.
 
-![](../../img/introduction/what-are-image-augmentations/distribution_overlap.webp)
+![Data augmentation widens the training distribution to overlap with the test distribution](../../img/introduction/what-are-image-augmentations/distribution_overlap.webp "Without augmentation, training and test distributions may have limited overlap. Augmentation widens the training distribution to cover more of the test distribution.")
 
-Crucially, unlike the slow and costly process of data collection and labeling, data augmentation is typically applied **on-the-fly** during model training. The transformations are often computed on the CPU in parallel while the GPU is busy with the forward and backward passes of the neural network. This means augmentations can help enhance data diversity and model robustness with minimal impact on overall training time and without the direct costs associated with acquiring new data. It's a powerful tool for making the most of the data you already have.
+Crucially, augmentation is applied **on-the-fly** during training. The transformations run on the CPU while the GPU handles forward and backward passes. This means you get more data diversity with near-zero additional cost compared to the slow, expensive process of collecting and labeling new samples.
 
-At its core, data augmentation involves applying various transformations to your existing training samples to create modified copies. Crucially, these transformations must be **label-preserving**. This means the core meaning or category represented by the data shouldn't change. If you apply an augmentation to an image labeled "cat," the resulting image should still be clearly recognizable as a "cat."
+## When Does Augmentation Help Most?
 
-![](../../img/introduction/what-are-image-augmentations/cat.webp)
+Augmentation tends to provide the **most relative value with smaller datasets**, where the risk of overfitting on limited examples is highest. For large datasets, the inherent diversity may already be sufficient — though augmentation typically still improves robustness.
 
-**Pros and Cons**
+Augmentation also acts as a form of **regularization**, similar to Dropout or weight decay. But unlike those uniform techniques, augmentation can be applied surgically — you could, in principle, design pipelines that apply specific transforms more heavily to underperforming classes or challenging samples.
 
-While the core idea is simple, the practical application of data augmentation involves trade-offs and strategic thinking. A smartly chosen augmentation pipeline almost always leads to better performing, more robust models. However, achieving the "optimal" pipeline is complex because it heavily depends on the specific context: the nature of the **task**, the chosen **model** architecture, the characteristics of the **dataset**, and even the **training hyperparameters** (like learning rate and optimizer).
+### The Hard Part: No Silver Bullet
 
-Generally, data augmentation tends to provide more relative value when working with smaller datasets, where the risk of overfitting on limited examples is higher. For large datasets, the inherent diversity might already be sufficient, although augmentation often still provides benefits in robustness.
+There's no automatic way to find the optimal augmentation strategy for every problem. The best pipeline depends on your specific **task**, **model architecture**, **dataset characteristics**, and even **training hyperparameters**.
 
-There are currently no standard methods to automatically determine the best augmentation strategy for every problem. Selecting an effective pipeline often relies on the practitioner's experience and intuition, usually involving iterative experimentation. While researchers are exploring automated approaches (like AutoAugment and RandAugment), these methods aren't yet mature enough to reliably replace careful manual selection in most practical scenarios, and they can be computationally expensive.
+While researchers have explored automated approaches (AutoAugment, RandAugment), these remain an active area of research and can be computationally expensive. In practice, selecting an effective pipeline relies on experience, intuition, and iterative experimentation.
 
-Also, predicting the exact performance gain from a specific augmentation strategy beforehand is difficult. This uncertainty makes it challenging to allocate time and resources for extensive tuning. Collecting new data adds a direct data asset (intellectual property) to a company, whereas an augmentation pipeline is primarily code and configuration, which isn't valued in the same way.
+> [!TIP]
+> Finding the *absolute best* pipeline is hard. Finding a *good* one that improves your model is usually straightforward. See our guide on **[How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md)** for practical recommendations.
 
-Remember that augmentation also acts as a form of regularization. Like any regularization, overuse can be harmful. Overly aggressive augmentations might slow down training convergence or, more critically, create an augmented training distribution that differs too much from the real-world test data, potentially hurting performance in production.
+### Watch Out: Over-Augmentation
 
-It's also worth noting how data augmentation differs from other common regularization methods like Dropout, weight decay (L1/L2 regularization), or early stopping. While those techniques generally apply uniformly across the model or the entire training process, data augmentation offers the *potential* for more surgical application. Although not its most common use, one could theoretically design pipelines that apply specific augmentations more heavily to underperforming classes or even individual challenging samples, offering a targeted way to improve robustness where it's most needed.
+Like any regularization, **overuse can be harmful**. Overly aggressive augmentations can:
+- Slow down training convergence
+- Create a training distribution that differs too much from real-world test data, hurting production performance
 
-Despite these challenges, data augmentation is a cornerstone of modern computer vision. It's widely used across almost all image-related tasks, and the collective expertise in applying it effectively grows daily. While finding the absolute *best* pipeline is hard, finding a *good* one that improves your model is often achievable. We provide practical recommendations in our guide on **[How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md)**. Remember these are guidelines, and verifying their effectiveness on your specific dataset through experimentation is always recommended.
+The goal is to expand the distribution, not distort it beyond what's realistic for your domain.
 
 ## Focusing on Image Augmentation
 
-Data augmentation applies to various domains (text, audio, etc.), but it's especially crucial and widely used in **computer vision**. Images have high dimensionality and show immense real-world variability due to factors like:
+Data augmentation works across domains (text, audio, tabular), but it's especially impactful in **computer vision**. Images have high dimensionality and exhibit enormous real-world variability:
 
-*   **Viewpoint:** Objects look different from various angles.
-*   **Illumination:** Lighting conditions change dramatically (day/night, indoor/outdoor, shadows).
-*   **Scale:** Objects can appear at different sizes depending on distance.
-*   **Deformation:** Non-rigid objects can bend and change shape.
-*   **Occlusion:** Objects can be partially hidden by others.
-*   **Background:** Objects appear against diverse backgrounds.
-*   **Intra-class Variation:** Even within a single category (like "dog"), there's huge visual diversity.
+- **Viewpoint:** Objects look different from different angles
+- **Illumination:** Daylight vs. night, indoor vs. outdoor, shadows
+- **Scale:** Objects appear at different sizes depending on distance
+- **Deformation:** Non-rigid objects bend and change shape
+- **Occlusion:** Objects can be partially hidden
+- **Background:** Objects appear against diverse backgrounds
+- **Intra-class variation:** Even within "dog," there's massive visual diversity
 
-Image augmentation techniques aim to simulate these variations.
+Image augmentation techniques simulate these variations synthetically.
 
-**Common Image Augmentation Techniques**
+## Common Image Augmentation Techniques
 
-Here are some common categories of image augmentations:
+### 1. Geometric Transformations
 
-1.  **Geometric Transformations:** These alter the spatial properties of the image.
-    *   *Flips:* Horizontal ([`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip)) and Vertical ([`VerticalFlip`](https://explore.albumentations.ai/transform/VerticalFlip)) flips are simple yet often very effective, especially if there's no inherent top/bottom or left/right orientation preference in the data (e.g., general object classification).
-    *   *Rotations:* [`Rotate`](https://explore.albumentations.ai/transform/Rotate) or [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) help the model become invariant to object orientation.
-    *   *Scaling:* [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), [`Resize`](https://explore.albumentations.ai/transform/Resize). Makes the model robust to objects appearing at different sizes.
-    *   *Translation:* Shifting the image content horizontally or vertically ([`Affine`](https://explore.albumentations.ai/transform/Affine)). Helps the model find objects regardless of their exact position.
-    *   *Shear:* Tilting the image along an axis ([`Affine`](https://explore.albumentations.ai/transform/Affine)). Simulates viewing objects from different angles slightly.
-    *   *Perspective:* Applying perspective distortion ([`Perspective`](https://explore.albumentations.ai/transform/Perspective)). Can simulate viewing planar surfaces from different viewpoints.
-    *   *Elastic Deformations & Distortions:* [`ElasticTransform`](https://explore.albumentations.ai/transform/ElasticTransform) warps the image locally, often useful for medical images. Other spatial distortions like [`GridDistortion`](https://explore.albumentations.ai/transform/GridDistortion) exist as well.
+These alter the spatial structure of the image — position, orientation, scale, and shape.
 
-2.  **Color Space Transformations:** These modify the color characteristics of the image.
-    *   *Brightness/Contrast:* [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast). Simulates varying lighting conditions.
-    *   *Gamma Correction:* [`RandomGamma`](https://explore.albumentations.ai/transform/RandomGamma). Adjusts image intensity non-linearly, also good for lighting variations.
-    *   *Hue/Saturation/Value:* [`HueSaturationValue`](https://explore.albumentations.ai/transform/HueSaturationValue). Adjusts the color shades, intensity, and brightness, making the model less sensitive to specific color palettes.
-    *   *Grayscale Conversion:* [`ToGray`](https://explore.albumentations.ai/transform/ToGray). Forces the model to rely on shapes and textures rather than color.
-    *   *Channel Shuffling:* [`ChannelShuffle`](https://explore.albumentations.ai/transform/ChannelShuffle). Randomly reorders the R, G, B channels. A more disruptive augmentation.
+- **Flipping**: [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip), [`VerticalFlip`](https://explore.albumentations.ai/transform/VerticalFlip) — simple yet very effective when there's no inherent orientation preference
+- **Rotation**: [`Rotate`](https://explore.albumentations.ai/transform/Rotate), [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) — invariance to object orientation
+- **Scaling**: [`RandomScale`](https://explore.albumentations.ai/transform/RandomScale), [`Resize`](https://explore.albumentations.ai/transform/Resize) — robustness to objects appearing at different sizes
+- **Translation**: [`Affine`](https://explore.albumentations.ai/transform/Affine) — objects should be found regardless of position
+- **Shear and Perspective**: [`Affine`](https://explore.albumentations.ai/transform/Affine), [`Perspective`](https://explore.albumentations.ai/transform/Perspective) — simulates viewing from different angles
+- **Elastic Deformations**: [`ElasticTransform`](https://explore.albumentations.ai/transform/ElasticTransform), [`GridDistortion`](https://explore.albumentations.ai/transform/GridDistortion) — local warping, especially useful for medical images
 
-3.  **Noise and Blurring:** These simulate imperfections in image capture or transmission.
-    *   *Gaussian Noise:* [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise). Adds random noise drawn from a Gaussian distribution.
-    *   *Blurring:* [`GaussianBlur`](https://explore.albumentations.ai/transform/GaussianBlur), [`MedianBlur`](https://explore.albumentations.ai/transform/MedianBlur), [`MotionBlur`](https://explore.albumentations.ai/transform/MotionBlur). Simulates out-of-focus images or movement during capture.
+### 2. Color Space Transformations
 
-4.  **Random Erasing / Occlusion:** These techniques randomly remove or obscure parts of the image. This forces the model to learn from the remaining context and prevents it from relying too heavily on any single feature.
-    *   The concept is often called "Cutout". Albumentations implementations include [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) (removes rectangular regions), [`GridDropout`](https://explore.albumentations.ai/transform/GridDropout) (removes grid points), and [`MaskDropout`](https://explore.albumentations.ai/transform/MaskDropout) (removes regions based on masks).
+These modify pixel values without changing spatial structure — simulating different lighting, cameras, and environments.
 
-5.  **Weather & Environmental Effects:** Simulates different real-world conditions.
-    *   Examples: [`RandomRain`](https://explore.albumentations.ai/transform/RandomRain), [`RandomFog`](https://explore.albumentations.ai/transform/RandomFog), [`RandomSunFlare`](https://explore.albumentations.ai/transform/RandomSunFlare), [`RandomShadow`](https://explore.albumentations.ai/transform/RandomShadow).
+- **Brightness/Contrast**: [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) — varying lighting conditions
+- **Gamma Correction**: [`RandomGamma`](https://explore.albumentations.ai/transform/RandomGamma) — non-linear intensity adjustment
+- **Hue/Saturation/Value**: [`HueSaturationValue`](https://explore.albumentations.ai/transform/HueSaturationValue) — color variation across cameras and environments
+- **Grayscale**: [`ToGray`](https://explore.albumentations.ai/transform/ToGray) — forces the model to rely on shape and texture rather than color
+- **Channel Shuffle**: [`ChannelShuffle`](https://explore.albumentations.ai/transform/ChannelShuffle) — randomly reorders RGB channels
 
-6.  **Mixing Images:** Some advanced techniques combine information from multiple images.
-    *   *MixUp:* Creates new samples by taking a weighted linear interpolation of pairs of images and their labels.
-    *   *CutMix:* Cuts a patch from one image and pastes it onto another, with labels mixed proportionally to the area of the patches.
-    *   *Mosaic:* Combines four training images into one larger image, resizing them and placing them in a 2x2 grid. This exposes the model to objects at different scales and contexts, and smaller objects become relatively larger.
-    *   *Copy-Paste:* Copies object instances (usually with their segmentation masks) from one image and pastes them onto another, often used for instance segmentation or detection to increase the number of object instances per image.
-    *(Note: Techniques like MixUp, CutMix, Mosaic, and Copy-Paste often require specific handling of labels and batching logic. While some components might be implementable with Albumentations, they are frequently integrated directly into the data loading or training loop rather than being standalone transforms applied to single images).*
+Here's an example showing several augmentations applied to a single image:
 
-### How Augmentations Create Data Variety
+![Original parrot image with 6 augmented variants: horizontal flip, crop, median blur, contrast change, hue/saturation shift, and gamma correction](../../img/introduction/image_augmentation/augmentation.webp "A single source image can generate many plausible variants — each one still clearly a parrot, but with different visual properties.")
 
-It's important to understand how combining even simple augmentations can dramatically increase the effective size and diversity of your dataset. Each augmentation added to a pipeline acts multiplicatively on the potential variations.
+### 3. Noise and Blurring
 
-*   Adding just [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) (with `p=1`) effectively **doubles** (x2) your dataset size, as each image now has its original and flipped version.
-*   If you then add [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) (which applies 0, 90, 180, or 270-degree rotations), you multiply the possibilities by **four** (x4). Combined with the flip, you now have 2 * 4 = **8** potential geometric variations for each original image.
-*   Adding a continuous transformation like [`Rotate(limit=10)`](https://explore.albumentations.ai/transform/Rotate) introduces a vast number of potential small rotations. If you also add [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast), the number of possible distinct outputs explodes further.
+These simulate imperfections in image capture or transmission:
 
-For pipelines commonly used in practice, especially by advanced users, the number of possible unique augmented outputs for a single input image becomes astronomical. This means that during training, the model almost **never sees the exact same input image twice**. It's constantly presented with slightly different variations, forcing it to learn more robust and general features.
+- **Gaussian Noise**: [`GaussNoise`](https://explore.albumentations.ai/transform/GaussNoise) — random sensor noise
+- **Blurring**: [`GaussianBlur`](https://explore.albumentations.ai/transform/GaussianBlur), [`MedianBlur`](https://explore.albumentations.ai/transform/MedianBlur), [`MotionBlur`](https://explore.albumentations.ai/transform/MotionBlur) — out-of-focus or motion during capture
 
-**The Crucial Role of Synchronization: Augmenting Targets**
+### 4. Random Erasing / Occlusion
 
-In many computer vision tasks, you're not just working with an image; you also have associated **targets** or **labels** that describe the image content. When you apply a geometric augmentation to an image (like a rotation or flip), you **must** apply the *exact same* transformation to its corresponding targets to maintain correctness. Color augmentations generally only affect the image itself.
+These force the model to learn from context rather than relying on any single feature:
 
-Here's how targets are typically handled for common tasks:
+- [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) — removes rectangular regions (generalization of [CutOut](https://arxiv.org/abs/1708.04552))
+- [`GridDropout`](https://explore.albumentations.ai/transform/GridDropout) — removes grid-aligned patches
+- [`MaskDropout`](https://explore.albumentations.ai/transform/MaskDropout) — removes regions guided by segmentation masks
 
-*   **Classification:** Usually, only the image is transformed. The class label (e.g., "dog") remains the same after flipping or rotating a dog image. (Albumentations target: `image`)
-*   **Object Detection:** If you rotate the image, the bounding boxes must also be rotated around the correct center point. If you scale the image, the bounding box coordinates must be scaled. If you flip the image, the box coordinates must be flipped accordingly. (Albumentations targets: `image`, `bboxes`)
-*   **Semantic Segmentation:** The segmentation mask is essentially a pixel-level label map. Any geometric warp, rotation, flip, or crop applied to the image must be applied identically to the mask. (Albumentations targets: `image`, `mask`)
-*   **Keypoint Detection:** Keypoint coordinates (e.g., locations of facial features) must be transformed geometrically just like the image pixels. (Albumentations targets: `image`, `keypoints`)
-*   **Instance Segmentation:** This task often combines masks and bounding boxes, requiring transformations to be consistent across all of them. (Albumentations targets: `image`, `mask`, `bboxes`)
+### 5. Weather & Environmental Effects
 
-**Important Note on Transform Compatibility:** Not all transforms support all target types. For example, pixel-level transforms like [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) only modify images and don't affect bounding boxes or keypoints, while spatial transforms like [`Rotate`](https://explore.albumentations.ai/transform/Rotate) modify both images and their associated targets. Before building your pipeline, check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference to ensure your chosen transforms work with your specific combination of targets.
+These simulate real-world conditions your model may encounter in deployment:
 
-Handling this synchronization manually can be complex and error-prone. A major advantage of libraries like Albumentations is that they are designed to handle this automatically. When you define a pipeline and pass your image along with its corresponding masks, bounding boxes, or keypoints using the correct arguments (e.g., `transform(image=img, mask=mask, bboxes=bboxes, keypoints=keypoints)`), the library ensures that all specified targets are transformed consistently with the image according to the rules of each augmentation.
+- [`RandomRain`](https://explore.albumentations.ai/transform/RandomRain), [`RandomFog`](https://explore.albumentations.ai/transform/RandomFog), [`RandomSunFlare`](https://explore.albumentations.ai/transform/RandomSunFlare), [`RandomShadow`](https://explore.albumentations.ai/transform/RandomShadow)
+
+### 6. Mixing Images
+
+Advanced techniques that combine information from multiple images:
+
+- **MixUp:** Weighted interpolation of image pairs and their labels
+- **CutMix:** Cuts a patch from one image and pastes it onto another, mixing labels proportionally
+- **Mosaic:** Combines four images into a 2×2 grid, exposing the model to objects at different scales
+- **Copy-Paste:** Copies object instances (with segmentation masks) from one image to another
+
+> [!NOTE]
+> MixUp, CutMix, Mosaic, and Copy-Paste require specific label and batching logic. They are typically integrated into the data loading or training loop rather than applied as standalone single-image transforms.
+
+## How Combining Augmentations Creates Massive Diversity
+
+Even simple augmentations act **multiplicatively** when combined:
+
+- [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) alone (with `p=1`) **doubles** your effective dataset — each image now has its original and flipped version.
+- Add [`RandomRotate90`](https://explore.albumentations.ai/transform/RandomRotate90) (0°, 90°, 180°, 270°) and you multiply by **4**: now **8** geometric variations per image.
+- Add continuous transforms like [`Rotate(limit=10)`](https://explore.albumentations.ai/transform/Rotate) and [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast), and the number of distinct possible outputs becomes practically infinite.
+
+> [!IMPORTANT]
+> With a typical pipeline, **your model almost never sees the exact same input image twice** during training. It's constantly presented with unique variations, forcing it to learn robust, general features rather than memorizing specific pixel patterns.
+
+## The Crucial Role of Target Synchronization
+
+In many computer vision tasks, you're not just working with images — you have associated **targets** that describe the image content. When you apply a geometric augmentation (like a rotation or flip), you **must** apply the *exact same* transformation to the corresponding targets.
+
+Here's how targets are handled for common tasks:
+
+| Task | What gets augmented | Albumentations targets |
+|---|---|---|
+| **Classification** | Image only; the class label stays the same | `image` |
+| **Object Detection** | Image + bounding box coordinates | `image`, `bboxes` |
+| **Semantic Segmentation** | Image + pixel-level mask | `image`, `mask` |
+| **Keypoint Detection** | Image + point coordinates | `image`, `keypoints` |
+| **Instance Segmentation** | Image + masks + bounding boxes | `image`, `mask`, `bboxes` |
+
+The following examples show how spatial transforms affect both the image and its associated targets simultaneously:
+
+**Pixel-level augmentation (brightness)** affects only the image — the mask stays identical:
+
+![A pixel-level augmentation (brightness adjustment) applied to an aerial image and its segmentation mask. The mask is unchanged because brightness is not a spatial transform.](../../img/introduction/dedicated_library/pixel_level_augmentation_for_inria_dataset.webp "Pixel-level transforms like brightness change only affect the image pixels — the segmentation mask remains unchanged.")
+
+**Spatial augmentation (rotation)** affects both the image and the mask identically:
+
+![A spatial augmentation (rotation) applied to an aerial image and its segmentation mask. Both are rotated by the same angle, keeping them perfectly aligned.](../../img/introduction/dedicated_library/spatial_level_augmentation_for_inria_dataset.webp "Spatial transforms like rotation affect both the image and the mask — they must stay in sync for correct training.")
+
+**For object detection**, spatial transforms must adjust bounding box coordinates too:
+
+![Pixel-level and spatial-level augmentations applied to a driving scene with bounding boxes. Brightness adjustment doesn't move boxes, but mirroring and cropping do.](../../img/introduction/dedicated_library/pixel_and_spatial_level_augmentations_for_object_detection.webp "In object detection, spatial augmentations must transform both the image and the bounding box coordinates consistently.")
+
+Handling this synchronization manually is complex and error-prone. Libraries like Albumentations handle it automatically — when you pass your image along with its masks, bounding boxes, or keypoints, the library ensures all targets are transformed consistently:
+
+```python
+result = transform(image=img, mask=mask, bboxes=bboxes, keypoints=keypoints)
+```
+
+> [!NOTE]
+> Not all transforms support all target types. Pixel-level transforms like [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) only modify images, while spatial transforms like [`Rotate`](https://explore.albumentations.ai/transform/Rotate) modify both images and their associated targets. Check the [Supported Targets by Transform](../reference/supported-targets-by-transform.md) reference before building your pipeline.
 
 ## Conclusion
 
-Data augmentation, particularly image augmentation, is an indispensable tool in the modern computer vision toolkit. It helps bridge the gap caused by limited data, pushes models to learn more robust and generalizable features, and ultimately leads to better performance on real-world tasks.
+Data augmentation is an indispensable tool in modern computer vision. It helps bridge the gap caused by limited data, pushes models to learn robust and generalizable features, and leads to better real-world performance — all with near-zero additional cost compared to collecting new data.
 
-While the concept is simple, effective implementation requires understanding your task and data, choosing appropriate transformations, and carefully managing the synchronization between images and their associated targets. Libraries like Albumentations help simplify this process, allowing developers to easily define and apply complex augmentation pipelines while ensuring target consistency.
+The concept is simple: generate plausible variations of your training images while preserving labels. The challenge lies in choosing the right transforms for your specific task and domain, and ensuring that all targets (masks, boxes, keypoints) stay perfectly synchronized.
 
 ## Where to Go Next?
 
-Now that you understand the concepts behind image augmentation, you might want to:
+Now that you understand the concepts behind image augmentation:
 
--   **[Get Started with Albumentations](../index.md):** An overview of the library itself.
 -   **[Install Albumentations](./installation.md):** Set up the library in your environment.
--   **[Learn the Core Concepts](../2-core-concepts/index.md):** Understand how Albumentations implements transforms, pipelines, and target handling.
--   **[See Basic Usage Examples](../3-basic-usage/index.md):** Explore practical code for common tasks.
--   **[Read How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Get practical advice on selecting transforms for your specific problem.
--   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** See which transforms work with your specific combination of targets (images, masks, bboxes, keypoints, volumes).
--   **[Explore Transforms Visually](https://explore.albumentations.ai):** Experiment with different augmentations and their effects.
+-   **[Learn the Core Concepts](../2-core-concepts/index.md):** How Albumentations implements transforms, pipelines, and target handling.
+-   **[How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** A practical 7-step framework for selecting transforms.
+-   **[See Basic Usage Examples](../3-basic-usage/index.md):** Task-specific guides for classification, detection, segmentation, and more.
+-   **[Check Transform Compatibility](../reference/supported-targets-by-transform.md):** Which transforms work with your specific combination of targets.
+-   **[Explore Transforms Visually](https://explore.albumentations.ai):** Experiment with different augmentations interactively.
