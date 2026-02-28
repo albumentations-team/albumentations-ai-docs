@@ -341,22 +341,30 @@ The following spatial transforms provide `.inverse()` for mapping model outputs 
 
 ```python
 import numpy as np
+import torch
 import albumentations as A
 from albumentations.core.type_definitions import d4_group_elements
+from albumentations.pytorch import ToTensorV2
 
 image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+device = next(model.parameters()).device
 predictions = []
 
 for element in d4_group_elements:
-    aug = A.D4(p=1.0, group_element=element)
-    augmented = aug(image=image)
-    augmented_image = augmented["image"]
+    D4_transform = A.D4(group_element=element, p=1.0)
+    transform = A.Compose([
+        D4_transform,
+        A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ToTensorV2(),
+    ])
 
-    # Model inference (placeholder)
-    predicted_image = model(augmented_image)
+    input_tensor = transform(image=image)["image"].unsqueeze(0).to(device)
+    with torch.no_grad():
+        pred_tensor = model(input_tensor)  # [1, C, H, W]
 
-    # Map prediction back to original orientation
-    prediction = aug.inverse()(image=predicted_image)["image"]
+    # Map prediction back to original orientation (convert to numpy for inverse)
+    pred_np = pred_tensor.squeeze(0).permute(1, 2, 0).cpu().numpy()
+    prediction = D4_transform.inverse()(image=pred_np)["image"]
     predictions.append(prediction)
 
 # Average predictions (e.g., for segmentation logits or density maps)
