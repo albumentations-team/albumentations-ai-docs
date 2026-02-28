@@ -8,10 +8,11 @@ description: Workflow for generating doc images from Jupyter notebooks. Use when
 ## Workflow
 
 1. **Run notebook** in `temp/` (e.g. `example_obb_affine_boats.ipynb`)
-2. **Save figures** to `img/<section>/<topic>/` matching doc structure:
+2. **Save figures** to `img/<section>/<topic>/` (project root, not `docs/img/`) matching doc structure:
    - `img/getting_started/augmenting_obb/` for OBB examples
    - `img/getting_started/augmenting_bboxes/` for bbox examples
    - `img/getting_started/augmenting_keypoints/` for keypoints
+   - `img/advanced/` for advanced guides (TTA, custom transforms, etc.)
 3. **Export as .webp:** `plt.savefig(path, format='webp')` or convert after
 4. **Link in docs:** Use relative path from doc file, e.g. `../../img/getting_started/augmenting_obb/name.webp`
 

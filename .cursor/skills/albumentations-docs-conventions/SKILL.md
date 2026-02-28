@@ -14,8 +14,9 @@ description: Enforces Markdown and image conventions for Albumentations AI docs.
 
 ## Image Rules
 
+- **Location:** All images live in project root `img/`, **not** `docs/img/`. Use subdirs matching doc structure: `img/getting_started/`, `img/introduction/`, `img/advanced/`.
 - **Format:** All images in `img/` must be `.webp`
-- **Relative image links:** May contain underscores in paths (exception to link rule)
+- **Relative image links:** From `docs/<section>/`, use `../../img/<subdir>/name.webp`. May contain underscores in paths (exception to link rule).
 - **Conversion:** Convert PNG/JPG to webp before adding: `cwebp input.png -o output.webp` or PIL/OpenCV
 
 ## Validation
