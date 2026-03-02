@@ -170,3 +170,4 @@ data/
 notebooks/
 
 .DS_Store
+uv.lock
