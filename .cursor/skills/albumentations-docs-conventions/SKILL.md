@@ -19,6 +19,11 @@ description: Enforces Markdown and image conventions for Albumentations AI docs.
 - **Relative image links:** From `docs/<section>/`, use `../../img/<subdir>/name.webp`. May contain underscores in paths (exception to link rule).
 - **Conversion:** Convert PNG/JPG to webp before adding: `cwebp input.png -o output.webp` or PIL/OpenCV
 
+## Rendering
+
+- Markdown docs are rendered to the website using **Next.js**, not MkDocs.
+- Some internal links (e.g. `../reference/supported-targets-by-transform.md`) may not exist as raw `.md` files in the repo — they are generated or resolved during the website build. Do not treat them as broken links.
+
 ## Validation
 
 ```bash

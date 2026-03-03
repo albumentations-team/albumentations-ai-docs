@@ -48,9 +48,6 @@ transform = A.Compose([
 ```
 
 
-
-
-
 ### From GitHub (Latest Development Version)
 
 For Albumentations:
