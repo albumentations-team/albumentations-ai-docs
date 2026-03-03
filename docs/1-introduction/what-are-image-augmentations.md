@@ -541,15 +541,15 @@ TTA is particularly effective when:
 
 The most common TTA transforms are horizontal flip (almost always helpful), multi-scale inference (run at multiple resolutions and average), and multi-crop (take several crops covering different parts of the image). More aggressive transforms like rotation or color variation can help in specific domains but may also hurt if the model has learned strong priors from training augmentation.
 
-There is a tradeoff: TTA increases inference cost linearly with the number of augmentation variants. Five-fold TTA means five forward passes. In latency-sensitive applications this is often unacceptable. In offline batch processing or high-stakes decisions, it is a reliable way to squeeze additional accuracy from an existing model without retraining.
+There is a tradeoff: TTA increases inference cost linearly with the number of augmentation variants. Five-fold TTA means five forward passes. In latency-sensitive applications this is often unacceptable. In offline batch processing or high-stakes decisions, it is a reliable way to squeeze additional accuracy from an existing model without retraining. See [Test-Time Augmentation](../4-advanced-guides/test-time-augmentation.md) for implementation details and code examples.
 
 ### Domain randomization: simulation to reality
 
 A specialized application of augmentation appears in robotics and simulation-based training. When training perception models on synthetic data (game engines, physics simulators), the synthetic images differ systematically from real-world images — different textures, lighting, rendering artifacts. Models trained purely on synthetic data often fail catastrophically on real data.
 
-**Domain randomization** addresses this by applying extreme random augmentation during training on synthetic data. The idea is counterintuitive: rather than making synthetic data more realistic, make it *maximally diverse*. Randomize textures, colors, lighting, camera parameters, object positions — far beyond any realistic range. The hypothesis is that real-world images become just one more variation in the distribution the model has already learned to handle.
+**Domain randomization** addresses this by applying extreme random augmentation during training on synthetic data. The logic follows directly from the distribution-widening principle discussed earlier: rather than making synthetic data more realistic, make it *maximally diverse*. Randomize textures, colors, lighting, camera parameters, object positions — far beyond any realistic range. If the training distribution is wide enough, real-world images fall inside it as just another variation the model has already learned to handle.
 
-This is Level 2 (out-of-distribution) augmentation taken to an extreme. It only works because the label is preserved — a simulated robot arm is still a robot arm regardless of whether its texture is chrome, wood grain, or psychedelic rainbow. The model learns features that are robust across all possible appearance variations, including the specific appearance of real-world objects. The underlying principle — that extreme diversity can sometimes substitute for realism — generalizes well beyond robotics to many augmentation decisions.
+This is Level 2 (out-of-distribution) augmentation taken to an extreme. It only works because the label is preserved — a simulated robot arm is still a robot arm regardless of whether its texture is chrome, wood grain, or psychedelic rainbow. The model learns features that are robust across all possible appearance variations, including the specific appearance of real-world objects. The underlying principle — that a wide enough training distribution absorbs the target domain without explicitly modeling it — generalizes well beyond robotics to many augmentation decisions.
 
 ## Production Reality: Operational Concerns
 
@@ -577,7 +577,7 @@ Before committing to a full training run, render 20–50 augmented samples with 
 - Images that are so distorted the label is ambiguous.
 - Edge artifacts from rotation or perspective (black borders, repeated pixels).
 
-This takes 10 minutes and prevents multi-day training runs on corrupted data.
+This takes 10 minutes and prevents multi-day training runs on corrupted data. For initial exploration of individual transforms — seeing what they do, how parameters affect output — the [Explore Transforms](https://explore.albumentations.ai) interactive tool lets you test any transform on your own images before writing pipeline code.
 
 ### Throughput
 
