@@ -398,7 +398,7 @@ Once you have a working per-task baseline, the next step is precision. Unlike we
 
 **Hard example mining through augmentation.** If your model consistently fails on a specific subset — small objects, occluded instances, unusual viewpoints — apply stronger augmentation specifically to those hard cases. This is hard negative mining implemented through the data pipeline rather than the loss function:
 
-- Apply heavier [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) to classes where occlusion is the primary failure mode.
+- Apply heavier [`ConstrainedCoarseDropout`](https://explore.albumentations.ai/transform/ConstrainedCoarseDropout) to classes where occlusion is the primary failure mode — it drops patches specifically within annotated object regions (masks or bounding boxes), so the occlusion targets the object rather than random background.
 - Use stronger geometric transforms for classes where the model is overfitting to canonical poses.
 - Increase blur and noise for classes where the model fails on low-quality inputs but handles high-quality ones fine.
 
