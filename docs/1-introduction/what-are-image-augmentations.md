@@ -27,11 +27,11 @@ Both families preserve labels (when chosen correctly), and because they operate 
 
 This is where augmentation becomes powerful. Each independent transformation direction multiplies the effective dataset size:
 
-- Apply horizontal flip to all images → **×2**
-- Rotate by 1-degree increments from −15° to +15° → **×31**
-- Use 5 different methods for grayscale conversion → **×5**
+- Apply horizontal flip to all images → **$\times 2$**
+- Rotate by 1-degree increments from −15° to +15° → **$\times 31$**
+- Use 5 different methods for grayscale conversion → **$\times 5$**
 
-That is already a **2 × 31 × 5 = 310×** expansion, and we haven't touched brightness, contrast, scale, crop position, blur strength, noise level, or occlusion. Each of these adds its own range of variation. Albumentations provides dozens of pixel-level transforms and dozens of spatial transforms, each with its own continuous or discrete parameter range.
+That is already a **$2 \times 31 \times 5 = 310\times$** expansion, and we haven't touched brightness, contrast, scale, crop position, blur strength, noise level, or occlusion. Each of these adds its own range of variation. Albumentations provides dozens of pixel-level transforms and dozens of spatial transforms, each with its own continuous or discrete parameter range.
 
 In practice, the space of all possible augmented versions of a single image is so vast that the network effectively never sees the exact same variant twice during training, even across hundreds of epochs.
 
@@ -461,11 +461,11 @@ Many training bugs come from treating equivariant targets as invariant targets b
 
 ### The formal view
 
-Let `x` be an image, `y` its target, and `T` a transformation sampled from a policy distribution. Training with augmentation minimizes expected loss on transformed samples:
+Let $x$ be an image, $y$ its target, and $T$ a transformation sampled from a policy distribution. Training with augmentation minimizes expected loss on transformed samples:
 
-`E_(x,y) E_T [ L(f(T(x)), T(y)) ]`
+$$\mathbb{E}_{(x,y)} \mathbb{E}_T \left[ L(f(T(x)), T(y)) \right]$$
 
-For classification, `T(y) = y` because label-preserving transforms leave the class unchanged. For detection, segmentation, and keypoints, `T(y)` is the spatially transformed target. The policy distribution over `T` defines exactly which invariances and equivariances the training process encourages.
+For classification, $T(y) = y$ because label-preserving transforms leave the class unchanged. For detection, segmentation, and keypoints, $T(y)$ is the spatially transformed target. The policy distribution over `T` defines exactly which invariances and equivariances the training process encourages.
 
 This framing makes policy design explicit: you are not "adding random noise." You are choosing which transformations should leave predictions stable and which should induce predictable spatial changes.
 
