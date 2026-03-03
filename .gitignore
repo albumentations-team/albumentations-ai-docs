@@ -172,3 +172,5 @@ notebooks/
 .DS_Store
 uv.lock
 temp_img/
+
+*.jpg
