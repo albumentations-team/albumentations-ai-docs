@@ -629,6 +629,7 @@ The practical playbook:
 ## Where to Go Next
 
 - **[Install Albumentations](./installation.md):** Set up the library.
+- **Translations:** [Русский (Habr)](https://habr.com/ru/articles/1008560/)
 - **[Learn Core Concepts](../2-core-concepts/index.md):** Transforms, pipelines, probabilities, and targets.
 - **[How to Pick Augmentations](../3-basic-usage/choosing-augmentations.md):** Practical policy selection framework.
 - **[Basic Usage Examples](../3-basic-usage/index.md):** Classification, detection, segmentation, and keypoints.
