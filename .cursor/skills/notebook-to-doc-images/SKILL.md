@@ -5,6 +5,11 @@ description: Workflow for generating doc images from Jupyter notebooks. Use when
 
 # Notebook to Doc Images
 
+## Library
+
+- Use **AlbumentationsX**: `pip install albumentationsx` (import as `import albumentations as A`)
+- Run scripts/notebooks with `python3.12` if the default `python3` has the old package.
+
 ## Workflow
 
 1. **Run notebook** in `temp/` (e.g. `example_obb_affine_boats.ipynb`)
