@@ -8,7 +8,7 @@ description: Workflow for generating doc images from Jupyter notebooks. Use when
 ## Library
 
 - Use **AlbumentationsX**: `pip install albumentationsx` (import as `import albumentations as A`)
-- Run scripts/notebooks with `python3.12` if the default `python3` has the old package.
+- Run scripts/notebooks with the Python interpreter where **albumentationsx** is installed (avoid environments that still have only the legacy `albumentations` package).
 
 ## Workflow
 

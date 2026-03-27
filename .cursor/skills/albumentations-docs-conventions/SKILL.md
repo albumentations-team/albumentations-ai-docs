@@ -10,7 +10,7 @@ description: Enforces Markdown and image conventions for Albumentations AI docs.
 - The library is **AlbumentationsX** (package `albumentationsx`), not the old `albumentations` package.
 - Install: `pip install albumentationsx`
 - Import stays the same: `import albumentations as A`
-- Run scripts with `python3.12` (the version where albumentationsx is installed) if the default `python3` points elsewhere.
+- Run scripts with `python` / `python3` using the interpreter where **albumentationsx** is installed (repo tooling targets Python 3.13+; avoid envs that only have the legacy `albumentations` package).
 
 ## Markdown Rules
 

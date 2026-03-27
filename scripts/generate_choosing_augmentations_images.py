@@ -1,11 +1,11 @@
 """Generate all images for docs/3-basic-usage/choosing-augmentations.md
 
 Requires: pip install albumentationsx
-Run:      python3.12 scripts/generate_choosing_augmentations_images.py
+Run:      python scripts/generate_choosing_augmentations_images.py  # interpreter where albumentationsx is installed
 
 Input assets (in temp_img/):
     fish.webp           — colorful fish (640x703)
-    soccer.web          — soccer field (2690x1793)
+    soccer.webp         — soccer field (2690x1793)
     soccer.json         — LabelMe annotation (ball bbox, person bboxes + polygon masks)
     person_small.webp   — person far from camera
     person_medium.webp  — person at medium distance
@@ -39,7 +39,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_IMG = ROOT / "temp_img"
 FISH_PATH = TEMP_IMG / "fish.webp"
-SOCCER_IMAGE_PATH = TEMP_IMG / "soccer.web"
+SOCCER_IMAGE_PATH = TEMP_IMG / "soccer.webp"
 SOCCER_JSON_PATH = TEMP_IMG / "soccer.json"
 PERSON_SMALL_PATH = TEMP_IMG / "person_small.webp"
 PERSON_MEDIUM_PATH = TEMP_IMG / "person_medium.webp"
