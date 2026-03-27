@@ -5,6 +5,13 @@ description: Enforces Markdown and image conventions for Albumentations AI docs.
 
 # Albumentations Docs Conventions
 
+## Library
+
+- The library is **AlbumentationsX** (package `albumentationsx`), not the old `albumentations` package.
+- Install: `pip install albumentationsx`
+- Import stays the same: `import albumentations as A`
+- Run scripts with `python` / `python3` using the interpreter where **albumentationsx** is installed (repo tooling targets Python 3.13+; avoid envs that only have the legacy `albumentations` package).
+
 ## Markdown Rules
 
 - **Filenames:** Use hyphens, not underscores (e.g. `oriented-bounding-boxes.md`)

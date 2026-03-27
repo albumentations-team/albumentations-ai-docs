@@ -32,6 +32,8 @@ This repository uses `pre-commit` to automatically check and enforce coding stan
 
 Now, the hooks will run automatically on `git commit`.
 
+**Tests:** Install dev dependencies (`pip install -r requirements-dev.txt` or `uv pip install -r requirements-dev.txt`), then run `pytest`. This repo is not an installable Python package; with uv you can use `uv run --no-project pytest` instead.
+
 **Running Hooks Manually:**
 
 You can run the checks on all files at any time:

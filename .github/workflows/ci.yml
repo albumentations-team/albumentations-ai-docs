@@ -30,11 +30,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
         activate-environment: true
 
-    - name: Install all dependencies
-      run: |
-        uv pip install wheel
-        uv pip install -r requirements-dev.txt
-        uv pip install .
+    - name: Install dev dependencies
+      run: uv pip install -r requirements-dev.txt
 
     - name: Run PyTest with coverage
       run: pytest
@@ -56,10 +53,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
         activate-environment: true
 
-    - name: Install all requirements
-      run: |
-        uv pip install -r requirements-dev.txt
-        uv pip install .
+    - name: Install dev dependencies
+      run: uv pip install -r requirements-dev.txt
 
     - name: Run checks
       run: pre-commit run --all-files

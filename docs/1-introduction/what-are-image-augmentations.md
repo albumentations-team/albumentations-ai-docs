@@ -174,7 +174,7 @@ Examples: [`HorizontalFlip`](https://explore.albumentations.ai/transform/Horizon
 
 Useful for viewpoint tolerance, framing variation, and scale/position invariance. [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) is safe in most natural-image tasks. For domains where orientation has no semantic meaning (aerial/satellite imagery, microscopy, some medical scans), [`SquareSymmetry`](https://explore.albumentations.ai/transform/SquareSymmetry) applies one of the 8 symmetries of the square (identity, flips, 90/180/270° rotations) — all exact operations that avoid interpolation artifacts from arbitrary-angle rotations.
 
-Failure mode: transform breaks scene semantics. Vertical flip is nonsense for driving scenes. Large rotations corrupt digit or text recognition. Always check whether the geometry you are adding is label-preserving for your specific task.
+Failure mode: transform breaks scene semantics. Vertical flip is invalid for driving scenes. Large rotations corrupt digit or text recognition. Always check whether the geometry you are adding is label-preserving for your specific task.
 
 ### Photometric transforms
 
