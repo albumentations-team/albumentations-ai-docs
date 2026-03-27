@@ -2,20 +2,16 @@
 
 ![Augmentation transforms applied to the same image](../../img/basic_usage/choosing_augmentations/header.webp "The same fish image under 32 different augmentation transforms — geometry, color, blur, noise, occlusion, and weather effects.")
 
-A team ships a defect detection model that scores 99% accuracy on the validation set. In production, it misses half the defects. The cause: training images were always well-lit and in focus; the factory floor has variable lighting and occasional motion blur.
+A defect detection model scores 99% on the validation set. In production, it misses half the defects — the factory floor has variable lighting and motion blur that the training data never showed. A chest X-ray classifier trained with aggressive augmentation — heavy elastic distortion, extreme brightness, strong noise — collapses entirely, because the diagnostic signal lives in subtle density differences that the augmentation washed out. A wildlife monitoring team adds every transform they can find: training crawls, validation oscillates, and nobody can tell which of the fifteen transforms is helping and which three are actively hurting.
 
-Another team trains a medical classifier with aggressive augmentation — heavy elastic distortion, extreme brightness shifts, strong noise — to improve robustness. Performance collapses. The modality is chest X-ray, where subtle density differences between healthy and pathological tissue are the entire signal. Aggressive pixel-level augmentation washes out these fine-grained intensity patterns.
-
-A third team adds every augmentation they can find to their pipeline. Training slows to a crawl, validation metrics oscillate wildly, and they cannot tell which transforms help and which hurt.
-
-Three teams, three different failures — too little augmentation, too much, and too unfocused. These are not rare edge cases. They are the default outcome when augmentation selection is treated as a checklist rather than a deliberate design process. The library gives you [a hundred transforms](../reference/supported-targets-by-transform.md); the hard part is choosing the right subset, in the right order, with the right parameters, for your specific task and distribution.
+Too little augmentation, too much, and too unfocused. Three failure modes, one root cause: treating augmentation as a checklist ("flip, rotate, blur, done") rather than a deliberate design process. The library gives you [a hundred transforms](../reference/supported-targets-by-transform.md); the hard part is choosing the right subset, in the right order, with the right parameters, for your specific task and distribution.
 
 This guide is about that decision process — the mental models, the reasoning, and the practical protocol that turns augmentation from a source of mystery regressions into a reliable lever for generalization.
 
 > [!TIP]
 > This guide covers *how to choose* augmentations. If you want to understand *what* augmentation is and *why* it works first, start with [What Is Image Augmentation?](../1-introduction/what-are-image-augmentations.md).
 
-How to choose augmentations and tune their parameters is not a solved problem — there is no formula that takes a dataset and outputs the optimal pipeline. Where possible, we provide mathematical or intuitive justification for the recommendations here. But much of this guide comes from the experience of training thousands of models across dozens of domains and from extensive conversations with practitioners — competition winners, production ML engineers, and researchers. Treat the advice as strong priors, not as proofs.
+How to choose augmentations and tune their parameters is not a solved problem — there is no formula that takes a dataset and outputs the optimal pipeline. Where possible, we provide mathematical or intuitive justification for the recommendations here. But much of this guide is shaped by practical experience — training models across competitions, production systems, and research projects — and by years of conversations with practitioners who shared what worked and what failed in their own pipelines. Treat the advice as strong priors, not as proofs.
 
 Before we dive in: if you can collect more labeled data that covers the variation your model will face in production, do that first. More representative training data is the single most reliable way to improve generalization — no synthetic transform matches real signal from the target distribution. Augmentation is the tool for when collection is too expensive, too slow, or when you cannot anticipate every deployment condition in advance. It is a complement to data collection, not a substitute.
 
@@ -116,14 +112,12 @@ The rest of this guide explains each step and the reasoning behind it — then h
 
 The ordering in the [7-step approach above](#quick-reference-the-7-step-approach) is not aesthetic preference — it reflects how augmentation acts on the training signal. Unlike weight decay or dropout layers, which apply uniform pressure across all samples, augmentation is a surgical tool: you can apply different transforms per class, per image, or per failure mode — a degree of freedom no other regularizer gives you. But the surgery must happen in the right order.
 
-The order matters for four reasons:
+Think of it as a dependency chain: **resolution → geometry → occlusion → color → domain variation → normalization.** Each step depends on the previous one being settled:
 
-1. **Resolution affects statistical properties when you resize.** If you *resize* images to a smaller target, transforms like blur and noise behave differently at the new resolution — a 5×5 blur kernel on a 1024×1024 image is imperceptible; the same kernel on a 64×64 image obliterates fine detail. If you *crop* instead, the pixel density is unchanged, so transform effects stay the same. Either way, fix the spatial dimensions first: resize-dependent transforms need the final resolution to be meaningful, and crop-dependent transforms need to avoid wasting compute on pixels that will be discarded.
-2. **Geometric invariances are foundational and safe.** Flips and axis-aligned rotations (90°, 180°, 270°) are pure pixel rearrangement — they do not interpolate, so they cannot introduce blurring or artifacts. This means they are always safe to add, unless the specific *sample-level* symmetry is violated (as in "b" vs "d" or "6" vs "9"). Adding them early means every subsequent transform sees both orientations, maximizing downstream diversity.
-3. **Dropout must act on the final spatial arrangement.** If dropout fires before crop, masked regions might be cropped out, wasting the regularization effect.
-4. **Normalization defines the coordinate system.** The model's first layer expects inputs in a specific numerical range. Any transform after normalization shifts the input off this expected manifold. Normalization is terminal, always.
-
-The full dependency chain: **resolution → geometry → occlusion → color → domain variation → normalization.**
+- **Resolution first** because transform effects are resolution-dependent. A 5×5 blur kernel on a 1024×1024 image is imperceptible; the same kernel on a 64×64 image obliterates fine detail. Fix spatial dimensions before tuning anything else.
+- **Geometry early** because flips and axis-aligned rotations are pure pixel rearrangement — no interpolation, no artifacts, no information loss. Adding them early means every subsequent transform sees both orientations, maximizing downstream diversity.
+- **Dropout after crop** because if dropout fires before crop, the masked regions might get cropped out entirely, wasting the regularization.
+- **Normalization last, always.** The model's first layer expects inputs in a specific numerical range. Any transform after normalization shifts the input off this expected manifold.
 
 ### How to Work Through the Steps
 
@@ -282,9 +276,7 @@ Two transforms specifically target this vulnerability:
 
 The mechanism is the same as [`CoarseDropout`](https://explore.albumentations.ai/transform/CoarseDropout) but operating in the color dimension instead of the spatial dimension. Where dropout removes *spatial regions* to force the model to learn from multiple parts of the object, [`ToGray`](https://explore.albumentations.ai/transform/ToGray) and [`ChannelDropout`](https://explore.albumentations.ai/transform/ChannelDropout) remove *color information* to force the model to learn from shape and texture. Both are Level 2 augmentations: at inference, the model sees full-color images — a strictly easier task than what it trained on.
 
-Think of color reduction as teaching the model a fallback strategy. Normally, the model uses color plus shape plus texture. But on the 10% of training samples where color is removed, the model must rely on shape and texture alone. This forces the model to build strong shape-based features as a backup — features that remain available even when color is present and reliable. The result is a model that uses color when it helps but does not collapse when color shifts.
-
-**The birder analogy.** An experienced birder identifies species in fog, at dusk, and through rain-streaked binoculars — conditions where color is unreliable or invisible. They rely on silhouette, flight pattern, size, and habitat. A novice who learned from a field guide's vivid photographs might say "I can't tell — there's no color." The experienced birder built robust features that work with or without color; the novice built fragile features that depend on it. [`ToGray`](https://explore.albumentations.ai/transform/ToGray) gives your model the experienced birder's training: it learns shape-based features as a fallback, so color becomes a helpful signal rather than a single point of failure.
+An experienced birder identifies species in fog, at dusk, and through rain-streaked binoculars — conditions where color is unreliable or invisible. They rely on silhouette, flight pattern, size, and habitat. A novice who learned from a field guide's vivid photographs might say "I can't tell — there's no color." [`ToGray`](https://explore.albumentations.ai/transform/ToGray) gives your model the experienced birder's training: it builds shape-based features that work with or without color, so color becomes a helpful signal rather than a single point of failure.
 
 **When to skip:** If color *is* the primary task signal, these transforms corrupt the label. Ripe vs. unripe fruit classification depends on color change. Traffic light state detection is entirely about color. Brand identification often relies on specific brand colors. In these cases, color reduction is not helpful regularization — it is label noise.
 
@@ -381,15 +373,15 @@ The table below groups transforms by the failure mode they address. Use the [Exp
 
 #### Beyond Per-Image: Batch-Based Augmentations
 
-Techniques that mix multiple samples within a batch are among the most powerful augmentations available — and they are practically a must-have for competitive results. They operate at a different level than per-image transforms:
+Some of the most impactful augmentation techniques operate across multiple images rather than within a single one. Albumentations provides [`A.Mosaic`](https://explore.albumentations.ai/transform/Mosaic) — which combines several images into a mosaic grid and supports all target types (masks, bboxes, keypoints). Mosaic was a significant contributor to the YOLO family's detection performance: it creates training samples with more objects and more scale variation per image than any single photo could contain.
 
-- **MixUp:** Linearly interpolates pairs of images and their labels. A powerful regularizer that improves both accuracy and calibration for classification tasks.
-- **CutMix:** Cuts a rectangular patch from one image and pastes it onto another; labels are mixed proportionally to the patch area. Combines the benefits of dropout (partial occlusion) with MixUp (label mixing).
-- **[Mosaic](https://explore.albumentations.ai/transform/Mosaic):** Combines several images into one larger image via a mosaic grid. A significant contributor to the YOLO family's detection performance — the jump from YOLOv3 to YOLOv4 was partly attributed to adopting Mosaic augmentation, which creates training samples with more objects and more scale variation per image. Albumentations provides [`A.Mosaic`](https://explore.albumentations.ai/transform/Mosaic) as a per-image variant that supports all target types (masks, bboxes, keypoints).
-- **CopyPaste:** Copies object instances (using masks) from one image and pastes them onto another. Effective for instance segmentation and object detection, especially for rare classes — you can artificially balance class frequencies by pasting more instances of underrepresented objects.
+Three other batch-level techniques are worth knowing about, though they are typically implemented in the training framework (timm, ultralytics) or custom dataloader logic rather than in a per-image augmentation library:
 
-> [!NOTE]
-> Albumentations is a per-image augmentation library and does not implement batch-level mixing transforms like MixUp, CutMix, or CopyPaste. These are typically handled by the training framework (timm for classification, ultralytics for detection, etc.) or custom dataloader logic. We mention them here because they are among the most impactful augmentation techniques in modern training — but their implementation is outside the scope of this library. They complement rather than replace per-image augmentation; use both.
+- **MixUp:** Linearly interpolates pairs of images and their labels. A powerful regularizer that improves both accuracy and calibration for classification.
+- **CutMix:** Cuts a rectangular patch from one image and pastes it onto another; labels are mixed proportionally to patch area. Combines the benefits of dropout (partial occlusion) with MixUp (label mixing).
+- **CopyPaste:** Copies object instances (using masks) from one image and pastes them onto another. Especially effective for rare classes — you can artificially balance class frequencies by pasting more instances of underrepresented objects.
+
+These complement per-image augmentation; use both when available.
 
 ### Step 7: Final Normalization - Standard vs. Sample-Specific
 
@@ -414,7 +406,9 @@ Normalization is the gate between your augmentation pipeline and the model's fir
     *   `normalization="image"`: Single mean and std across all channels and pixels.
     *   `normalization="image_per_channel"`: Mean and std independently for each channel.
 
-    **Why it helps:** Consider what happens mathematically. [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) multiplies pixel values by a random factor and adds a random offset — parametric brightness/contrast variation with a fixed distribution you chose. Per-image normalization does something structurally similar but in reverse: by subtracting the image's own mean and dividing by its own standard deviation, it *removes* the image's global brightness and contrast, making the normalized output depend only on the relative structure of pixel values within that image. The effect is equivalent to baking a non-parametric brightness/contrast augmentation into the normalization step itself. A bright image and a dark image of the same scene produce similar normalized outputs, because the per-image statistics absorb the global intensity difference. The model learns to interpret features relative to each image's own statistical properties — making it robust to exactly the kind of exposure and contrast variation that differs between training cameras and deployment cameras.
+    **Why it helps:** The connection to [`RandomBrightnessContrast`](https://explore.albumentations.ai/transform/RandomBrightnessContrast) is surprisingly direct. `RandomBrightnessContrast` multiplies pixel values by a random factor and adds a random offset — `pixel * α + β` — with `α` and `β` sampled from a distribution you define. Per-image normalization does *structurally the same thing* but in reverse: it subtracts the image's own mean and divides by its own standard deviation — `(pixel - μ) / σ`. Both are affine transforms on pixel values. The difference: `RandomBrightnessContrast` is parametric (you choose the range), while per-image normalization is non-parametric (the image's own statistics determine the shift).
+
+    Here is the subtle part. Per-image normalization runs *after* all preceding augmentations. Each augmented version of the same source image has slightly different pixel statistics — a color-jittered version has a different mean than a brightness-shifted version. So the normalization constants `μ` and `σ` change on every pass, even for the same source image. The model never sees the same normalized values twice. The effect: a bright image and a dark image of the same scene produce similar normalized outputs, because the per-image statistics absorb the global intensity difference. You get a free, data-dependent brightness/contrast augmentation baked into the normalization step — without adding any transform to your pipeline.
 
     ```python
     normalize_sample_per_channel = A.Normalize(normalization="image_per_channel", p=1.0)
@@ -434,7 +428,7 @@ The right augmentation strength depends on model capacity. A small model (Mobile
 
 Augmentation is part of the regularization budget, not an independent toggle. Weight decay, architectural dropout, label smoothing, and data augmentation all draw from the same budget — if you max out everything simultaneously, the model underfits. Stronger augmentation may require longer training or an adjusted learning-rate schedule. Strong augmentation plus strong label smoothing can soften the training signal too much. Noisy labels plus heavy augmentation makes optimization chaotic. Augmentation strength and model capacity are coupled knobs — tune them together. For a deeper treatment, see [Match Augmentation Strength to Model Capacity](../1-introduction/what-are-image-augmentations.md#match-augmentation-strength-to-model-capacity).
 
-Consider a simplified scenario to illustrate the dynamic. The exact numbers are illustrative, but the pattern is consistent across real experiments: you train an animal classifier on 50,000 images. Four configurations, same data:
+The pattern shows up consistently. Take an animal classifier trained on 50,000 images — four configurations, same data:
 
 | Configuration | Train acc | Val acc | Outcome |
 |---|---|---|---|
@@ -445,7 +439,7 @@ Consider a simplified scenario to illustrate the dynamic. The exact numbers are 
 
 The pattern: MobileNet plateaus at 85% with light augmentation — heavier policies overwhelm its 5M parameters. ViT-Large absorbs the same heavy policy and converts it into nine additional points of validation accuracy, reaching 94%. The aggressive pipeline that crushed MobileNet is what ViT-Large *needs* to stop memorizing. The large model has enough capacity to learn *through* the augmentation pressure, converting it into more robust features rather than being overwhelmed by it.
 
-Think of augmentation strength as a dimmer switch, not an on/off toggle. The question is never "augmentation: yes or no?" but "how much augmentation for *this* model on *this* data?" Turn the dial up until the model starts struggling to learn — training loss stays high, convergence slows dramatically — then back off one notch. That is your operating point.
+Think of augmentation strength as a dimmer switch, not an on/off toggle. The question is never "augmentation: yes or no?" but "how much augmentation for *this* model on *this* data?" Turn the dial up until the model starts struggling to learn — training loss stays high, convergence slows dramatically — then back off one notch. That is your operating point. The augmentation that is "too aggressive" for a small model is often exactly what a large model needs to generalize.
 
 **Batch size interacts with augmentation strength.** Each training batch already has gradient variance from the random sample of images. Augmentation adds a second source of variance — each image is a random perturbation of the original. With small batch sizes (8–16), these two sources of gradient variance compound: the gradient estimate is noisy from the small sample *and* variable from heavy augmentation, making optimization unstable. Large batch sizes absorb this variance better because the gradient is averaged over more samples. If you are training with a small batch and heavy augmentation and convergence is erratic, increasing batch size may stabilize training before you need to reduce augmentation strength. This is a cheaper fix than weakening the pipeline — you keep the regularization benefit while giving the optimizer a cleaner signal.
 
@@ -463,7 +457,7 @@ Instead of applying the same augmentation from epoch 1 to the last, shape the in
 
 **Ease off at the end (tapering).** Reduce or remove heavy augmentation in the last 5-15% of training epochs. The mechanism: early training builds robust, general features — edges, textures, object parts — that tolerate heavy perturbation. Late training refines fine decision boundaries between visually similar classes, and those boundaries are fragile to the same perturbation that was harmless earlier. A strong color jitter that helpfully forced the model to learn shape over color in epoch 10 now destabilizes the subtle texture boundary between two similar species in epoch 90. Tapering removes augmentation pressure precisely when the model shifts from feature building to precision refinement. The "light" pipeline keeps essential transforms (crop, flip, normalize) but drops aggressive dropout, heavy color distortion, and strong geometric transforms.
 
-Both techniques are standard in top Kaggle solutions. The combined effect is often 0.1–0.5% on validation metrics — small but consistent. In production, it is free accuracy: no architecture change, no additional data, just a smarter training schedule.
+Both techniques are well-established in competitive ML and production pipelines. The combined effect is often 0.1–0.5% on validation metrics — small but consistent, and essentially free: no architecture change, no additional data, just a smarter training schedule.
 
 ### Progressive Resizing: Low-Res First, High-Res Later
 
@@ -550,7 +544,7 @@ val_pipeline_flip = A.Compose([
 
 Run your validation set through each pipeline and compare the metrics. A large drop from `val_pipeline_clean` to `val_pipeline_lighting` tells you the model is fragile to lighting changes — and suggests adding brightness/gamma augmentations to your *training* pipeline. A drop under `val_pipeline_flip` means the model has not learned horizontal symmetry — and [`HorizontalFlip`](https://explore.albumentations.ai/transform/HorizontalFlip) should go into training.
 
-This creates a diagnostic-driven feedback loop: test for a vulnerability, find it, add the corresponding augmentation to training, retrain, test again.
+This creates a diagnostic-driven feedback loop: test for a vulnerability, find it, add the corresponding augmentation to training, retrain, test again. The best augmentation pipelines are not designed from first principles — they are diagnosed into existence.
 
 #### Worked Example: A Wildlife Camera Trap Classifier
 
@@ -602,21 +596,15 @@ Diagnostics tell you what to add. Equally important is knowing when to *remove* 
 
 ## Recognizing When Augmentation Hurts
 
-Over-augmentation is real, and its symptoms are distinct from other training failures. The metric-reading pitfalls above (per-class regressions hiding behind aggregate improvement, calibration degradation, easy-slice gains masking tail-case losses) are how you *detect* damage after training. But you can also spot trouble *during* training:
+The metric-reading pitfalls above catch damage *after* training. Three signals catch it *during* training: loss stays high and does not converge (especially with small models under aggressive pipelines), validation metrics oscillate without trending (the model is pulled in too many directions), or convergence takes 3× longer than baseline (more difficulty than the model can absorb). For a deeper treatment of over-augmentation symptoms and their causes, see [Failure Modes](../1-introduction/what-are-image-augmentations.md#know-the-failure-modes-before-they-hit-production).
 
-**Training loss stays high and does not converge.** The model cannot learn through the augmentation pressure. This is especially common with small models under aggressive pipelines designed for larger architectures.
-
-**Validation metrics oscillate without trending.** Instead of the usual decrease-plateau-rise pattern, you see erratic swings. The model is pulled in different directions by samples that are too diverse or too distorted.
-
-**The model learns dramatically slower than baseline.** Some slowdown is expected — augmentation makes the task harder. But 3× more epochs to reach the same metric means the augmentation is adding more difficulty than the model can absorb.
-
-### The Fix Protocol
+The fix protocol is sequential — stop at the first step that resolves the issue:
 
 1. **Reduce magnitude first, not the transform.** If rotation at ±30° hurts, try ±10° before removing rotation entirely.
 2. **Reduce probability.** Drop `p` from 0.5 to 0.2 or 0.1.
 3. **Remove the most recent addition.** Revert to the previous best checkpoint.
-4. **Check for destructive interactions.** A moderate color shift might become destructive after heavy contrast and blur.
-5. **Consider model capacity.** The fix may not be removing augmentation but *upgrading the model*. A larger model can absorb stronger augmentation and convert it into better features.
+4. **Check for destructive interactions.** A moderate color shift might become destructive after heavy contrast and blur. The combination can cross the label-preservation boundary even when each transform alone does not.
+5. **Consider model capacity.** The fix may not be removing augmentation but *upgrading the model*. A larger model can absorb stronger augmentation and convert it into better features — the augmentation that overwhelmed MobileNet might be exactly what ViT needs.
 
 ## Automated Augmentation Search
 
@@ -643,7 +631,7 @@ Render 20–50 augmented samples with all targets overlaid (masks, boxes, keypoi
 
 ![Augmentation bug: incorrect bbox format](../../img/basic_usage/choosing_augmentations/augmentation_bug_bbox.webp "A silent bug: passing the wrong format to BboxParams produces valid but spatially wrong bounding boxes. The model trains on misaligned labels without raising any error.")
 
-This is also where you validate the *choices* you made in the steps above. Does the dropout actually look reasonable at the probability you set? Is the color distortion too aggressive for your domain? Are the rotated images still clearly recognizable? Visual inspection is not just a bug check — it is the final validation of your augmentation design.
+This is also where you validate the *choices* you made in the steps above. Does the dropout actually look reasonable at the probability you set? Is the color distortion too aggressive for your domain? Are the rotated images still clearly recognizable? Visual inspection is not just a bug check — it is the final validation of your augmentation design. Ten minutes of looking at augmented samples prevents ten days of training on corrupted data.
 
 ### Reproducibility and Tracking
 
@@ -696,17 +684,17 @@ Policy review should be a standard step during major data or product transitions
 
 ## Conclusion
 
-There is no formula that takes a dataset and outputs the optimal augmentation pipeline. But there is a process that reliably gets you to a strong one — and this guide has laid it out.
+There is no formula that takes a dataset and outputs the optimal augmentation pipeline. But there is a process that reliably gets you to a strong one.
 
-The core insight is that augmentation is not a bag of tricks you sprinkle on training data. It is an engineering tool for encoding domain knowledge about which variations matter and which do not — knowledge that your network architecture cannot express on its own. When you add a transform, you are making a precise claim about invariance. When that claim is true, the model generalizes better. When it is false, you are injecting label noise. The entire art of choosing augmentations reduces to asking the right questions about your data and your task, then encoding the answers as transforms.
+The core insight is that every transform you add is a claim about invariance — a statement that this variation does not change what the image means, and that your architecture has no built-in mechanism to ignore it. When that claim is true, augmentation teaches the model something its architecture cannot learn on its own. When that claim is false, you are injecting label noise. The entire art reduces to asking precise questions about your data and encoding the answers as transforms.
 
 Three things to take away:
 
-1. **Start with the question, not the transform.** "What does my model need to be invariant to that my training data does not cover?" comes before "should I add ColorJitter?" The answer drives the choice, not the other way around.
+1. **Start with the question, not the transform.** "What does my model need to be invariant to that my training data does not cover?" comes before "should I add ColorJitter?" The invariance gap drives the choice — not a checklist, not what worked on someone else's dataset, not convention.
 
-2. **Measure ruthlessly.** A single aggregate metric hides more than it reveals. Per-class breakdowns, robustness tests under targeted conditions, and calibration checks — these are what separate a pipeline that looks good from one that actually works in production. The wildlife camera trap example in this guide showed a model going from 71% fog accuracy to 87% in two days of targeted iteration. That kind of improvement comes from diagnosis, not guessing.
+2. **Measure surgically.** Aggregate metrics lie. The wildlife camera trap example in this guide showed a model going from 71% fog accuracy to 87% in two days — not by adding more transforms, but by diagnosing the specific failure and targeting it. Per-class breakdowns, robustness tests under targeted conditions, and per-condition slicing are what separate a pipeline that looks good from one that works in production.
 
-3. **Treat the pipeline as a living artifact.** The augmentation policy that was perfect for your studio-shot training data becomes counterproductive when you collect 200,000 real-world images. The policy that worked for MobileNet needs to be rebuilt for ViT. When the data changes, when the model changes, when the deployment conditions change — the pipeline must change too.
+3. **Treat the pipeline as a living artifact.** The policy that was perfect for studio-shot training data becomes counterproductive when you collect 200,000 real-world images. The policy that worked for MobileNet needs to be rebuilt for ViT. Data changes, models change, deployment conditions change — the pipeline must change with them, or it quietly degrades from asset to liability.
 
 ## Complete Pipeline Examples
 
