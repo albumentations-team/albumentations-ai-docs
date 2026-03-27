@@ -1,46 +1,4 @@
-[build-system]
-build-backend = "setuptools.build_meta"
-requires = [ "setuptools>=45", "wheel" ]
-
-[project]
-name = "albumentations-ai-docs"
-version = "0.0.1"
-description = "Docs for Albumentations AI"
-readme = "README.md"
-keywords = [
-  "albumentations",
-  "albumentations-ai",
-  "albumentations-ai-docs",
-  "albumentations-ai-docs-generator",
-]
-license = { text = "Custom License - See LICENSE file for details" }
-maintainers = [ { name = "Vladimir Iglovikov" } ]
-authors = [
-  { name = "Vladimir Iglovikov", email = "iglovikov@gmail.com" },
-]
-requires-python = ">=3.13"
-classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Topic :: Software Development :: Documentation",
-  "Topic :: Software Development :: Libraries",
-  "Topic :: Software Development :: Libraries :: Python Modules",
-  "Typing :: Typed",
-]
-dependencies = []
-optional-dependencies.dev = [
-  "pre-commit>=3.5",
-  "pytest>=8.3.3",
-]
-urls."bug tracker" = "https://github.com/albumentations-team/albumentations-ai-docs/issues"
-urls.homepage = "https://github.com/albumentations-team/albumentations-ai-docs"
+# Tool config only (ruff, pytest, mypy). Not a Python distribution — use `uv run --no-project pytest`.
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -97,6 +55,9 @@ lint.unfixable = []
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Like Black, use double quotes for strings.
 lint.pydocstyle.convention = "google"
+
+[tool.pytest]
+ini_options.pythonpath = [ "scripts" ]
 
 [tool.mypy]
 python_version = "3.13"

@@ -3,9 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Add scripts directory to path to allow import
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-
 from check_markdown import is_relative, check_markdown_file, NON_WEBP_IMAGE_EXTENSIONS
 
 # Fixture to create temporary markdown files
