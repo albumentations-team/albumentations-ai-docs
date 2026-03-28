@@ -2,6 +2,8 @@
 
 ![Augmentation transforms applied to the same image](../../img/basic_usage/choosing_augmentations/header.webp "The same fish image under 32 different augmentation transforms — geometry, color, blur, noise, occlusion, and weather effects.")
 
+[This text in Russian on habr.com](https://habr.com/ru/articles/1016172/)
+
 A defect detection model scores 99% on the validation set. In production, it misses half the defects — the factory floor has variable lighting and motion blur that the training data never showed. A chest X-ray classifier trained with aggressive augmentation — heavy elastic distortion, extreme brightness, strong noise — collapses entirely, because the diagnostic signal lives in subtle density differences that the augmentation washed out. A wildlife monitoring team adds every transform they can find: training crawls, validation oscillates, and nobody can tell which of the fifteen transforms is helping and which three are actively hurting.
 
 Too little augmentation, too much, and too unfocused. Three failure modes, one root cause: treating augmentation as a checklist ("flip, rotate, blur, done") rather than a deliberate design process. The library gives you [a hundred transforms](../reference/supported-targets-by-transform.md); the hard part is choosing the right subset, in the right order, with the right parameters, for your specific task and distribution.
