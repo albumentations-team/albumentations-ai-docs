@@ -73,7 +73,7 @@ The principle: **translate the meaning of the phrase, not the words in it.** Eng
 | always-on transform | постоянно включённая трансформация |
 | label-preserving transform | трансформация, сохраняющая метку |
 | label-breaking transform | трансформация, нарушающая метку |
-| destroys the label | делает метку неверной / ломает метку |
+| destroys the label | ломает метку / вносит шум в разметку |
 | class-specific augmentation | классоспецифичная аугментация / аугментация по классам |
 | per-domain policy | аугментация по доменам / policy по домену |
 | targeted augmentation | прицельная аугментация |

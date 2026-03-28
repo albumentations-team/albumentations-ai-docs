@@ -123,7 +123,7 @@ Do **not** treat this as a generic "write Russian" skill for original Russian co
 - Kill `коллапсировать` — use `ломаться`, `проседать`, `разваливаться`.
 - In prose, prefer `горизонтальное отражение` / `вертикальное отражение` over `флип`, unless you are naming the exact transform/API token like `HorizontalFlip` or `VerticalFlip`.
 - Watch for sentence patterns like "`X` утверждает:" after English `X claims`. In Russian prose this is often cleaner as `означает`, `задаёт предположение`, `предполагает`, or a direct declarative rewrite.
-- Watch verb strength around labels. For English `destroys the label` / `corrupts the label`, prefer `делает метку неверной`, `ломает метку`, `портит метку`, or `вносит шум в разметку` over emotionally stronger verbs like `уничтожает`.
+- Watch verb strength around labels. For English `destroys the label` / `corrupts the label`, prefer `ломает метку`, `портит метку`, `делает разметку шумной`, or `вносит шум в разметку` over emotionally stronger verbs like `уничтожает`.
 - Prefer readable profession or role nouns over exotic niche borrowings. Example: `орнитолог` or `наблюдатель за птицами`, not `бёрдвотчер`.
 
 ### Formatting
