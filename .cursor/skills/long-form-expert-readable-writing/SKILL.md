@@ -61,6 +61,31 @@ Avoid generic statements like "it depends" unless followed by exact conditions.
 - Define terms at first use in one sentence.
 - Prefer concrete nouns/verbs over abstract phrasing.
 - Use examples before abstractions when possible.
+- Do not use vague cliché subjects in hooks or claims: avoid openings like "Most people...", "People often...", "Many teams...", "Most projects...", "Augmentation pipelines are usually...", unless you immediately anchor them to a specific observable context. Prefer concrete situations, recognizable workflows, or a direct claim.
+
+## Hook Rules
+
+- Open with a concrete workflow, failure mode, or decision problem.
+- State what is missing in the default approach, not just that it is "common."
+- Introduce the core framing early, in one sentence.
+- Do not start with broad sociological filler about what "people" do.
+- Do not use generic content-marketing phrases like "In this post", "ultimate guide", "comprehensive walkthrough", or "best practices" unless the user explicitly asks for that tone.
+
+## CTA / Closing Rules
+
+- Do not use fake-curiosity closers such as "Curious how others think...", "Would love to hear...", or "Let me know..." unless the user explicitly wants that tone.
+- If asking the reader for input, state the ask directly and honestly: request feedback, criticism, counterexamples, or experience reports.
+- Phrase the closing as a concrete invitation or favor, not as performative interest.
+- Prefer specific asks over vague engagement bait. Good: "If you have counterexamples from medical or OCR workloads, I'd appreciate them." Bad: "Curious what everyone thinks."
+- Avoid empty politeness formulas like "I'd appreciate it" when they do not add information. Prefer human but concrete phrasing such as "I’d be very interested to learn from your experience", "I’ll be happy to hear where this breaks", or a direct request for examples and countercases.
+
+## Credibility Attribution Rules
+
+- Use credibility to support the material, not to center the author.
+- Avoid stacked first-person credibility claims such as "I built X, I maintain X, I wrote Y."
+- Prefer project-first phrasing: lead with the document, library, or work; add the author's role briefly as context.
+- When author context matters, keep it compact and factual: "based on the official docs", "written by a core maintainer", "from a co-creator of the library".
+- Do not sound self-congratulatory, founder-branded, or status-seeking unless the user explicitly wants that voice.
 
 ## Memory Anchors (Mandatory)
 
