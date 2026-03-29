@@ -2,6 +2,8 @@
 
 Albumentations uses a sustainable dual licensing model. This guide explains the licensing model and what it means for you.
 
+If you are evaluating the library technically rather than legally, see [AlbumentationsX vs Albumentations MIT: Practical Benefits](./albumentationsx-vs-albumentations-mit-benefits.md).
+
 ## Quick Summary
 
 - **Albumentations** is dual-licensed: AGPL-3.0 (open source) / Commercial
