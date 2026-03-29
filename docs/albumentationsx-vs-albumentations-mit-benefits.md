@@ -249,7 +249,7 @@ The easiest way to evaluate the move is by workload type.
 
 ## 4. Maintenance Reality
 
-From `2.0.9` on `2025-06-25` through `2.1.1` on `2026-03-27`, AlbumentationsX shipped fourteen releases:
+From `2.0.9` through `2.1.1`, AlbumentationsX shipped fourteen releases. Exact publish dates are on each release page linked under [Sources](#sources) below, not repeated here so they do not go stale if notes are amended.
 
 - `2.0.9`
 - `2.0.10`
@@ -286,15 +286,17 @@ This is the practical distinction a team should care about:
 - Benchmark comparison page: [AlbumentationsX vs Albumentations MIT](https://albumentations.ai/docs/benchmarks/albumentationsx-vs-albumentations-mit/)
 - Benchmark repository: [albumentations-team/benchmark](https://github.com/albumentations-team/benchmark)
 - Release index: [Albumentations release notes](https://albumentations.ai/docs/releases/)
-- Releases used for this page:
+- AlbumentationsX releases in the `2.0.9`–`2.1.1` range (full list; matches the fourteen versions enumerated in **Maintenance Reality** above):
   - [2.0.9](https://albumentations.ai/docs/releases/2.0.9)
   - [2.0.10](https://albumentations.ai/docs/releases/2.0.10)
   - [2.0.11](https://albumentations.ai/docs/releases/2.0.11)
   - [2.0.12](https://albumentations.ai/docs/releases/2.0.12)
+  - [2.0.13](https://albumentations.ai/docs/releases/2.0.13)
   - [2.0.14](https://albumentations.ai/docs/releases/2.0.14)
   - [2.0.15](https://albumentations.ai/docs/releases/2.0.15)
   - [2.0.16](https://albumentations.ai/docs/releases/2.0.16)
   - [2.0.17](https://albumentations.ai/docs/releases/2.0.17)
+  - [2.0.18](https://albumentations.ai/docs/releases/2.0.18)
   - [2.0.19](https://albumentations.ai/docs/releases/2.0.19)
   - [2.0.20](https://albumentations.ai/docs/releases/2.0.20)
   - [2.1.0](https://albumentations.ai/docs/releases/2.1.0)
